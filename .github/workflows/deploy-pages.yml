@@ -64,3 +64,11 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Smoke test live Kleos
+        run: |
+          curl --fail --silent --show-error --location \
+            --retry 5 --retry-all-errors --retry-delay 2 \
+            "${{ steps.deployment.outputs.page_url }}" \
+            --output /tmp/kleos.html
+          grep -q "Kleos" /tmp/kleos.html

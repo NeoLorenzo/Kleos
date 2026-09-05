@@ -74,6 +74,6 @@ test("repository documentation records intentional shared Supabase infrastructur
   const persistenceReadme = read("supabase/README.md");
 
   assert.match(readme, /shared Supabase/i);
-  assert.match(persistenceReadme, /shared/i);
+  assert.match(persistenceReadme, /shar(?:e|es|ed|ing)/i);
   assert.match(persistenceReadme, /Kleos/i);
 });

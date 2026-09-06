@@ -5,6 +5,8 @@ import { AUTHORIZED_KLEOS_EMAIL } from "@/lib/kleos/data";
 import {
   cognitiveRowToDraft,
   liftRowToDraft,
+  removeMeasurementRecord,
+  replaceMeasurementRecord,
   scoreRowToDraft,
   validateCognitiveDraft,
   validateLiftDraft,
@@ -30,12 +32,15 @@ const TABLES = {
   }
 };
 
+const emptyRecords = () => ({ score: [], lift: [], cognitive: [] });
+
 export default function MeasurementCorrections() {
   const [authorized, setAuthorized] = useState(false);
+  const [userId, setUserId] = useState(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
-  const [records, setRecords] = useState({ score: [], lift: [], cognitive: [] });
+  const [records, setRecords] = useState(emptyRecords);
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState(null);
 
@@ -44,7 +49,16 @@ export default function MeasurementCorrections() {
 
     const applyUser = (user) => {
       const email = String(user?.email || "").trim().toLowerCase();
-      setAuthorized(Boolean(user && email === AUTHORIZED_KLEOS_EMAIL));
+      const isAuthorized = Boolean(user?.id && email === AUTHORIZED_KLEOS_EMAIL);
+      setAuthorized(isAuthorized);
+      setUserId(isAuthorized ? user.id : null);
+
+      if (!isAuthorized) {
+        setOpen(false);
+        setEditing(null);
+        setDraft(null);
+        setRecords(emptyRecords());
+      }
     };
 
     void supabase.auth.getUser().then(({ data }) => applyUser(data?.user || null));
@@ -56,8 +70,8 @@ export default function MeasurementCorrections() {
   }, []);
 
   useEffect(() => {
-    if (open && authorized) void loadRecords();
-  }, [open, authorized]);
+    if (open && authorized && userId) void loadRecords();
+  }, [open, authorized, userId]);
 
   const sortedRecords = useMemo(
     () => ({
@@ -69,14 +83,14 @@ export default function MeasurementCorrections() {
   );
 
   const loadRecords = async () => {
-    if (!supabase) return;
+    if (!supabase || !userId) return;
     setLoading(true);
     setStatus("");
 
     const [scores, lifts, cognitive] = await Promise.all([
-      supabase.from(TABLES.score.table).select(TABLES.score.select),
-      supabase.from(TABLES.lift.table).select(TABLES.lift.select),
-      supabase.from(TABLES.cognitive.table).select(TABLES.cognitive.select)
+      supabase.from(TABLES.score.table).select(TABLES.score.select).eq("user_id", userId),
+      supabase.from(TABLES.lift.table).select(TABLES.lift.select).eq("user_id", userId),
+      supabase.from(TABLES.cognitive.table).select(TABLES.cognitive.select).eq("user_id", userId)
     ]);
 
     setLoading(false);
@@ -113,7 +127,7 @@ export default function MeasurementCorrections() {
 
   const saveEdit = async (event) => {
     event.preventDefault();
-    if (!supabase || !editing || !draft) return;
+    if (!supabase || !editing || !draft || !userId) return;
 
     const validation =
       editing.kind === "score"
@@ -130,10 +144,13 @@ export default function MeasurementCorrections() {
     setLoading(true);
     setStatus("");
     const config = TABLES[editing.kind];
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from(config.table)
       .update(validation.payload)
-      .eq("id", editing.id);
+      .eq("id", editing.id)
+      .eq("user_id", userId)
+      .select(config.select)
+      .single();
     setLoading(false);
 
     if (error) {
@@ -141,11 +158,14 @@ export default function MeasurementCorrections() {
       return;
     }
 
-    window.location.reload();
+    setRecords((current) => replaceMeasurementRecord(current, editing.kind, data));
+    setEditing(null);
+    setDraft(null);
+    setStatus(`${config.label} updated.`);
   };
 
   const deleteRecord = async (kind, row) => {
-    if (!supabase) return;
+    if (!supabase || !userId) return;
     const config = TABLES[kind];
     const summary = describeRecord(kind, row);
     if (!window.confirm(`Delete this ${config.label}?\n\n${summary}\n\nThis cannot be undone.`)) {
@@ -154,7 +174,13 @@ export default function MeasurementCorrections() {
 
     setLoading(true);
     setStatus("");
-    const { error } = await supabase.from(config.table).delete().eq("id", row.id);
+    const { error } = await supabase
+      .from(config.table)
+      .delete()
+      .eq("id", row.id)
+      .eq("user_id", userId)
+      .select("id")
+      .single();
     setLoading(false);
 
     if (error) {
@@ -162,7 +188,8 @@ export default function MeasurementCorrections() {
       return;
     }
 
-    window.location.reload();
+    setRecords((current) => removeMeasurementRecord(current, kind, row.id));
+    setStatus(`${config.label} deleted.`);
   };
 
   if (!authorized) return null;

@@ -2,7 +2,8 @@ const assert = require("node:assert/strict");
 const { readFile } = require("node:fs/promises");
 const { test, before } = require("node:test");
 const path = require("node:path");
-const { pathToFileURL } = require("node:url");
+
+process.env.TZ = "Europe/Lisbon";
 
 let helpers;
 
@@ -42,7 +43,7 @@ test("lift corrections reject invalid reps and normalize valid payloads", () => 
   assert.equal(result.payload.exercise_name, "Flat Barbell Bench");
   assert.equal(result.payload.weight_kg, 90);
   assert.equal(result.payload.reps, 5);
-  assert.match(result.payload.performed_at, /^2026-09-06T/);
+  assert.match(result.payload.performed_at, /^2026-09-05T23:00:00\.000Z$/);
 });
 
 test("cognitive corrections enforce every 0-10 context rating", () => {
@@ -81,7 +82,7 @@ test("cognitive corrections enforce every 0-10 context rating", () => {
   assert.equal(Number.isNaN(new Date(result.payload.taken_at).getTime()), false);
 });
 
-test("row-to-draft conversion keeps editable canonical values", () => {
+test("row-to-draft conversion keeps canonical local dates editable", () => {
   assert.deepEqual(
     helpers.scoreRowToDraft({ score: 75, entry_date: "2026-09-01", llm_commentary: "note" }),
     { score: "75", entryDate: "2026-09-01", commentary: "note" }
@@ -92,8 +93,39 @@ test("row-to-draft conversion keeps editable canonical values", () => {
       exercise_name: "Bench",
       weight_kg: 80,
       reps: 6,
-      performed_at: "2026-09-02T00:00:00.000Z"
+      performed_at: "2026-09-05T23:00:00.000Z"
     }),
-    { exerciseName: "Bench", weightKg: "80", reps: "6", performedAt: "2026-09-02" }
+    { exerciseName: "Bench", weightKg: "80", reps: "6", performedAt: "2026-09-06" }
   );
+});
+
+test("successful edits reconcile only the matching local record", () => {
+  const records = {
+    score: [{ id: 1, score: 70 }, { id: 2, score: 80 }],
+    lift: [{ id: 3, weight_kg: 90 }],
+    cognitive: [{ id: 4, score_text: "120" }]
+  };
+  const updated = { id: 2, score: 82.5 };
+
+  const next = helpers.replaceMeasurementRecord(records, "score", updated);
+
+  assert.deepEqual(next.score, [{ id: 1, score: 70 }, updated]);
+  assert.equal(next.lift, records.lift);
+  assert.equal(next.cognitive, records.cognitive);
+  assert.deepEqual(records.score, [{ id: 1, score: 70 }, { id: 2, score: 80 }]);
+});
+
+test("successful deletions immediately remove only the matching local record", () => {
+  const records = {
+    score: [{ id: 1, score: 70 }],
+    lift: [{ id: 2, weight_kg: 90 }, { id: 3, weight_kg: 100 }],
+    cognitive: [{ id: 4, score_text: "120" }]
+  };
+
+  const next = helpers.removeMeasurementRecord(records, "lift", 2);
+
+  assert.deepEqual(next.lift, [{ id: 3, weight_kg: 100 }]);
+  assert.equal(next.score, records.score);
+  assert.equal(next.cognitive, records.cognitive);
+  assert.deepEqual(records.lift, [{ id: 2, weight_kg: 90 }, { id: 3, weight_kg: 100 }]);
 });

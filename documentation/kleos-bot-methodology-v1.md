@@ -4,7 +4,7 @@ Kleos Bot produces a dated derived assessment of the eight canonical Kleos vecto
 
 ## Evidence boundary
 
-Every run must read the current canonical Kleos records directly from the shared Supabase project. Do not evaluate from stale manually copied prompt text.
+Every run must use the current canonical Kleos records from the shared Supabase project. Do not evaluate from stale manually copied prompt text.
 
 Canonical evidence currently includes:
 
@@ -19,11 +19,38 @@ Canonical evidence currently includes:
 - `goat_immutable_characteristics`
 - `goat_misc_characteristics`
 
-Legacy `goat_score_entries` may be read for historical context but must not be used as evidence that mechanically determines any vector score. Existing derived scores are not raw evidence.
+Legacy `goat_score_entries` must not determine any current vector score. Existing vector snapshots and snapshot results are derived assessments, not canonical evidence.
 
-The bot must not silently import facts from previous ChatGPT conversations or unrelated external sources. A future ingestion issue may expand the canonical evidence boundary explicitly.
+The bot must not silently import facts from previous ChatGPT conversations, ChatGPT memory, unrelated files, or external sources.
 
-For ChatGPT/Apple Shortcuts runs through the connected Supabase administrative SQL interface, canonical evidence must be retrieved through `get_kleos_bot_evidence_admin()`, not through raw `SELECT` statements against the `goat_*` tables. The privileged reader returns the ten canonical evidence groups as structured JSON, internally scopes every query to the fixed authorized Kleos owner, strips `user_id` from returned rows, and returns neither existing vector snapshots nor legacy score entries.
+## Apple Shortcuts evidence transport
+
+For Apple Shortcuts → ChatGPT runs, ChatGPT must not retrieve personal evidence through the connected Supabase SQL connector. The connector may block returning the evidence payload even when it is wrapped in a dedicated RPC.
+
+The supported read path is:
+
+```text
+Apple Shortcut
+      ↓
+POST kleos-bot-evidence Edge Function
+      ↓
+canonical evidence JSON
+      ↓
+Ask ChatGPT with that JSON embedded in the invocation
+```
+
+The Edge Function authenticates the Shortcut using a dedicated high-entropy bot token supplied in `x-kleos-bot-token`. The plaintext token is stored only in the Shortcut; the repository contains only its SHA-256 hash. Supabase database credentials remain server-side in the Edge Function environment.
+
+The Edge Function calls `get_kleos_bot_evidence_admin()` server-side and returns its canonical JSON result. That RPC:
+
+- accepts no owner UUID;
+- resolves the fixed authorized Kleos owner internally;
+- strips `user_id` from returned records;
+- returns exactly the ten canonical methodology 1.0.0 evidence groups;
+- excludes vector snapshots, snapshot results, and legacy score entries;
+- is read-only.
+
+ChatGPT must treat the JSON supplied by the Shortcut as the complete authoritative evidence payload for that invocation. It must not perform raw `SELECT` queries against the underlying `goat_*` tables and must not use previous snapshots or memory as fallback evidence.
 
 ## Vector interpretation
 
@@ -42,8 +69,6 @@ Evidence may inform more than one vector only when the relationship is substanti
 
 Scores are broad ordinal assessments of current state, not XP and not objective ground truth.
 
-Use this calibration consistently:
-
 - `0–19`: severely weak / highly impaired state on available direct evidence
 - `20–39`: clearly below ordinary adult functioning or development
 - `40–59`: ordinary / mixed / developing state
@@ -52,9 +77,7 @@ Use this calibration consistently:
 - `85–94`: exceptional state
 - `95–100`: genuinely elite to near world-leading state
 
-Do not force a score simply because the scale exists. If the canonical evidence cannot support a defensible placement, output `unknown`.
-
-The scale is intentionally coarse. Avoid false precision: integer scores are preferred unless the evidence strongly justifies otherwise.
+Do not force a score simply because the scale exists. If the canonical evidence cannot support a defensible placement, output `unknown`. Prefer integer scores and avoid false precision.
 
 ## Confidence
 
@@ -64,7 +87,7 @@ For an assessed vector:
 - **medium** — at least one meaningful direct source or several useful but incomplete sources;
 - **low** — sparse, indirect, or stale evidence that still supports a provisional assessment.
 
-Use `unknown` status rather than a low-confidence numeric guess when evidence is too weak to justify a score.
+Use `unknown` rather than a low-confidence numeric guess when the evidence is too weak to justify a score.
 
 Unknown vectors use:
 
@@ -78,9 +101,9 @@ Unknown vectors use:
 
 ## Commentary
 
-Each vector must include concise commentary that identifies the evidence basis and major uncertainty. Commentary should explain the assessment, not merely restate the number.
+Each vector must include concise commentary identifying the evidence basis and major uncertainty. Commentary should explain the assessment rather than merely restate the number.
 
-Do not infer unstated diagnoses, personality traits, relationship quality, wealth, creative skill, or other characteristics from proxies unless the stored evidence explicitly supports the inference.
+Do not infer unstated diagnoses, personality traits, relationship quality, wealth, creative skill, or other sensitive characteristics from weak proxies.
 
 ## Output contract
 
@@ -109,47 +132,31 @@ Application/orchestration code supplies evaluator identity `kleos-bot`, methodol
 
 Kleos Bot has no built-in scheduling cadence. It may be triggered manually, by Apple Shortcuts, by ChatGPT, or by a future orchestration layer at any frequency. Multiple valid evaluations in the same week, day, hour, or minute are legitimate and must create independent immutable snapshots.
 
-Each invocation supplies an `executionKey` that identifies that specific execution. Retrying the same execution with the same key returns the existing snapshot instead of creating a duplicate. A genuinely new evaluation must use a new execution key and is never blocked because another snapshot exists in the same time window.
+Each invocation supplies an execution key identifying that specific execution. Retrying the same execution with the same key returns the existing snapshot instead of creating a duplicate. A genuinely new evaluation uses a new execution key and is never blocked because another snapshot exists in the same time window.
 
-## Privileged ChatGPT flow
+## Persistence path
 
-The supported Apple Shortcuts/ChatGPT administrative flow is:
+After evaluation and validation, Apple Shortcuts/ChatGPT runs persist through the connected Supabase administrative SQL interface using:
+
+`create_kleos_bot_snapshot_admin(...)`
+
+The privileged admin writer:
+
+- requires no fabricated `request.jwt.claims`;
+- resolves the authorized Kleos owner internally;
+- accepts no owner UUID from the model;
+- preserves exactly-eight-vector validation, immutable history, methodology metadata, and per-execution idempotency;
+- is not executable by normal application roles;
+- is intended only for direct privileged SQL execution.
+
+The complete supported flow is therefore:
 
 ```text
-get_kleos_bot_evidence_admin()
+Shortcut HTTP evidence retrieval
         ↓
-evaluate exactly eight vectors
+ChatGPT evaluates exactly eight vectors
         ↓
 create_kleos_bot_snapshot_admin(...)
 ```
 
-Both privileged functions are intended only for direct SQL execution under the database `postgres` session used by the connected Supabase administrative interface. Neither function is executable by `public`, `anon`, `authenticated`, or `service_role` API roles.
-
-The privileged evidence reader:
-
-- accepts no owner UUID;
-- resolves the fixed authorized Kleos owner internally;
-- requires no `auth.uid()`, `auth.jwt()`, or `request.jwt.claims` manipulation;
-- returns only the ten canonical methodology 1.0.0 evidence groups;
-- strips the owner `user_id` from returned records;
-- does not return vector snapshots or legacy score entries;
-- is read-only and performs no mutations.
-
-## Persistence paths
-
-Normal owner-authenticated application flows may use `create_kleos_bot_snapshot(...)`, which requires the normal Supabase owner JWT context.
-
-ChatGPT/Apple Shortcuts runs that execute through the connected privileged Supabase SQL interface must instead use `create_kleos_bot_snapshot_admin(...)`.
-
-The privileged admin writer:
-
-- does not require or permit fabricated `request.jwt.claims`;
-- resolves the single authorized Kleos owner internally;
-- accepts no owner UUID from the model;
-- preserves exactly-eight-vector validation, immutable history, methodology metadata, and per-execution idempotency;
-- is revoked from `public`, `anon`, `authenticated`, and `service_role` API roles;
-- is intended only for direct privileged SQL execution under the database `postgres` session used by the connected Supabase administrative interface.
-
-The Apple Shortcuts/ChatGPT prompt must never instruct the model to establish or mutate JWT/session claims, must never include or request the owner's UUID, and must never query the canonical evidence tables directly through raw SQL.
-
-A malformed model response is rejected before persistence. An evidence retrieval, database, or authorization failure must leave the last valid snapshot untouched. Direct client mutation of the snapshot tables remains unavailable.
+A malformed evaluation, evidence retrieval failure, database failure, or authorization failure must leave the last valid snapshot untouched. Direct client mutation of the snapshot tables remains unavailable.

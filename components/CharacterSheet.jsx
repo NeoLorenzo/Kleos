@@ -119,6 +119,20 @@ export default function CharacterSheet({ userId, kleosData }) {
               <article className={styles.trajectoryItem} key={vector.id}>
                 <strong>{vector.label}</strong>
                 <p className={styles.trajectory}>{formatTrajectorySummary(trajectory)}</p>
+                {trajectory.length ? (
+                  <details className={styles.historyDetails}>
+                    <summary>Inspect history</summary>
+                    <ol className={styles.historyList}>
+                      {trajectory.slice().reverse().map((point, index) => (
+                        <li key={point.snapshotId || `${point.evaluatedAt || "snapshot"}-${index}`}>
+                          <span>{formatDate(point.evaluatedAt)}</span>
+                          <strong>{trajectoryValue(point)}</strong>
+                          <span>{trajectoryContext(point)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                ) : null}
               </article>
             );
           })}
@@ -170,6 +184,24 @@ function confidenceLabel(result) {
   if (!result) return "No data";
   if (result.status === "unknown") return "Unknown";
   return `${capitalize(result.confidence)} confidence`;
+}
+
+function trajectoryValue(point) {
+  if (point.status === "assessed") return `${formatNumber(point.score)} / 100`;
+  if (point.status === "unknown") return "Unknown";
+  return "Missing";
+}
+
+function trajectoryContext(point) {
+  const parts = [];
+  if (point.status === "assessed" && point.confidence) {
+    parts.push(`${capitalize(point.confidence)} confidence`);
+  } else if (point.status === "unknown") {
+    parts.push("insufficient evidence");
+  }
+  if (point.methodologyVersion) parts.push(`methodology ${point.methodologyVersion}`);
+  if (point.evaluator) parts.push(point.evaluator);
+  return parts.join(" · ") || "context unavailable";
 }
 
 function bodyMetricSummary(profile) {

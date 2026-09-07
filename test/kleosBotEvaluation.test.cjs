@@ -40,31 +40,47 @@ function validResults() {
 test("Kleos Bot owns stable evaluator and methodology metadata", () => {
   const result = bot.normalizeKleosBotEvaluation(
     { results: validResults() },
-    { evaluatedAt: "2026-09-07T11:00:00+01:00" }
+    {
+      evaluatedAt: "2026-09-07T11:00:00+01:00",
+      executionKey: "shortcut-2026-09-07T10:00:00Z-a"
+    }
   );
 
   assert.equal(result.ok, true);
   assert.equal(result.value.evaluator, "kleos-bot");
   assert.equal(result.value.methodologyVersion, "1.0.0");
-  assert.equal(result.value.runKey, "2026-W37:1.0.0");
+  assert.equal(result.value.executionKey, "shortcut-2026-09-07T10:00:00Z-a");
 });
 
-test("weekly retries resolve to the same run key in Europe/Lisbon", () => {
-  assert.equal(
-    bot.buildKleosBotRunKey("2026-09-07T08:00:00+01:00"),
-    bot.buildKleosBotRunKey("2026-09-13T20:00:00+01:00")
+test("distinct executions remain distinct regardless of time window", () => {
+  const first = bot.normalizeKleosBotEvaluation(
+    { results: validResults() },
+    { evaluatedAt: "2026-09-07T11:00:00+01:00", executionKey: "run-a" }
   );
-  assert.notEqual(
-    bot.buildKleosBotRunKey("2026-09-13T20:00:00+01:00"),
-    bot.buildKleosBotRunKey("2026-09-14T08:00:00+01:00")
+  const second = bot.normalizeKleosBotEvaluation(
+    { results: validResults() },
+    { evaluatedAt: "2026-09-07T11:00:01+01:00", executionKey: "run-b" }
   );
+
+  assert.equal(first.ok, true);
+  assert.equal(second.ok, true);
+  assert.notEqual(first.value.executionKey, second.value.executionKey);
+});
+
+test("execution key is required for retry-safe persistence", () => {
+  const result = bot.normalizeKleosBotEvaluation(
+    { results: validResults() },
+    { evaluatedAt: "2026-09-07T11:00:00+01:00" }
+  );
+  assert.equal(result.ok, false);
+  assert.match(result.message, /executionKey is required/i);
 });
 
 test("malformed model output cannot become a persisted snapshot payload", () => {
   const missingVector = validResults().slice(0, 7);
   const result = bot.normalizeKleosBotEvaluation(
     { results: missingVector },
-    { evaluatedAt: "2026-09-07T11:00:00+01:00" }
+    { evaluatedAt: "2026-09-07T11:00:00+01:00", executionKey: "run-malformed" }
   );
   assert.equal(result.ok, false);
 });
@@ -72,7 +88,7 @@ test("malformed model output cannot become a persisted snapshot payload", () => 
 test("Kleos Bot preserves explicit unknown rather than inventing a score", () => {
   const result = bot.normalizeKleosBotEvaluation(
     { results: validResults() },
-    { evaluatedAt: "2026-09-07T11:00:00+01:00" }
+    { evaluatedAt: "2026-09-07T11:00:00+01:00", executionKey: "run-unknown" }
   );
   assert.equal(result.ok, true);
   const relational = result.value.results.find((item) => item.vectorId === "relational");

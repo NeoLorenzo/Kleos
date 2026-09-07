@@ -29,9 +29,14 @@ Kleos and Ariadne share these stable vector identifiers:
 
 Kleos stores append-only dated assessments in `kleos_vector_snapshots` and `kleos_vector_snapshot_results`. A vector result is either an assessed 0–100 value with confidence and commentary, or an explicit `unknown` state when evidence is insufficient. Missing evidence is never converted to zero.
 
+Kleos Bot is the canonical evaluator. It runs approximately weekly, reads current canonical evidence directly from Supabase, applies methodology `1.0.0`, validates all eight vector results, and persists through the idempotent `create_kleos_bot_weekly_snapshot(...)` contract. Retries within the same ISO week/methodology reuse the existing snapshot rather than creating duplicates.
+
 The minimal current-state reader is available at `/vector-state/`. The full character-sheet redesign remains a later product issue.
 
-See [`documentation/vector-snapshot-contract.md`](documentation/vector-snapshot-contract.md) for the stable read/write contract used by Kleos Bot and read-only consumers such as Ariadne.
+See:
+
+- [`documentation/vector-snapshot-contract.md`](documentation/vector-snapshot-contract.md) for the stable snapshot interoperability contract.
+- [`documentation/kleos-bot-methodology-v1.md`](documentation/kleos-bot-methodology-v1.md) for the current evaluation methodology.
 
 ## Current persistence
 
@@ -56,7 +61,7 @@ It also owns the derived vector-state tables:
 
 The raw data was intentionally **not copied or migrated** during application extraction. Kleos reads and writes the same canonical records previously used by Ariadne's `/lab` route. Vector snapshots are derived historical interpretations and do not replace those source records.
 
-Existing Row Level Security remains authoritative. The policies require the authenticated row owner and the authorized Google account. Snapshot tables are read-only to ordinary authenticated clients; trusted writes use the atomic `create_kleos_vector_snapshot` RPC.
+Existing Row Level Security remains authoritative. The policies require the authenticated row owner and the authorized Google account. Snapshot tables are read-only to ordinary authenticated clients; trusted writes use the atomic snapshot RPCs.
 
 Future schema changes that concern Kleos-owned persistence should be authored from this repository even while the physical database remains shared.
 
@@ -124,4 +129,4 @@ The application continues to preserve the former GOAT Lab measurement workflows:
 - miscellaneous characteristics
 - legacy generated LLM evaluation context
 
-The vector architecture does not depend on the legacy browser-generated LLM prompt. That workflow may remain temporarily for compatibility while Kleos Bot (#5) becomes the canonical evaluator.
+The vector architecture does not depend on the legacy browser-generated LLM prompt. That prompt remains non-canonical compatibility UI; scheduled Kleos Bot evaluations are the source of new vector snapshots.

@@ -1,0 +1,51 @@
+name: Validate reviewed Kleos #10
+
+on:
+  push:
+    branches: ["feature/kleos-10-character-sheet"]
+    paths: [".github/workflows/validate-kleos-10-review.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Architecture review assertions
+        run: |
+          test ! -e components/CharacterSheetHomeShell.jsx
+          grep -q 'import CharacterSheet from "@/components/CharacterSheet"' app/page.js
+          grep -q '<CharacterSheet userId={user.id} kleosData={kleosData} />' app/page.js
+          ! grep -q 'buildKleosScorePrompt' app/page.js
+          ! grep -q 'Copy LLM Context' app/page.js
+          grep -q 'kleos:measurements-changed' app/page.js
+          grep -q 'kleos:measurements-changed' components/MeasurementCorrections.jsx
+
+      - name: Run tests
+        run: npm test
+
+      - name: Check source privacy
+        run: npm run check:privacy
+
+      - name: Build production static export
+        env:
+          STATIC_EXPORT: "true"
+          NEXT_PUBLIC_BASE_PATH: "/Kleos"
+          NEXT_PUBLIC_SUPABASE_URL: "https://jhpsggjphoqyygthqfki.supabase.co"
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_-r71Jkgx3TiyY_2_RtMUqQ_XWdW3Beh"
+        run: npm run build
+
+      - name: Check exported site privacy
+        run: npm run check:privacy

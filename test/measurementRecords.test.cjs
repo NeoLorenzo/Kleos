@@ -13,19 +13,6 @@ before(async () => {
   helpers = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 });
 
-test("score corrections enforce the create-flow range and preserve commentary", () => {
-  assert.equal(helpers.validateScoreDraft({ score: -1, entryDate: "2026-09-06", commentary: "" }).ok, false);
-  assert.equal(helpers.validateScoreDraft({ score: 101, entryDate: "2026-09-06", commentary: "" }).ok, false);
-
-  assert.deepEqual(
-    helpers.validateScoreDraft({ score: "82.5", entryDate: "2026-09-06", commentary: "  revised  " }),
-    {
-      ok: true,
-      payload: { score: 82.5, entry_date: "2026-09-06", llm_commentary: "revised" }
-    }
-  );
-});
-
 test("lift corrections reject invalid reps and normalize valid payloads", () => {
   assert.equal(
     helpers.validateLiftDraft({ exerciseName: "Bench", weightKg: "80", reps: "4.5", performedAt: "2026-09-06" }).ok,
@@ -84,11 +71,6 @@ test("cognitive corrections enforce every 0-10 context rating", () => {
 
 test("row-to-draft conversion keeps canonical local dates editable", () => {
   assert.deepEqual(
-    helpers.scoreRowToDraft({ score: 75, entry_date: "2026-09-01", llm_commentary: "note" }),
-    { score: "75", entryDate: "2026-09-01", commentary: "note" }
-  );
-
-  assert.deepEqual(
     helpers.liftRowToDraft({
       exercise_name: "Bench",
       weight_kg: 80,
@@ -97,35 +79,59 @@ test("row-to-draft conversion keeps canonical local dates editable", () => {
     }),
     { exerciseName: "Bench", weightKg: "80", reps: "6", performedAt: "2026-09-06" }
   );
+
+  assert.deepEqual(
+    helpers.cognitiveRowToDraft({
+      test_name: "Mensa Norway",
+      score_text: "128",
+      taken_at: "2026-09-06T11:30:00.000Z",
+      hunger: 3,
+      distractions: 2,
+      wakefulness: 8,
+      mood: 7
+    }),
+    {
+      testName: "Mensa Norway",
+      score: "128",
+      takenAt: "2026-09-06T12:30",
+      hunger: "3",
+      distractions: "2",
+      wakefulness: "8",
+      mood: "7"
+    }
+  );
 });
 
 test("successful edits reconcile only the matching local record", () => {
   const records = {
-    score: [{ id: 1, score: 70 }, { id: 2, score: 80 }],
-    lift: [{ id: 3, weight_kg: 90 }],
-    cognitive: [{ id: 4, score_text: "120" }]
+    lift: [{ id: 1, weight_kg: 80 }, { id: 2, weight_kg: 90 }],
+    cognitive: [{ id: 3, score_text: "120" }]
   };
-  const updated = { id: 2, score: 82.5 };
+  const updated = { id: 2, weight_kg: 92.5 };
 
-  const next = helpers.replaceMeasurementRecord(records, "score", updated);
+  const next = helpers.replaceMeasurementRecord(records, "lift", updated);
 
-  assert.deepEqual(next.score, [{ id: 1, score: 70 }, updated]);
-  assert.equal(next.lift, records.lift);
+  assert.deepEqual(next.lift, [{ id: 1, weight_kg: 80 }, updated]);
   assert.equal(next.cognitive, records.cognitive);
-  assert.deepEqual(records.score, [{ id: 1, score: 70 }, { id: 2, score: 80 }]);
+  assert.deepEqual(records.lift, [{ id: 1, weight_kg: 80 }, { id: 2, weight_kg: 90 }]);
 });
 
 test("successful deletions immediately remove only the matching local record", () => {
   const records = {
-    score: [{ id: 1, score: 70 }],
-    lift: [{ id: 2, weight_kg: 90 }, { id: 3, weight_kg: 100 }],
-    cognitive: [{ id: 4, score_text: "120" }]
+    lift: [{ id: 1, weight_kg: 90 }, { id: 2, weight_kg: 100 }],
+    cognitive: [{ id: 3, score_text: "120" }]
   };
 
-  const next = helpers.removeMeasurementRecord(records, "lift", 2);
+  const next = helpers.removeMeasurementRecord(records, "lift", 1);
 
-  assert.deepEqual(next.lift, [{ id: 3, weight_kg: 100 }]);
-  assert.equal(next.score, records.score);
+  assert.deepEqual(next.lift, [{ id: 2, weight_kg: 100 }]);
   assert.equal(next.cognitive, records.cognitive);
-  assert.deepEqual(records.lift, [{ id: 2, weight_kg: 90 }, { id: 3, weight_kg: 100 }]);
+  assert.deepEqual(records.lift, [{ id: 1, weight_kg: 90 }, { id: 2, weight_kg: 100 }]);
+});
+
+test("legacy GOAT score records are no longer accepted as editable measurements", () => {
+  assert.throws(
+    () => helpers.replaceMeasurementRecord({ score: [{ id: 1 }] }, "score", { id: 1 }),
+    /Unknown measurement kind: score/
+  );
 });

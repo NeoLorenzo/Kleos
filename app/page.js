@@ -7,6 +7,11 @@ import {
   createEmptyKleosData,
   loadKleosData
 } from "@/lib/kleos/data";
+import {
+  formatTimestampLocalDate,
+  getLocalCalendarDateValue,
+  validateLiftDraft
+} from "@/lib/kleos/measurementRecords";
 import CharacterSheet from "@/components/CharacterSheet";
 
 const STRENGTH_EXERCISES = [
@@ -25,7 +30,7 @@ const COGNITIVE_TESTS = [
 ];
 
 function getTodayDateValue() {
-  return new Date().toISOString().slice(0, 10);
+  return getLocalCalendarDateValue();
 }
 
 function getDateTimeLocalValue() {
@@ -216,10 +221,9 @@ export default function KleosPage() {
       return;
     }
 
-    const weightKg = Number(liftForm.weightKg);
-    const reps = Number(liftForm.reps);
-    if (!Number.isFinite(weightKg) || weightKg <= 0 || !Number.isInteger(reps) || reps <= 0) {
-      setStatusMessage("Enter a positive KG weight and whole-number reps.");
+    const validation = validateLiftDraft(liftForm);
+    if (!validation.ok) {
+      setStatusMessage(validation.message);
       return;
     }
 
@@ -229,10 +233,7 @@ export default function KleosPage() {
       .from("goat_strength_lifts")
       .insert({
         user_id: user.id,
-        exercise_name: liftForm.exerciseName,
-        weight_kg: weightKg,
-        reps,
-        performed_at: new Date(`${liftForm.performedAt}T00:00:00`).toISOString()
+        ...validation.payload
       })
       .select("id,exercise_name,weight_kg,reps,performed_at,created_at")
       .single();
@@ -947,10 +948,7 @@ function compareDatedRows(dateKey) {
 }
 
 function formatDate(value) {
-  if (!value) {
-    return "-";
-  }
-  return new Date(`${value}T00:00:00`).toLocaleDateString();
+  return formatTimestampLocalDate(value);
 }
 
 function formatDateTime(value) {

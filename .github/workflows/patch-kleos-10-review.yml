@@ -1,0 +1,128 @@
+name: Apply Kleos #10 review fixes
+
+on:
+  push:
+    branches: ["feature/kleos-10-character-sheet"]
+    paths: [".github/workflows/patch-kleos-10-review.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/kleos-10-character-sheet
+
+      - name: Integrate character sheet with canonical page state
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one match, found {count}")
+              return text.replace(old, new, 1)
+
+          page_path = Path("app/page.js")
+          page = page_path.read_text()
+          page = replace_once(
+              page,
+              'import { buildKleosScorePrompt } from "@/lib/kleos/prompt";\n',
+              'import CharacterSheet from "@/components/CharacterSheet";\n',
+              "replace legacy prompt import"
+          )
+          page = replace_once(
+              page,
+              '  const [copyStatus, setCopyStatus] = useState("");\n',
+              '',
+              "remove legacy copy status"
+          )
+          page = replace_once(
+              page,
+              '''  const llmContextPrompt = useMemo(\n    () => buildKleosScorePrompt({ kleosData }),\n    [kleosData]\n  );\n\n''',
+              '',
+              "remove legacy prompt memo"
+          )
+          page = replace_once(
+              page,
+              '''  const copyLlmContext = async () => {\n    setCopyStatus("");\n    try {\n      await navigator.clipboard.writeText(llmContextPrompt);\n      setCopyStatus("Copied LLM context.");\n    } catch (error) {\n      setCopyStatus(`Copy failed: ${getErrorMessage(error)}`);\n    }\n  };\n\n''',
+              '',
+              "remove legacy copy handler"
+          )
+          page = replace_once(
+              page,
+              '''  const signInWithGoogle = async () => {\n''',
+              '''  useEffect(() => {\n    if (!user?.id) return undefined;\n\n    const handleMeasurementCorrection = () => {\n      void loadData(user.id);\n    };\n\n    window.addEventListener("kleos:measurements-changed", handleMeasurementCorrection);\n    return () => {\n      window.removeEventListener("kleos:measurements-changed", handleMeasurementCorrection);\n    };\n  }, [user?.id]);\n\n  const signInWithGoogle = async () => {\n''',
+              "add correction refresh listener"
+          )
+          page = replace_once(
+              page,
+              '''              <button type="button" className="secondary-btn" onClick={copyLlmContext}>\n                Copy LLM Context\n              </button>\n''',
+              '''              <button\n                type="button"\n                className="secondary-btn"\n                onClick={() => document.getElementById("measurement-editor")?.scrollIntoView({ behavior: "smooth", block: "start" })}\n              >\n                Measurements\n              </button>\n''',
+              "replace legacy header action"
+          )
+          page = replace_once(
+              page,
+              '''          <div className="kleos-scroll">\n            <section className="score-panel">\n''',
+              '''          <div className="kleos-scroll">\n            <CharacterSheet userId={user.id} kleosData={kleosData} />\n            <section className="kleos-card wide-card" id="measurement-editor">\n              <div className="section-header">\n                <h2>Measurements & Records</h2>\n                <p>Canonical evidence and editing tools. Derived vector scores are evaluated by Kleos Bot, not this interface.</p>\n              </div>\n            </section>\n            <section className="score-panel">\n''',
+              "insert character sheet"
+          )
+          page = replace_once(
+              page,
+              '''            {statusMessage || copyStatus ? (\n              <p className="status-line">{copyStatus || statusMessage}</p>\n            ) : null}\n''',
+              '''            {statusMessage ? (\n              <p className="status-line">{statusMessage}</p>\n            ) : null}\n''',
+              "simplify status line"
+          )
+          page_path.write_text(page)
+
+          layout_path = Path("app/layout.js")
+          layout = layout_path.read_text()
+          layout = replace_once(
+              layout,
+              'import CharacterSheetHomeShell from "@/components/CharacterSheetHomeShell";\n',
+              '',
+              "remove duplicate shell import"
+          )
+          layout = replace_once(
+              layout,
+              '        <CharacterSheetHomeShell />\n',
+              '',
+              "remove duplicate shell render"
+          )
+          layout_path.write_text(layout)
+
+          corrections_path = Path("components/MeasurementCorrections.jsx")
+          corrections = corrections_path.read_text()
+          corrections = replace_once(
+              corrections,
+              '''    setRecords((current) => replaceMeasurementRecord(current, editing.kind, data));\n    setEditing(null);\n''',
+              '''    setRecords((current) => replaceMeasurementRecord(current, editing.kind, data));\n    window.dispatchEvent(new Event("kleos:measurements-changed"));\n    setEditing(null);\n''',
+              "refresh after correction update"
+          )
+          corrections = replace_once(
+              corrections,
+              '''    setRecords((current) => removeMeasurementRecord(current, kind, row.id));\n    setStatus(`${config.label} deleted.`);\n''',
+              '''    setRecords((current) => removeMeasurementRecord(current, kind, row.id));\n    window.dispatchEvent(new Event("kleos:measurements-changed"));\n    setStatus(`${config.label} deleted.`);\n''',
+              "refresh after correction delete"
+          )
+          corrections_path.write_text(corrections)
+
+          shell = Path("components/CharacterSheetHomeShell.jsx")
+          if not shell.exists():
+              raise SystemExit("CharacterSheetHomeShell.jsx is unexpectedly missing")
+          shell.unlink()
+
+          Path(".github/workflows/patch-kleos-10-review.yml").unlink()
+
+      - name: Commit review fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Fix #10 character-sheet state integration after review"
+          git push origin HEAD:feature/kleos-10-character-sheet

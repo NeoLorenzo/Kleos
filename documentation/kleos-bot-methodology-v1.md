@@ -101,18 +101,14 @@ The model output contains only:
 
 The real `results` array must contain all eight canonical vectors exactly once. `overallScore` remains `null` in methodology v1 unless a later methodology explicitly defines how it should be computed.
 
-Application code supplies evaluator identity `kleos-bot`, methodology version `1.0.0`, evaluation timestamp, and the weekly run key. The model does not choose or override those values.
+Application/orchestration code supplies evaluator identity `kleos-bot`, methodology version `1.0.0`, evaluation timestamp, and a unique per-execution idempotency key. The model does not choose or override evaluator or methodology metadata.
 
-## Scheduling and idempotency
+## Execution and idempotency
 
-The intended cadence is once per ISO week using the Europe/Lisbon timezone.
+Kleos Bot has no built-in scheduling cadence. It may be triggered manually, by Apple Shortcuts, by ChatGPT, or by a future orchestration layer at any frequency. Multiple valid evaluations in the same week, day, hour, or minute are legitimate and must create independent immutable snapshots.
 
-The run key format is:
+Each invocation supplies an `executionKey` that identifies that specific execution. Retrying the same execution with the same key returns the existing snapshot instead of creating a duplicate. A genuinely new evaluation must use a new execution key and is never blocked because another snapshot exists in the same time window.
 
-```text
-YYYY-Www:1.0.0
-```
+Persistence uses `create_kleos_bot_snapshot(...)`. The older weekly writer is retired and scheduling policy is intentionally outside Kleos.
 
-Retries in the same week/methodology use the same run key. `create_kleos_bot_weekly_snapshot(...)` serializes matching retries and returns the existing snapshot instead of creating another record.
-
-A malformed model response is rejected before persistence. A database or authentication failure must leave the last valid snapshot untouched. Manual trusted writes through the #4 RPC remain available for debugging and recovery.
+A malformed model response is rejected before persistence. A database or authentication failure must leave the last valid snapshot untouched. Manual trusted writes through the base vector snapshot RPC remain available for debugging and recovery.

@@ -1,5 +1,4 @@
 import "./globals.css";
-import CharacterSheetHomeShell from "@/components/CharacterSheetHomeShell";
 import MeasurementCorrections from "@/components/MeasurementCorrections";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -17,7 +16,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <CharacterSheetHomeShell />
         {children}
         <MeasurementCorrections />
       </body>

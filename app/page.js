@@ -7,7 +7,7 @@ import {
   createEmptyKleosData,
   loadKleosData
 } from "@/lib/kleos/data";
-import { buildKleosScorePrompt } from "@/lib/kleos/prompt";
+import CharacterSheet from "@/components/CharacterSheet";
 
 const STRENGTH_EXERCISES = [
   "Flat Barbell Bench",
@@ -83,17 +83,11 @@ export default function KleosPage() {
   const [immutableDraft, setImmutableDraft] = useState("");
   const [miscDraft, setMiscDraft] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
-  const [copyStatus, setCopyStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const latestScoreEntry = useMemo(
     () => [...kleosData.scoreEntries].sort(compareScoreEntries)[0] || null,
     [kleosData.scoreEntries]
-  );
-
-  const llmContextPrompt = useMemo(
-    () => buildKleosScorePrompt({ kleosData }),
-    [kleosData]
   );
 
   useEffect(() => {
@@ -180,6 +174,19 @@ export default function KleosPage() {
       }
     }
   };
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+
+    const handleMeasurementCorrection = () => {
+      void loadData(user.id);
+    };
+
+    window.addEventListener("kleos:measurements-changed", handleMeasurementCorrection);
+    return () => {
+      window.removeEventListener("kleos:measurements-changed", handleMeasurementCorrection);
+    };
+  }, [user?.id]);
 
   const signInWithGoogle = async () => {
     if (!supabase) {
@@ -549,16 +556,6 @@ export default function KleosPage() {
     setStatusMessage("Immutable characteristics saved.");
   };
 
-  const copyLlmContext = async () => {
-    setCopyStatus("");
-    try {
-      await navigator.clipboard.writeText(llmContextPrompt);
-      setCopyStatus("Copied LLM context.");
-    } catch (error) {
-      setCopyStatus(`Copy failed: ${getErrorMessage(error)}`);
-    }
-  };
-
   return (
     <main className="kleos-shell">
       <section className="kleos-board">
@@ -570,8 +567,12 @@ export default function KleosPage() {
           </div>
           {accessState === "authorized" ? (
             <div className="kleos-header-actions">
-              <button type="button" className="secondary-btn" onClick={copyLlmContext}>
-                Copy LLM Context
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => document.getElementById("measurement-editor")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              >
+                Measurements
               </button>
               <button type="button" className="secondary-btn" onClick={signOut}>
                 Sign Out
@@ -587,6 +588,13 @@ export default function KleosPage() {
           onSignIn: signInWithGoogle
         }) || (
           <div className="kleos-scroll">
+            <CharacterSheet userId={user.id} kleosData={kleosData} />
+            <section className="kleos-card wide-card" id="measurement-editor">
+              <div className="section-header">
+                <h2>Measurements & Records</h2>
+                <p>Canonical evidence and editing tools. Derived vector scores are evaluated by Kleos Bot, not this interface.</p>
+              </div>
+            </section>
             <section className="score-panel">
               <div className="score-readout">
                 <span>Current GOAT Score</span>
@@ -961,8 +969,8 @@ export default function KleosPage() {
               </section>
             </div>
 
-            {statusMessage || copyStatus ? (
-              <p className="status-line">{copyStatus || statusMessage}</p>
+            {statusMessage ? (
+              <p className="status-line">{statusMessage}</p>
             ) : null}
           </div>
         )}

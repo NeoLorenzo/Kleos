@@ -6,16 +6,36 @@ It was extracted from the former **GOAT Lab** surface inside [NeoLorenzo/Ariadne
 
 ## Product boundary
 
-- **Ariadne** owns direction, objectives, goals, projects, tasks, and execution planning.
-- **Kleos** owns personal measurement, benchmarking, character/profile data, and GOAT-score context generation.
+- **Ariadne** owns desired movement: directions, objectives, goals, projects, tasks, and execution planning.
+- **Kleos** owns current state: raw personal evidence, dated derived vector snapshots, benchmarking, and character/profile data.
+- **Kleos Bot** owns vector evaluation methodology and writes new derived snapshots through the trusted Kleos contract.
 - The applications are separate repositories and deployments.
 - They deliberately share the existing Ariadne Supabase project for database and authentication infrastructure.
 
 A separate Supabase project is not required for the current architecture.
 
+## Eight-vector current-state model
+
+Kleos and Ariadne share these stable vector identifiers:
+
+- `physical`
+- `psychological`
+- `intellectual`
+- `professional`
+- `financial`
+- `relational`
+- `creative`
+- `experiential`
+
+Kleos stores append-only dated assessments in `kleos_vector_snapshots` and `kleos_vector_snapshot_results`. A vector result is either an assessed 0–100 value with confidence and commentary, or an explicit `unknown` state when evidence is insufficient. Missing evidence is never converted to zero.
+
+The minimal current-state reader is available at `/vector-state/`. The full character-sheet redesign remains a later product issue.
+
+See [`documentation/vector-snapshot-contract.md`](documentation/vector-snapshot-contract.md) for the stable read/write contract used by Kleos Bot and read-only consumers such as Ariadne.
+
 ## Current persistence
 
-Kleos currently owns and directly uses the existing `public.goat_*` tables:
+Kleos owns the existing `public.goat_*` raw-evidence and legacy score tables:
 
 - `goat_score_entries`
 - `goat_strength_lifts`
@@ -29,11 +49,20 @@ Kleos currently owns and directly uses the existing `public.goat_*` tables:
 - `goat_immutable_characteristics`
 - `goat_misc_characteristics`
 
-The data was intentionally **not copied or migrated** during application extraction. Kleos reads and writes the same canonical records previously used by Ariadne's `/lab` route.
+It also owns the derived vector-state tables:
 
-Existing Row Level Security remains authoritative. The current policies require the authenticated row owner and the authorized Google account.
+- `kleos_vector_snapshots`
+- `kleos_vector_snapshot_results`
+
+The raw data was intentionally **not copied or migrated** during application extraction. Kleos reads and writes the same canonical records previously used by Ariadne's `/lab` route. Vector snapshots are derived historical interpretations and do not replace those source records.
+
+Existing Row Level Security remains authoritative. The policies require the authenticated row owner and the authorized Google account. Snapshot tables are read-only to ordinary authenticated clients; trusted writes use the atomic `create_kleos_vector_snapshot` RPC.
 
 Future schema changes that concern Kleos-owned persistence should be authored from this repository even while the physical database remains shared.
+
+## Database migrations
+
+Apply the additive SQL migrations under [`supabase/migrations/`](supabase/migrations/) to the shared Supabase project in filename order. They must not seed, reset, or silently rewrite private data.
 
 ## Development
 
@@ -56,10 +85,11 @@ The publishable key is safe for client-side use; authorization is enforced by Su
 
 Kleos uses the same Supabase Auth project and Google provider as Ariadne.
 
-For the deployed GitHub Pages application, the following URL must be included in **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**:
+For the deployed GitHub Pages application, these URLs must be included in **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**:
 
 ```text
 https://neolorenzo.github.io/Kleos/
+https://neolorenzo.github.io/Kleos/vector-state/
 ```
 
 For local development, add the appropriate localhost URL as well, for example:
@@ -80,11 +110,11 @@ Expected production URL:
 https://neolorenzo.github.io/Kleos/
 ```
 
-## Extraction status
+## Legacy measurement capabilities
 
-The current application reproduces the former GOAT Lab capabilities:
+The application continues to preserve the former GOAT Lab measurement workflows:
 
-- GOAT score entry and history
+- legacy GOAT score entry and history
 - cognitive-test tracking with condition ratings
 - strength lifts and body metrics
 - academic results and notes
@@ -92,6 +122,6 @@ The current application reproduces the former GOAT Lab capabilities:
 - CV context
 - immutable characteristics
 - miscellaneous characteristics
-- generated LLM evaluation context
+- legacy generated LLM evaluation context
 
-Ariadne's old `/lab` implementation should remain available until Kleos has been authenticated against production and representative read/write checks have been completed. Only then should the Lab code be removed from Ariadne.
+The vector architecture does not depend on the legacy browser-generated LLM prompt. That workflow may remain temporarily for compatibility while Kleos Bot (#5) becomes the canonical evaluator.

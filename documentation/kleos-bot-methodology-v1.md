@@ -109,6 +109,21 @@ Kleos Bot has no built-in scheduling cadence. It may be triggered manually, by A
 
 Each invocation supplies an `executionKey` that identifies that specific execution. Retrying the same execution with the same key returns the existing snapshot instead of creating a duplicate. A genuinely new evaluation must use a new execution key and is never blocked because another snapshot exists in the same time window.
 
-Persistence uses `create_kleos_bot_snapshot(...)`. The older weekly writer is retired and scheduling policy is intentionally outside Kleos.
+## Persistence paths
 
-A malformed model response is rejected before persistence. A database or authentication failure must leave the last valid snapshot untouched. Manual trusted writes through the base vector snapshot RPC remain available for debugging and recovery.
+Normal owner-authenticated application flows may use `create_kleos_bot_snapshot(...)`, which requires the normal Supabase owner JWT context.
+
+ChatGPT/Apple Shortcuts runs that execute through the connected privileged Supabase SQL interface must instead use `create_kleos_bot_snapshot_admin(...)`.
+
+The privileged admin entry point:
+
+- does not require or permit fabricated `request.jwt.claims`;
+- resolves the single authorized Kleos owner internally;
+- accepts no owner UUID from the model;
+- preserves exactly-eight-vector validation, immutable history, methodology metadata, and per-execution idempotency;
+- is revoked from `public`, `anon`, `authenticated`, and `service_role` API roles;
+- is intended only for direct privileged SQL execution under the database `postgres` session used by the connected Supabase administrative interface.
+
+The Apple Shortcuts/ChatGPT prompt must never instruct the model to establish or mutate JWT/session claims and must never include or request the owner's UUID.
+
+A malformed model response is rejected before persistence. A database or authorization failure must leave the last valid snapshot untouched. Direct client mutation of the snapshot tables remains unavailable.

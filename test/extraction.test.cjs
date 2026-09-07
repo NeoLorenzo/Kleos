@@ -30,18 +30,21 @@ test("Kleos data layer covers every migrated GOAT table", () => {
   assert.match(source, /AUTHORIZED_KLEOS_EMAIL/);
 });
 
-test("Kleos root is independent from Ariadne application shell", () => {
+test("Kleos root is independent from Ariadne and uses the character-sheet orientation", () => {
   const source = read("app/page.js");
 
   assert.doesNotMatch(source, /components\/AppShell/);
   assert.doesNotMatch(source, /githubProviderToken/);
-  assert.match(source, /buildKleosScorePrompt/);
+  assert.doesNotMatch(source, /buildKleosScorePrompt/);
+  assert.doesNotMatch(source, /Copy LLM Context/);
+  assert.match(source, /CharacterSheet/);
   assert.match(source, /loadKleosData/);
   assert.match(source, /window\.location\.origin/);
 });
 
-test("Kleos prompt retains the migrated evaluation domains", () => {
+test("legacy Kleos prompt module retains the migrated evaluation domains without owning the root UI", () => {
   const source = read("lib/kleos/prompt.js");
+  const rootSource = read("app/page.js");
   const requiredSections = [
     "Cognitive Tests",
     "Strength and Physical Capability",
@@ -55,6 +58,7 @@ test("Kleos prompt retains the migrated evaluation domains", () => {
   for (const section of requiredSections) {
     assert.ok(source.includes(section), `missing prompt section: ${section}`);
   }
+  assert.doesNotMatch(rootSource, /lib\/kleos\/prompt/);
 });
 
 test("Kleos source control owns the migrated persistence boundary", () => {

@@ -159,6 +159,7 @@ export default function MeasurementCorrections() {
     }
 
     setRecords((current) => replaceMeasurementRecord(current, editing.kind, data));
+    window.dispatchEvent(new Event("kleos:measurements-changed"));
     setEditing(null);
     setDraft(null);
     setStatus(`${config.label} updated.`);
@@ -189,6 +190,7 @@ export default function MeasurementCorrections() {
     }
 
     setRecords((current) => removeMeasurementRecord(current, kind, row.id));
+    window.dispatchEvent(new Event("kleos:measurements-changed"));
     setStatus(`${config.label} deleted.`);
   };
 

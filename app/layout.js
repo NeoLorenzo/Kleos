@@ -5,7 +5,7 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export const metadata = {
   title: "Kleos",
-  description: "Private personal measurement, benchmarking, and self-knowledge workspace",
+  description: "Private character-state, personal measurement, benchmarking, and self-knowledge workspace",
   manifest: `${basePath}/manifest.webmanifest`,
   icons: {
     icon: `${basePath}/icon.svg`

@@ -6,7 +6,7 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), "utf8");
 
-const goatTables = [
+const persistedGoatTables = [
   "goat_score_entries",
   "goat_strength_lifts",
   "goat_cognitive_tests",
@@ -20,13 +20,16 @@ const goatTables = [
   "goat_misc_characteristics"
 ];
 
-test("Kleos data layer covers every migrated GOAT table", () => {
+const clientDataTables = persistedGoatTables.filter((table) => table !== "goat_score_entries");
+
+test("Kleos client data layer covers active UI tables without loading the retired global GOAT score", () => {
   const source = read("lib/kleos/data.js");
 
-  for (const table of goatTables) {
+  for (const table of clientDataTables) {
     assert.match(source, new RegExp(`\\b${table}\\b`), `missing ${table} from data layer`);
   }
 
+  assert.doesNotMatch(source, /\bgoat_score_entries\b/);
   assert.match(source, /AUTHORIZED_KLEOS_EMAIL/);
 });
 
@@ -64,7 +67,7 @@ test("legacy Kleos prompt module retains the migrated evaluation domains without
 test("Kleos source control owns the migrated persistence boundary", () => {
   const schema = read("supabase/schema.sql");
 
-  for (const table of goatTables) {
+  for (const table of persistedGoatTables) {
     assert.ok(schema.includes(`public.${table}`), `missing ${table} from Kleos schema`);
   }
 

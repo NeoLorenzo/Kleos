@@ -13,6 +13,50 @@ before(async () => {
   helpers = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 });
 
+test("local calendar defaults use the browser-local day rather than the UTC day", () => {
+  assert.equal(
+    helpers.getLocalCalendarDateValue(new Date("2026-09-06T23:30:00.000Z")),
+    "2026-09-07"
+  );
+  assert.equal(
+    helpers.getLocalCalendarDateValue(new Date("2026-01-15T00:30:00.000Z")),
+    "2026-01-15"
+  );
+});
+
+test("calendar-date conversion preserves Lisbon dates in summer and winter", () => {
+  assert.equal(
+    helpers.localCalendarDateToIsoTimestamp("2026-09-06"),
+    "2026-09-05T23:00:00.000Z"
+  );
+  assert.equal(
+    helpers.localCalendarDateToIsoTimestamp("2026-01-06"),
+    "2026-01-06T00:00:00.000Z"
+  );
+  assert.equal(helpers.localCalendarDateToIsoTimestamp("2026-02-30"), null);
+});
+
+test("timestamp-backed lift dates render and round-trip as their intended local calendar date", () => {
+  assert.equal(
+    helpers.timestampToLocalCalendarDate("2026-09-05T23:00:00.000Z"),
+    "2026-09-06"
+  );
+  assert.equal(
+    helpers.timestampToLocalCalendarDate("2026-01-06T00:00:00.000Z"),
+    "2026-01-06"
+  );
+  assert.equal(
+    helpers.formatTimestampLocalDate("2026-09-05T23:00:00.000Z", "en-GB"),
+    "06/09/2026"
+  );
+  assert.equal(helpers.formatTimestampLocalDate("not-a-date", "en-GB"), "-");
+});
+
+test("date-only values render without UTC drift", () => {
+  assert.equal(helpers.formatDateOnlyCalendarDate("2026-09-06", "en-GB"), "06/09/2026");
+  assert.equal(helpers.formatDateOnlyCalendarDate("2026-02-30", "en-GB"), "-");
+});
+
 test("lift corrections reject invalid reps and normalize valid payloads", () => {
   assert.equal(
     helpers.validateLiftDraft({ exerciseName: "Bench", weightKg: "80", reps: "4.5", performedAt: "2026-09-06" }).ok,
@@ -30,7 +74,22 @@ test("lift corrections reject invalid reps and normalize valid payloads", () => 
   assert.equal(result.payload.exercise_name, "Flat Barbell Bench");
   assert.equal(result.payload.weight_kg, 90);
   assert.equal(result.payload.reps, 5);
-  assert.match(result.payload.performed_at, /^2026-09-05T23:00:00\.000Z$/);
+  assert.equal(result.payload.performed_at, "2026-09-05T23:00:00.000Z");
+});
+
+test("lift corrections reject impossible calendar dates instead of throwing", () => {
+  assert.deepEqual(
+    helpers.validateLiftDraft({
+      exerciseName: "Bench",
+      weightKg: "80",
+      reps: "5",
+      performedAt: "2026-02-30"
+    }),
+    {
+      ok: false,
+      message: "Enter an exercise, positive KG weight, whole-number reps, and a valid date."
+    }
+  );
 });
 
 test("cognitive corrections enforce every 0-10 context rating", () => {

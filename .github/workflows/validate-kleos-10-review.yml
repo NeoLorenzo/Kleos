@@ -3,7 +3,9 @@ name: Validate reviewed Kleos #10
 on:
   push:
     branches: ["feature/kleos-10-character-sheet"]
-    paths: [".github/workflows/validate-kleos-10-review.yml"]
+    paths:
+      - ".github/workflows/validate-kleos-10-review.yml"
+      - "test/**"
 
 permissions:
   contents: read

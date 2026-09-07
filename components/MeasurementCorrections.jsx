@@ -7,19 +7,12 @@ import {
   liftRowToDraft,
   removeMeasurementRecord,
   replaceMeasurementRecord,
-  scoreRowToDraft,
   validateCognitiveDraft,
-  validateLiftDraft,
-  validateScoreDraft
+  validateLiftDraft
 } from "@/lib/kleos/measurementRecords";
 import { supabase } from "@/lib/supabase/client";
 
 const TABLES = {
-  score: {
-    table: "goat_score_entries",
-    select: "id,score,entry_date,llm_commentary,created_at",
-    label: "GOAT score"
-  },
   lift: {
     table: "goat_strength_lifts",
     select: "id,exercise_name,weight_kg,reps,performed_at,created_at",
@@ -32,7 +25,7 @@ const TABLES = {
   }
 };
 
-const emptyRecords = () => ({ score: [], lift: [], cognitive: [] });
+const emptyRecords = () => ({ lift: [], cognitive: [] });
 
 export default function MeasurementCorrections() {
   const [authorized, setAuthorized] = useState(false);
@@ -62,7 +55,9 @@ export default function MeasurementCorrections() {
     };
 
     void supabase.auth.getUser().then(({ data }) => applyUser(data?.user || null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       applyUser(session?.user || null);
     });
 
@@ -75,7 +70,6 @@ export default function MeasurementCorrections() {
 
   const sortedRecords = useMemo(
     () => ({
-      score: [...records.score].sort((a, b) => String(b.entry_date).localeCompare(String(a.entry_date))),
       lift: [...records.lift].sort((a, b) => String(b.performed_at).localeCompare(String(a.performed_at))),
       cognitive: [...records.cognitive].sort((a, b) => String(b.taken_at).localeCompare(String(a.taken_at)))
     }),
@@ -87,21 +81,19 @@ export default function MeasurementCorrections() {
     setLoading(true);
     setStatus("");
 
-    const [scores, lifts, cognitive] = await Promise.all([
-      supabase.from(TABLES.score.table).select(TABLES.score.select).eq("user_id", userId),
+    const [lifts, cognitive] = await Promise.all([
       supabase.from(TABLES.lift.table).select(TABLES.lift.select).eq("user_id", userId),
       supabase.from(TABLES.cognitive.table).select(TABLES.cognitive.select).eq("user_id", userId)
     ]);
 
     setLoading(false);
-    const failed = [scores, lifts, cognitive].find((result) => result.error);
+    const failed = [lifts, cognitive].find((result) => result.error);
     if (failed?.error) {
       setStatus(`Measurement history failed to load: ${failed.error.message}`);
       return;
     }
 
     setRecords({
-      score: scores.data || [],
       lift: lifts.data || [],
       cognitive: cognitive.data || []
     });
@@ -110,13 +102,7 @@ export default function MeasurementCorrections() {
   const beginEdit = (kind, row) => {
     setStatus("");
     setEditing({ kind, id: row.id });
-    setDraft(
-      kind === "score"
-        ? scoreRowToDraft(row)
-        : kind === "lift"
-          ? liftRowToDraft(row)
-          : cognitiveRowToDraft(row)
-    );
+    setDraft(kind === "lift" ? liftRowToDraft(row) : cognitiveRowToDraft(row));
   };
 
   const cancelEdit = () => {
@@ -130,11 +116,7 @@ export default function MeasurementCorrections() {
     if (!supabase || !editing || !draft || !userId) return;
 
     const validation =
-      editing.kind === "score"
-        ? validateScoreDraft(draft)
-        : editing.kind === "lift"
-          ? validateLiftDraft(draft)
-          : validateCognitiveDraft(draft);
+      editing.kind === "lift" ? validateLiftDraft(draft) : validateCognitiveDraft(draft);
 
     if (!validation.ok) {
       setStatus(validation.message);
@@ -203,16 +185,30 @@ export default function MeasurementCorrections() {
       </button>
 
       {open ? (
-        <div className="correction-backdrop" role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget) setOpen(false);
-        }}>
-          <section className="correction-panel" role="dialog" aria-modal="true" aria-label="Correct recorded measurements">
+        <div
+          className="correction-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setOpen(false);
+          }}
+        >
+          <section
+            className="correction-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Correct recorded measurements"
+          >
             <header className="correction-header">
               <div>
                 <h2>Correct recorded measurements</h2>
-                <p>Edit or delete canonical GOAT score, strength, and cognitive history.</p>
+                <p>Edit or delete canonical strength and cognitive history.</p>
               </div>
-              <button type="button" className="correction-close" onClick={() => setOpen(false)} aria-label="Close">
+              <button
+                type="button"
+                className="correction-close"
+                onClick={() => setOpen(false)}
+                aria-label="Close"
+              >
                 ×
               </button>
             </header>
@@ -231,14 +227,6 @@ export default function MeasurementCorrections() {
               />
             ) : (
               <div className="correction-groups">
-                <RecordGroup
-                  title="GOAT Score History"
-                  kind="score"
-                  rows={sortedRecords.score}
-                  onEdit={beginEdit}
-                  onDelete={deleteRecord}
-                  disabled={loading}
-                />
                 <RecordGroup
                   title="Strength History"
                   kind="lift"
@@ -327,15 +315,23 @@ function RecordGroup({ title, kind, rows, onEdit, onDelete, disabled }) {
     <section className="correction-group">
       <h3>{title}</h3>
       <div className="correction-list">
-        {rows.length ? rows.map((row) => (
-          <div className="correction-row" key={row.id}>
-            <div className="correction-row-text">{describeRecord(kind, row)}</div>
-            <div className="correction-actions">
-              <button type="button" onClick={() => onEdit(kind, row)} disabled={disabled}>Edit</button>
-              <button type="button" onClick={() => onDelete(kind, row)} disabled={disabled}>Delete</button>
+        {rows.length ? (
+          rows.map((row) => (
+            <div className="correction-row" key={row.id}>
+              <div className="correction-row-text">{describeRecord(kind, row)}</div>
+              <div className="correction-actions">
+                <button type="button" onClick={() => onEdit(kind, row)} disabled={disabled}>
+                  Edit
+                </button>
+                <button type="button" onClick={() => onDelete(kind, row)} disabled={disabled}>
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        )) : <div className="correction-empty">No records.</div>}
+          ))
+        ) : (
+          <div className="correction-empty">No records.</div>
+        )}
       </div>
     </section>
   );
@@ -347,31 +343,45 @@ function EditForm({ kind, draft, setDraft, onSubmit, onCancel, disabled }) {
   return (
     <form className="correction-form" onSubmit={onSubmit}>
       <h3>Edit {TABLES[kind].label}</h3>
-      {kind === "score" ? (
-        <>
-          <Field label="Score"><input type="number" min="0" max="100" step="0.1" value={draft.score} onChange={(event) => setField("score", event.target.value)} /></Field>
-          <Field label="Date"><input type="date" value={draft.entryDate} onChange={(event) => setField("entryDate", event.target.value)} /></Field>
-          <Field label="LLM commentary"><textarea rows="4" value={draft.commentary} onChange={(event) => setField("commentary", event.target.value)} /></Field>
-        </>
-      ) : null}
 
       {kind === "lift" ? (
         <>
-          <Field label="Exercise"><input value={draft.exerciseName} onChange={(event) => setField("exerciseName", event.target.value)} /></Field>
-          <Field label="Weight KG"><input type="number" min="0" step="0.5" value={draft.weightKg} onChange={(event) => setField("weightKg", event.target.value)} /></Field>
-          <Field label="Reps"><input type="number" min="1" step="1" value={draft.reps} onChange={(event) => setField("reps", event.target.value)} /></Field>
-          <Field label="Date"><input type="date" value={draft.performedAt} onChange={(event) => setField("performedAt", event.target.value)} /></Field>
+          <Field label="Exercise">
+            <input value={draft.exerciseName} onChange={(event) => setField("exerciseName", event.target.value)} />
+          </Field>
+          <Field label="Weight KG">
+            <input type="number" min="0" step="0.5" value={draft.weightKg} onChange={(event) => setField("weightKg", event.target.value)} />
+          </Field>
+          <Field label="Reps">
+            <input type="number" min="1" step="1" value={draft.reps} onChange={(event) => setField("reps", event.target.value)} />
+          </Field>
+          <Field label="Date">
+            <input type="date" value={draft.performedAt} onChange={(event) => setField("performedAt", event.target.value)} />
+          </Field>
         </>
       ) : null}
 
       {kind === "cognitive" ? (
         <>
-          <Field label="Test"><input value={draft.testName} onChange={(event) => setField("testName", event.target.value)} /></Field>
-          <Field label="Score"><input value={draft.score} onChange={(event) => setField("score", event.target.value)} /></Field>
-          <Field label="Date/time"><input type="datetime-local" value={draft.takenAt} onChange={(event) => setField("takenAt", event.target.value)} /></Field>
+          <Field label="Test">
+            <input value={draft.testName} onChange={(event) => setField("testName", event.target.value)} />
+          </Field>
+          <Field label="Score">
+            <input value={draft.score} onChange={(event) => setField("score", event.target.value)} />
+          </Field>
+          <Field label="Date/time">
+            <input type="datetime-local" value={draft.takenAt} onChange={(event) => setField("takenAt", event.target.value)} />
+          </Field>
           {["hunger", "distractions", "wakefulness", "mood"].map((field) => (
             <Field key={field} label={`${field[0].toUpperCase()}${field.slice(1)} /10`}>
-              <input type="number" min="0" max="10" step="1" value={draft[field]} onChange={(event) => setField(field, event.target.value)} />
+              <input
+                type="number"
+                min="0"
+                max="10"
+                step="1"
+                value={draft[field]}
+                onChange={(event) => setField(field, event.target.value)}
+              />
             </Field>
           ))}
         </>
@@ -390,9 +400,6 @@ function Field({ label, children }) {
 }
 
 function describeRecord(kind, row) {
-  if (kind === "score") {
-    return `${formatNumber(row.score)} / 100 — ${row.entry_date}${row.llm_commentary ? ` — ${row.llm_commentary}` : ""}`;
-  }
   if (kind === "lift") {
     return `${row.exercise_name} — ${formatNumber(row.weight_kg)} KG × ${row.reps} — ${formatDate(row.performed_at)}`;
   }

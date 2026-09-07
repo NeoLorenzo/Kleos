@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import {
   AUTHORIZED_KLEOS_EMAIL,
@@ -34,14 +34,6 @@ function getDateTimeLocalValue() {
   return now.toISOString().slice(0, 16);
 }
 
-function createDefaultScoreForm() {
-  return {
-    score: "",
-    entryDate: getTodayDateValue(),
-    commentary: ""
-  };
-}
-
 function createDefaultLiftForm() {
   return {
     exerciseName: STRENGTH_EXERCISES[0],
@@ -67,7 +59,6 @@ export default function KleosPage() {
   const [accessState, setAccessState] = useState("loading");
   const [user, setUser] = useState(null);
   const [kleosData, setKleosData] = useState(createEmptyKleosData);
-  const [scoreForm, setScoreForm] = useState(createDefaultScoreForm);
   const [liftForm, setLiftForm] = useState(createDefaultLiftForm);
   const [cognitiveForm, setCognitiveForm] = useState(createDefaultCognitiveForm);
   const [strengthProfileForm, setStrengthProfileForm] = useState({
@@ -84,11 +75,6 @@ export default function KleosPage() {
   const [miscDraft, setMiscDraft] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
-  const latestScoreEntry = useMemo(
-    () => [...kleosData.scoreEntries].sort(compareScoreEntries)[0] || null,
-    [kleosData.scoreEntries]
-  );
 
   useEffect(() => {
     if (!supabase) {
@@ -222,45 +208,6 @@ export default function KleosPage() {
     if (error) {
       setStatusMessage(error.message || "Sign-out failed.");
     }
-  };
-
-  const saveScoreEntry = async (event) => {
-    event.preventDefault();
-    if (!user?.id || isSaving) {
-      return;
-    }
-
-    const scoreValue = Number(scoreForm.score);
-    if (!Number.isFinite(scoreValue) || scoreValue < 0 || scoreValue > 100 || !scoreForm.entryDate) {
-      setStatusMessage("Enter a GOAT score from 0 to 100 and a date.");
-      return;
-    }
-
-    setIsSaving(true);
-    setStatusMessage("");
-    const { data, error } = await supabase
-      .from("goat_score_entries")
-      .insert({
-        user_id: user.id,
-        score: scoreValue,
-        entry_date: scoreForm.entryDate,
-        llm_commentary: scoreForm.commentary.trim()
-      })
-      .select("id,score,entry_date,llm_commentary,created_at")
-      .single();
-
-    setIsSaving(false);
-    if (error) {
-      setStatusMessage(`GOAT score save failed: ${error.message}`);
-      return;
-    }
-
-    setKleosData((current) => ({
-      ...current,
-      scoreEntries: [data, ...current.scoreEntries].sort(compareScoreEntries)
-    }));
-    setScoreForm(createDefaultScoreForm());
-    setStatusMessage("GOAT score entry saved.");
   };
 
   const saveStrengthLift = async (event) => {
@@ -595,51 +542,6 @@ export default function KleosPage() {
                 <p>Canonical evidence and editing tools. Derived vector scores are evaluated by Kleos Bot, not this interface.</p>
               </div>
             </section>
-            <section className="score-panel">
-              <div className="score-readout">
-                <span>Current GOAT Score</span>
-                <strong>{latestScoreEntry ? `${formatNumber(latestScoreEntry.score)} / 100` : "-- / 100"}</strong>
-                <em>{latestScoreEntry ? formatDate(latestScoreEntry.entry_date) : "No score yet"}</em>
-              </div>
-              <form className="score-form" onSubmit={saveScoreEntry}>
-                <label>
-                  Score
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={scoreForm.score}
-                    onChange={(event) =>
-                      setScoreForm((current) => ({ ...current, score: event.target.value }))
-                    }
-                  />
-                </label>
-                <label>
-                  Date
-                  <input
-                    type="date"
-                    value={scoreForm.entryDate}
-                    onChange={(event) =>
-                      setScoreForm((current) => ({ ...current, entryDate: event.target.value }))
-                    }
-                  />
-                </label>
-                <label className="wide-field">
-                  LLM commentary
-                  <textarea
-                    rows={3}
-                    value={scoreForm.commentary}
-                    onChange={(event) =>
-                      setScoreForm((current) => ({ ...current, commentary: event.target.value }))
-                    }
-                  />
-                </label>
-                <button type="submit" className="primary-btn" disabled={isSaving}>
-                  Update Score
-                </button>
-              </form>
-            </section>
 
             <div className="kleos-grid">
               <section className="kleos-card">
@@ -954,19 +856,6 @@ export default function KleosPage() {
                   Save Appendix
                 </button>
               </section>
-
-              <section className="kleos-card wide-card">
-                <SectionHeader title="GOAT Score History" />
-                <CompactTable
-                  columns={["Score", "Date", "LLM Commentary"]}
-                  rows={kleosData.scoreEntries.map((entry) => [
-                    `${formatNumber(entry.score)} / 100`,
-                    formatDate(entry.entry_date),
-                    entry.llm_commentary || "-"
-                  ])}
-                  emptyText="No GOAT score entries yet."
-                />
-              </section>
             </div>
 
             {statusMessage ? (
@@ -1050,15 +939,6 @@ function CompactTable({ columns, rows, emptyText }) {
       </table>
     </div>
   );
-}
-
-function compareScoreEntries(left, right) {
-  const rightDate = new Date(`${right.entry_date || ""}T00:00:00`).getTime();
-  const leftDate = new Date(`${left.entry_date || ""}T00:00:00`).getTime();
-  if (rightDate !== leftDate) {
-    return rightDate - leftDate;
-  }
-  return new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime();
 }
 
 function compareDatedRows(dateKey) {

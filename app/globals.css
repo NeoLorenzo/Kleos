@@ -111,7 +111,6 @@ button:disabled {
   padding: 1rem;
 }
 
-.score-panel,
 .kleos-card,
 .access-panel {
   border: 1px solid var(--border-soft);
@@ -119,56 +118,11 @@ button:disabled {
   background: var(--panel);
 }
 
-.score-panel {
-  display: grid;
-  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2fr);
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.score-readout {
-  min-height: 12rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  border: 1px solid rgba(167, 139, 250, 0.28);
-  border-radius: 0.8rem;
-  background: linear-gradient(160deg, rgba(124, 58, 237, 0.18), rgba(15, 19, 29, 0.5));
-  text-align: center;
-}
-
-.score-readout span {
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.score-readout strong {
-  font-size: clamp(2.2rem, 5vw, 4.4rem);
-  line-height: 1;
-}
-
-.score-readout em {
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-style: normal;
-}
-
-.score-form,
 .compact-form,
 .inline-form,
 .stacked-form {
   display: grid;
   gap: 0.75rem;
-}
-
-.score-form {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-content: start;
 }
 
 .compact-form {
@@ -223,10 +177,6 @@ select:focus,
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12);
-}
-
-.wide-field {
-  grid-column: 1 / -1;
 }
 
 .large-textarea {
@@ -400,7 +350,6 @@ tbody tr:last-child td {
     justify-content: flex-start;
   }
 
-  .score-panel,
   .kleos-grid {
     grid-template-columns: 1fr;
   }
@@ -413,17 +362,8 @@ tbody tr:last-child td {
 @media (max-width: 560px) {
   .kleos-header,
   .kleos-scroll,
-  .kleos-card,
-  .score-panel {
+  .kleos-card {
     padding: 0.85rem;
-  }
-
-  .score-form {
-    grid-template-columns: 1fr;
-  }
-
-  .wide-field {
-    grid-column: auto;
   }
 
   .kleos-header-actions,

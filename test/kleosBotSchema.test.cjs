@@ -7,32 +7,36 @@ let migration;
 
 before(async () => {
   migration = await readFile(
-    path.join(process.cwd(), "supabase/migrations/20260907_0002_kleos_bot_weekly_idempotency.sql"),
+    path.join(process.cwd(), "supabase/migrations/20260907_0003_kleos_bot_schedule_agnostic.sql"),
     "utf8"
   );
 });
 
-test("weekly run keys are unique per owner and evaluator", () => {
-  assert.match(migration, /add column if not exists run_key text null/i);
-  assert.match(migration, /create unique index if not exists kleos_vector_snapshots_run_key_idx/i);
-  assert.match(migration, /\(user_id, evaluator, run_key\)/i);
+test("weekly run keys are replaced with per-execution idempotency", () => {
+  assert.match(migration, /rename column run_key to execution_key/i);
+  assert.match(migration, /rename to kleos_vector_snapshots_execution_key_idx/i);
+  assert.match(migration, /p_execution_key text/i);
+  assert.doesNotMatch(migration, /YYYY-W/i);
 });
 
-test("bot writer serializes retries before checking for an existing run", () => {
-  assert.match(migration, /create or replace function public\.create_kleos_bot_weekly_snapshot/i);
+test("bot writer deduplicates only the exact same execution", () => {
+  assert.match(migration, /create or replace function public\.create_kleos_bot_snapshot/i);
   assert.match(migration, /pg_advisory_xact_lock/i);
   assert.match(migration, /and evaluator = 'kleos-bot'/i);
-  assert.match(migration, /and run_key = btrim\(p_run_key\)/i);
+  assert.match(migration, /and execution_key = v_execution_key/i);
   assert.match(migration, /'created', false/i);
 });
 
-test("new weekly snapshots reuse the #4 atomic snapshot writer", () => {
+test("distinct executions reuse the atomic snapshot writer without time-window gating", () => {
   assert.match(migration, /public\.create_kleos_vector_snapshot\(/i);
-  assert.match(migration, /set run_key = btrim\(p_run_key\)/i);
+  assert.match(migration, /set execution_key = v_execution_key/i);
   assert.match(migration, /'created', true/i);
+  assert.doesNotMatch(migration, /date_trunc\s*\(/i);
+  assert.doesNotMatch(migration, /extract\s*\(\s*week/i);
 });
 
-test("bot RPC remains unavailable to anonymous clients", () => {
-  assert.match(migration, /revoke all on function public\.create_kleos_bot_weekly_snapshot[\s\S]*from anon/i);
-  assert.match(migration, /grant execute on function public\.create_kleos_bot_weekly_snapshot[\s\S]*to authenticated/i);
+test("legacy weekly writer is retired and new RPC remains owner-authenticated", () => {
+  assert.match(migration, /drop function if exists public\.create_kleos_bot_weekly_snapshot/i);
+  assert.match(migration, /revoke all on function public\.create_kleos_bot_snapshot[\s\S]*from anon/i);
+  assert.match(migration, /grant execute on function public\.create_kleos_bot_snapshot[\s\S]*to authenticated/i);
 });

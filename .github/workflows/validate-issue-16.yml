@@ -1,0 +1,27 @@
+name: Validate issue 16
+
+on:
+  push:
+    branches: ["fix/16-admin-kleos-bot-persistence"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm run check:privacy
+      - env:
+          STATIC_EXPORT: "true"
+          NEXT_PUBLIC_BASE_PATH: "/Kleos"
+          NEXT_PUBLIC_SUPABASE_URL: "https://jhpsggjphoqyygthqfki.supabase.co"
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_-r71Jkgx3TiyY_2_RtMUqQ_XWdW3Beh"
+        run: npm run build
+      - run: npm run check:privacy

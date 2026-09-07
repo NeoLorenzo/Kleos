@@ -23,6 +23,8 @@ Legacy `goat_score_entries` may be read for historical context but must not be u
 
 The bot must not silently import facts from previous ChatGPT conversations or unrelated external sources. A future ingestion issue may expand the canonical evidence boundary explicitly.
 
+For ChatGPT/Apple Shortcuts runs through the connected Supabase administrative SQL interface, canonical evidence must be retrieved through `get_kleos_bot_evidence_admin()`, not through raw `SELECT` statements against the `goat_*` tables. The privileged reader returns the ten canonical evidence groups as structured JSON, internally scopes every query to the fixed authorized Kleos owner, strips `user_id` from returned rows, and returns neither existing vector snapshots nor legacy score entries.
+
 ## Vector interpretation
 
 - **Physical** — health, strength, endurance, body composition, sleep, nutrition, mobility.
@@ -109,13 +111,37 @@ Kleos Bot has no built-in scheduling cadence. It may be triggered manually, by A
 
 Each invocation supplies an `executionKey` that identifies that specific execution. Retrying the same execution with the same key returns the existing snapshot instead of creating a duplicate. A genuinely new evaluation must use a new execution key and is never blocked because another snapshot exists in the same time window.
 
+## Privileged ChatGPT flow
+
+The supported Apple Shortcuts/ChatGPT administrative flow is:
+
+```text
+get_kleos_bot_evidence_admin()
+        ↓
+evaluate exactly eight vectors
+        ↓
+create_kleos_bot_snapshot_admin(...)
+```
+
+Both privileged functions are intended only for direct SQL execution under the database `postgres` session used by the connected Supabase administrative interface. Neither function is executable by `public`, `anon`, `authenticated`, or `service_role` API roles.
+
+The privileged evidence reader:
+
+- accepts no owner UUID;
+- resolves the fixed authorized Kleos owner internally;
+- requires no `auth.uid()`, `auth.jwt()`, or `request.jwt.claims` manipulation;
+- returns only the ten canonical methodology 1.0.0 evidence groups;
+- strips the owner `user_id` from returned records;
+- does not return vector snapshots or legacy score entries;
+- is read-only and performs no mutations.
+
 ## Persistence paths
 
 Normal owner-authenticated application flows may use `create_kleos_bot_snapshot(...)`, which requires the normal Supabase owner JWT context.
 
 ChatGPT/Apple Shortcuts runs that execute through the connected privileged Supabase SQL interface must instead use `create_kleos_bot_snapshot_admin(...)`.
 
-The privileged admin entry point:
+The privileged admin writer:
 
 - does not require or permit fabricated `request.jwt.claims`;
 - resolves the single authorized Kleos owner internally;
@@ -124,6 +150,6 @@ The privileged admin entry point:
 - is revoked from `public`, `anon`, `authenticated`, and `service_role` API roles;
 - is intended only for direct privileged SQL execution under the database `postgres` session used by the connected Supabase administrative interface.
 
-The Apple Shortcuts/ChatGPT prompt must never instruct the model to establish or mutate JWT/session claims and must never include or request the owner's UUID.
+The Apple Shortcuts/ChatGPT prompt must never instruct the model to establish or mutate JWT/session claims, must never include or request the owner's UUID, and must never query the canonical evidence tables directly through raw SQL.
 
-A malformed model response is rejected before persistence. A database or authorization failure must leave the last valid snapshot untouched. Direct client mutation of the snapshot tables remains unavailable.
+A malformed model response is rejected before persistence. An evidence retrieval, database, or authorization failure must leave the last valid snapshot untouched. Direct client mutation of the snapshot tables remains unavailable.

@@ -2,6 +2,7 @@ import postgres from "npm:postgres@3.4.7";
 
 // SHA-256 of the dedicated Shortcut token. The token itself is never committed.
 const EXPECTED_TOKEN_HASH = "903582239a902fe118415c44c3eb1cc967624ffa3ad0394dafb9fc825f9a3c43";
+const EVIDENCE_SCHEMA_VERSION = "2.0.0";
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -59,17 +60,22 @@ Deno.serve(async (req: Request) => {
   try {
     const rows = await sql`select public.get_kleos_bot_evidence_admin() as evidence`;
     const evidence = rows[0]?.evidence;
-    if (!evidence || typeof evidence !== "object") {
+
+    if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) {
       return json({ error: "EVIDENCE_UNAVAILABLE" }, 500);
     }
 
-    // Methodology 1.0.0 has an explicit ten-group evidence contract. Big Five is
-    // stored as canonical Kleos evidence, but must not silently change the bot's
-    // evaluation inputs until a later methodology version opts into it.
-    const methodologyEvidence = { ...(evidence as Record<string, unknown>) };
-    delete methodologyEvidence.goat_big_five_assessments;
+    const evidenceGroups = evidence as Record<string, unknown>;
+    const entries = Object.entries(evidenceGroups);
 
-    return json(methodologyEvidence, 200);
+    if (entries.length === 0 || entries.some(([, value]) => !Array.isArray(value))) {
+      return json({ error: "EVIDENCE_INVALID" }, 500);
+    }
+
+    return json({
+      evidence_schema_version: EVIDENCE_SCHEMA_VERSION,
+      evidence_groups: evidenceGroups,
+    }, 200);
   } catch (_error) {
     return json({ error: "EVIDENCE_RETRIEVAL_FAILED" }, 500);
   } finally {

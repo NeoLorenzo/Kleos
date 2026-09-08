@@ -1,0 +1,240 @@
+.panel {
+  padding: 1rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.9rem;
+  background: var(--panel);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.header h3,
+.history h4 {
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.note,
+.formHint,
+.empty,
+.message {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.note {
+  max-width: 58rem;
+  margin: 0.45rem 0 0;
+}
+
+.count {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.dateField,
+.scoreInput,
+.domainScoreInput {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.dateField {
+  max-width: 14rem;
+}
+
+.dateField input,
+.scoreInput input,
+.domainScoreInput input {
+  width: 100%;
+  min-width: 0;
+}
+
+.domainFormGrid,
+.domainResults {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.domainFieldset,
+.domainResult {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.75rem;
+  background: var(--panel-2);
+}
+
+.domainFieldset legend {
+  padding: 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.domainScoreInput {
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.facetInputs {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.formHint {
+  margin: 0;
+}
+
+.message {
+  margin: 0.8rem 0 0;
+}
+
+.history {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.history h4 {
+  margin-bottom: 0.7rem;
+}
+
+.assessment {
+  border: 1px solid var(--border-soft);
+  border-radius: 0.75rem;
+  background: rgba(7, 9, 15, 0.3);
+}
+
+.assessment + .assessment {
+  margin-top: 0.6rem;
+}
+
+.assessment > summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.assessment > summary span {
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.domainResults {
+  padding: 0 0.75rem 0.75rem;
+}
+
+.domainResult header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.domainResult header span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.domainResult header strong {
+  font-size: 1.15rem;
+}
+
+.domainResult dl {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+}
+
+.domainResult dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.domainResult dt,
+.domainResult dd {
+  margin: 0;
+  font-size: 0.74rem;
+}
+
+.domainResult dt {
+  color: var(--muted);
+}
+
+.domainResult dd {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  margin: 0;
+}
+
+@media (max-width: 1150px) {
+  .domainFormGrid,
+  .domainResults {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .header,
+  .assessment > summary {
+    display: grid;
+  }
+
+  .assessment > summary span {
+    text-align: left;
+  }
+
+  .domainFormGrid,
+  .domainResults {
+    grid-template-columns: 1fr;
+  }
+}

@@ -133,7 +133,7 @@ export default function BigFiveAssessments({ userId, assessments = [] }) {
             <details
               className={styles.assessment}
               key={assessment.id || `${assessment.test_date}-${assessment.created_at || index}`}
-              open={index === 0}
+              defaultOpen={index === 0}
             >
               <summary>
                 <strong>{formatBigFiveTestDate(assessment.test_date)}</strong>

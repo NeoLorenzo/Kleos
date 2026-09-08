@@ -43,7 +43,7 @@ jobs:
         run: npm run build
 
       - name: Check exported site privacy
-        run: npm run check:privacy
+        run: npm run check:privacy -- out
 
       - name: Upload static artifact
         uses: actions/upload-pages-artifact@v3

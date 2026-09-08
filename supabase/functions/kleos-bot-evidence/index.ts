@@ -62,7 +62,14 @@ Deno.serve(async (req: Request) => {
     if (!evidence || typeof evidence !== "object") {
       return json({ error: "EVIDENCE_UNAVAILABLE" }, 500);
     }
-    return json(evidence, 200);
+
+    // Methodology 1.0.0 has an explicit ten-group evidence contract. Big Five is
+    // stored as canonical Kleos evidence, but must not silently change the bot's
+    // evaluation inputs until a later methodology version opts into it.
+    const methodologyEvidence = { ...(evidence as Record<string, unknown>) };
+    delete methodologyEvidence.goat_big_five_assessments;
+
+    return json(methodologyEvidence, 200);
   } catch (_error) {
     return json({ error: "EVIDENCE_RETRIEVAL_FAILED" }, 500);
   } finally {

@@ -34,6 +34,10 @@ test("edge evidence endpoint keeps database credentials server-side and reuses t
   assert.doesNotMatch(source, /SUPABASE_SECRET_KEYS\s*=\s*["']/i);
 });
 
+test("edge evidence endpoint preserves methodology 1.0.0 when newer evidence groups exist", () => {
+  assert.match(source, /delete\s+methodologyEvidence\.goat_big_five_assessments/i);
+});
+
 test("edge evidence endpoint does not duplicate raw evidence-table selection or expose owner identity", () => {
   assert.doesNotMatch(source, /from\s+public\.goat_/i);
   assert.doesNotMatch(source, /kleos_vector_snapshots/i);

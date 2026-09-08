@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "./CharacterSheet.module.css";
+import BigFiveAssessments from "./BigFiveAssessments";
 import { loadVectorSnapshotHistory } from "@/lib/kleos/vectorSnapshotRepository";
 import { VECTOR_DEFINITIONS } from "@/lib/kleos/vectorSnapshots";
+import { formatBigFiveTestDate } from "@/lib/kleos/bigFive";
 import {
   buildCharacterEvidence,
   buildVectorTrajectory,
@@ -49,6 +51,7 @@ export default function CharacterSheet({ userId, kleosData }) {
     .sort((a, b) => Number(b.stage || 0) - Number(a.stage || 0))[0] || null;
   const latestCognitive = kleosData?.cognitiveTests?.[0] || null;
   const latestLift = kleosData?.strengthLifts?.[0] || null;
+  const latestBigFive = kleosData?.bigFiveAssessments?.[0] || null;
 
   return (
     <section className={styles.sheet} aria-labelledby="character-sheet-title">
@@ -161,12 +164,23 @@ export default function CharacterSheet({ userId, kleosData }) {
             label="Latest cognitive test"
             value={latestCognitive ? `${latestCognitive.test_name} · ${latestCognitive.score_text}` : "No cognitive test recorded"}
           />
+          <Record
+            label="Big Five"
+            value={latestBigFive
+              ? `${kleosData.bigFiveAssessments.length} recorded · latest ${formatBigFiveTestDate(latestBigFive.test_date)}`
+              : "No assessment recorded"}
+          />
           <Record label="Academic modules" value={`${kleosData?.academicModules?.length || 0} recorded`} />
           <Record label="Strength lifts" value={`${kleosData?.strengthLifts?.length || 0} recorded`} />
           <Record label="Health profile" value={hasText(kleosData?.healthProfile?.bloodTestText) || hasText(kleosData?.healthProfile?.miscText) ? "Recorded" : "Not recorded"} />
           <Record label="Professional profile" value={hasText(kleosData?.cvText) ? "CV recorded" : "No CV recorded"} />
         </div>
       </section>
+
+      <BigFiveAssessments
+        userId={userId}
+        assessments={kleosData?.bigFiveAssessments || []}
+      />
     </section>
   );
 }

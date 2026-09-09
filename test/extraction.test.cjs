@@ -20,16 +20,22 @@ const persistedGoatTables = [
   "goat_misc_characteristics"
 ];
 
-const clientDataTables = persistedGoatTables.filter((table) => table !== "goat_score_entries");
+const activeClientTables = [
+  "heracles_strength_metrics",
+  ...persistedGoatTables.filter(
+    (table) => table !== "goat_score_entries" && table !== "goat_strength_lifts"
+  )
+];
 
-test("Kleos client data layer covers active UI tables without loading the retired global GOAT score", () => {
+test("Kleos client data layer covers active UI tables without loading retired GOAT score or manual strength history", () => {
   const source = read("lib/kleos/data.js");
 
-  for (const table of clientDataTables) {
+  for (const table of activeClientTables) {
     assert.match(source, new RegExp(`\\b${table}\\b`), `missing ${table} from data layer`);
   }
 
   assert.doesNotMatch(source, /\bgoat_score_entries\b/);
+  assert.doesNotMatch(source, /\bgoat_strength_lifts\b/);
   assert.match(source, /AUTHORIZED_KLEOS_EMAIL/);
 });
 

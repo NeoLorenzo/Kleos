@@ -50,7 +50,6 @@ export default function CharacterSheet({ userId, kleosData }) {
     .filter((stage) => Number.isFinite(Number(stage.stage_mean)))
     .sort((a, b) => Number(b.stage || 0) - Number(a.stage || 0))[0] || null;
   const latestCognitive = kleosData?.cognitiveTests?.[0] || null;
-  const latestLift = kleosData?.strengthLifts?.[0] || null;
   const latestBigFive = kleosData?.bigFiveAssessments?.[0] || null;
 
   return (
@@ -152,10 +151,8 @@ export default function CharacterSheet({ userId, kleosData }) {
         </header>
         <div className={styles.recordsGrid}>
           <Record label="Body metrics" value={bodyMetricSummary(kleosData?.strengthProfile)} />
-          <Record
-            label="Latest recorded lift"
-            value={latestLift ? `${latestLift.exercise_name} · ${formatNumber(latestLift.weight_kg)} kg × ${latestLift.reps}` : "No lift recorded"}
-          />
+          <Record label="Heracles strength" value={strengthMetricSummary(kleosData?.strengthMetrics)} />
+          <Record label="Strength sync" value={strengthSyncSummary(kleosData?.strengthMetrics)} />
           <Record
             label="Latest academic stage"
             value={latestStage ? `${latestStage.academic_year} · ${formatNumber(latestStage.stage_mean)}% mean` : "No completed stage mean"}
@@ -171,7 +168,6 @@ export default function CharacterSheet({ userId, kleosData }) {
               : "No assessment recorded"}
           />
           <Record label="Academic modules" value={`${kleosData?.academicModules?.length || 0} recorded`} />
-          <Record label="Strength lifts" value={`${kleosData?.strengthLifts?.length || 0} recorded`} />
           <Record label="Health profile" value={hasText(kleosData?.healthProfile?.bloodTestText) || hasText(kleosData?.healthProfile?.miscText) ? "Recorded" : "Not recorded"} />
           <Record label="Professional profile" value={hasText(kleosData?.cvText) ? "CV recorded" : "No CV recorded"} />
         </div>
@@ -226,6 +222,22 @@ function bodyMetricSummary(profile) {
     height === null ? null : `${formatNumber(height)} cm`,
     weight === null ? null : `${formatNumber(weight)} kg`
   ].filter(Boolean).join(" · ");
+}
+
+function strengthMetricSummary(metrics = []) {
+  const current = metrics.filter((metric) => metric.is_current).length;
+  const stale = metrics.length - current;
+  if (!metrics.length) return "No Heracles strength snapshot yet";
+  return `${current} current · ${stale} stale`;
+}
+
+function strengthSyncSummary(metrics = []) {
+  const checkedTimes = metrics
+    .map((metric) => new Date(metric.last_checked_at || 0).getTime())
+    .filter(Number.isFinite)
+    .filter((time) => time > 0);
+  if (!checkedTimes.length) return "Never synced";
+  return `Checked ${formatDate(new Date(Math.max(...checkedTimes)).toISOString())}`;
 }
 
 function numeric(value) {

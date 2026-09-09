@@ -11,21 +11,34 @@ before(async () => {
   helpers = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 });
 
-test("battery contains 36 validated response slots plus 11 Kleos facets", () => {
+test("battery contains 26 validated response slots plus 16 Kleos facets", () => {
   const validatedCount = helpers.PSYCHOLOGICAL_INSTRUMENTS.reduce(
     (count, instrument) => count + instrument.items.length,
     0
   );
-  assert.equal(validatedCount, 36);
-  assert.equal(helpers.KLEOS_PSYCHOLOGICAL_FACETS.length, 11);
-  assert.equal(helpers.getPsychologicalQuestionCount(), 47);
+  assert.equal(validatedCount, 26);
+  assert.equal(helpers.KLEOS_PSYCHOLOGICAL_FACETS.length, 16);
+  assert.equal(helpers.getPsychologicalQuestionCount(), 42);
 });
 
-test("PSS-10 wording stays outside the public source while preserving ten response slots", () => {
-  const pss = helpers.PSYCHOLOGICAL_INSTRUMENTS.find((instrument) => instrument.id === "pss10");
-  assert.equal(pss.licensedTextExternal, true);
-  assert.equal(pss.items.length, 10);
-  assert.ok(pss.items.every((item, index) => item === `PSS-10 item ${index + 1}`));
+test("PSS-10 is absent from instruments, drafts, versions and persisted score selection", () => {
+  assert.equal(helpers.PSYCHOLOGICAL_INSTRUMENTS.some((instrument) => instrument.id === "pss10"), false);
+  assert.equal("pss10" in helpers.PSYCHOLOGICAL_INSTRUMENT_VERSIONS, false);
+  assert.equal("pss10" in helpers.createEmptyPsychologicalDraft(), false);
+  assert.doesNotMatch(helpers.PSYCHOLOGICAL_SELECT_COLUMNS, /pss10/i);
+});
+
+test("expanded Kleos facets cover stress load, unexpected coping, control and recovery", () => {
+  const facetIds = new Set(helpers.KLEOS_PSYCHOLOGICAL_FACETS.map((facet) => facet.id));
+  for (const id of [
+    "demands_manageability",
+    "unexpected_coping",
+    "pressure_control",
+    "stress_recovery",
+    "emotional_regulation"
+  ]) {
+    assert.equal(facetIds.has(id), true, `${id} should be present`);
+  }
 });
 
 test("WHO-5 scoring returns raw and official 0-100 transform", () => {
@@ -36,18 +49,10 @@ test("WHO-5 scoring returns raw and official 0-100 transform", () => {
   assert.equal(result.who5.percentage, 60);
 });
 
-test("PSS-10 reverse scores items 4, 5, 7 and 8", () => {
-  const responses = completeResponses();
-  responses.pss10 = [0, 1, 2, 3, 4, 0, 1, 2, 3, 4];
-  const result = helpers.scorePsychologicalResponses(responses);
-  // 0 + 1 + 2 + (4-3) + (4-4) + 0 + (4-1) + (4-2) + 3 + 4 = 16
-  assert.equal(result.pss10.raw, 16);
-});
-
 test("validated scales remain independent and no aggregate psychological score is created", () => {
   const responses = completeResponses();
   const result = helpers.scorePsychologicalResponses(responses);
-  assert.deepEqual(Object.keys(result).sort(), ["gad7", "kleos", "phq9", "pss10", "swls", "who5"]);
+  assert.deepEqual(Object.keys(result).sort(), ["gad7", "kleos", "phq9", "swls", "who5"]);
   assert.equal("overall" in result, false);
   assert.equal("psychological" in result, false);
 });
@@ -65,6 +70,8 @@ test("validation rejects partial submissions and preserves PHQ-9 item 9 separate
   assert.equal(validation.payload.phq9_score, 2);
   assert.equal(validation.payload.swls_score, 20);
   assert.equal(validation.scores.swls.category, "Neutral");
+  assert.equal("pss10_score" in validation.payload, false);
+  assert.equal("pss10" in validation.payload.responses, false);
 });
 
 test("stored responses can deterministically repopulate an editable draft", () => {
@@ -79,13 +86,13 @@ test("stored responses can deterministically repopulate an editable draft", () =
   assert.equal(restored.gad7[0], "1");
   assert.equal(restored.swls[4], "5");
   assert.equal(restored.kleos.agency, "1");
+  assert.equal(restored.kleos.demands_manageability, "1");
 });
 
 function completeResponses() {
   return {
     who5: [0, 0, 0, 0, 0],
     swls: [1, 1, 1, 1, 1],
-    pss10: Array(10).fill(0),
     gad7: Array(7).fill(0),
     phq9: Array(9).fill(0),
     kleos: Object.fromEntries(helpers.KLEOS_PSYCHOLOGICAL_FACETS.map((facet) => [facet.id, 0]))
@@ -94,7 +101,6 @@ function completeResponses() {
 
 function fillDraft(draft, value) {
   draft.who5 = Array(5).fill(String(value));
-  draft.pss10 = Array(10).fill(String(value));
   draft.gad7 = Array(7).fill(String(value));
   draft.phq9 = Array(9).fill(String(value));
   for (const facet of helpers.KLEOS_PSYCHOLOGICAL_FACETS) {

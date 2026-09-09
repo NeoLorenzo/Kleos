@@ -1,0 +1,499 @@
+.panel {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.header,
+.assessmentFlow,
+.history {
+  border: 1px solid var(--border-soft);
+  border-radius: 0.95rem;
+  background: var(--panel);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem;
+}
+
+.header h1,
+.historyHeader h2,
+.instrumentHeader h2 {
+  margin: 0;
+}
+
+.header h1 {
+  font-size: clamp(1.65rem, 4vw, 2.4rem);
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.intro,
+.instrumentHeader p,
+.licenseNotice p,
+.safetyNotice p,
+.empty,
+.attribution {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.intro {
+  max-width: 48rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.86rem;
+}
+
+.assessmentFlow {
+  overflow: hidden;
+}
+
+.progressHeader {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.progressHeader > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+
+.progressHeader span {
+  color: var(--muted);
+}
+
+.progressTrack {
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.15);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.stepNav {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border-soft);
+  overflow-x: auto;
+}
+
+.stepButton,
+.activeStep {
+  min-width: 7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  color: #cbd5e1;
+  background: #0b0f17;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.stepButton span,
+.activeStep span {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  font-size: 0.65rem;
+}
+
+.activeStep {
+  border-color: rgba(167, 139, 250, 0.65);
+  background: var(--accent-soft);
+  color: #ede9fe;
+}
+
+.stepPanel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+}
+
+.instrumentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.instrumentHeader h2 {
+  font-size: 1.2rem;
+}
+
+.instrumentHeader p {
+  margin: 0.4rem 0 0;
+  max-width: 46rem;
+  font-size: 0.78rem;
+}
+
+.instrumentHeader a {
+  flex: 0 0 auto;
+  color: #c4b5fd;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.questionList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.question {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  background: rgba(11, 15, 23, 0.72);
+}
+
+.question legend {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0 0.2rem;
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.question legend small {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--accent);
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.questionNumber {
+  width: 1.55rem;
+  height: 1.55rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 0.45rem;
+  background: rgba(124, 58, 237, 0.2);
+  color: #ddd6fe;
+  font-size: 0.68rem;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  padding: 0.42rem 0.58rem;
+  background: #0b0f17;
+  color: #cbd5e1;
+  font-size: 0.69rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: #ede9fe;
+}
+
+.option input {
+  width: 0.9rem;
+  min-height: auto;
+  height: 0.9rem;
+  margin: 0;
+  accent-color: var(--accent-strong);
+}
+
+.licenseNotice,
+.safetyNotice {
+  border-radius: 0.75rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.licenseNotice {
+  border: 1px solid rgba(250, 204, 21, 0.24);
+  background: rgba(133, 77, 14, 0.12);
+}
+
+.safetyNotice {
+  border: 1px solid rgba(252, 165, 165, 0.28);
+  background: rgba(127, 29, 29, 0.16);
+}
+
+.licenseNotice strong,
+.safetyNotice strong {
+  font-size: 0.8rem;
+}
+
+.licenseNotice p,
+.safetyNotice p {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+}
+
+.attribution {
+  margin: 0;
+  padding-top: 0.3rem;
+  font-size: 0.66rem;
+}
+
+.flowActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding: 0.85rem 1rem 1rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.message {
+  margin: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  background: rgba(124, 58, 237, 0.11);
+  color: #ddd6fe;
+  font-size: 0.78rem;
+}
+
+.history {
+  padding: 1rem;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.historyHeader h2 {
+  font-size: 1.05rem;
+}
+
+.historyHeader > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.historyList {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.historyCard {
+  border: 1px solid var(--border-soft);
+  border-radius: 0.75rem;
+  background: rgba(11, 15, 23, 0.72);
+  overflow: hidden;
+}
+
+.historyCard summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.historyCard summary::-webkit-details-marker {
+  display: none;
+}
+
+.historyCard summary > div:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.historyCard summary > div:first-child span {
+  color: var(--muted);
+  font-size: 0.67rem;
+}
+
+.summaryScores {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.summaryScores span {
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 0.25rem 0.42rem;
+  color: #cbd5e1;
+  font-size: 0.65rem;
+}
+
+.historyBody {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.9rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.resultGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.result {
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.65rem;
+  padding: 0.65rem;
+  background: var(--panel-2);
+}
+
+.result span,
+.result small {
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+
+.result strong {
+  font-size: 1rem;
+}
+
+.facetGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.facetGrid > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  padding: 0.35rem 0;
+  font-size: 0.7rem;
+}
+
+.facetGrid span {
+  color: var(--muted);
+}
+
+.historyActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.deleteButton {
+  min-height: 2.45rem;
+  border: 1px solid rgba(252, 165, 165, 0.35);
+  border-radius: 0.58rem;
+  padding: 0.5rem 0.78rem;
+  background: rgba(127, 29, 29, 0.2);
+  color: #fecaca;
+  font-weight: 800;
+}
+
+.deleteButton:disabled {
+  opacity: 0.58;
+}
+
+@media (max-width: 900px) {
+  .stepNav {
+    grid-template-columns: repeat(6, 8rem);
+  }
+
+  .resultGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .facetGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .header,
+  .instrumentHeader,
+  .historyCard summary,
+  .historyHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .summaryScores {
+    justify-content: flex-start;
+  }
+
+  .resultGrid,
+  .facetGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .option {
+    border-radius: 0.55rem;
+  }
+
+  .flowActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .flowActions button:last-child {
+    grid-column: 1 / -1;
+  }
+}

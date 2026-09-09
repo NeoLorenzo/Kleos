@@ -43,36 +43,29 @@ using (
 );
 
 create or replace function public.replace_heracles_strength_snapshot(
+  p_user_id uuid,
   p_snapshot jsonb,
   p_synced_at timestamptz default now()
 )
 returns jsonb
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
-  v_owner_id uuid;
   v_current_count integer;
   v_stale_count integer;
 begin
+  if p_user_id is null then
+    raise exception using errcode = '22023', message = 'KLEOS_OWNER_REQUIRED';
+  end if;
+
   if p_snapshot is null or jsonb_typeof(p_snapshot) <> 'array' then
     raise exception using errcode = '22023', message = 'HERACLES_STRENGTH_SNAPSHOT_MUST_BE_ARRAY';
   end if;
 
   if p_synced_at is null then
     raise exception using errcode = '22023', message = 'HERACLES_STRENGTH_SYNC_TIME_REQUIRED';
-  end if;
-
-  select id
-  into v_owner_id
-  from auth.users
-  where lower(email) = 'theneolorenzo@gmail.com'
-  order by created_at asc
-  limit 1;
-
-  if v_owner_id is null then
-    raise exception using errcode = '22023', message = 'KLEOS_OWNER_NOT_FOUND';
   end if;
 
   if exists (
@@ -111,7 +104,7 @@ begin
   update public.heracles_strength_metrics
   set is_current = false,
       last_checked_at = p_synced_at
-  where user_id = v_owner_id;
+  where user_id = p_user_id;
 
   insert into public.heracles_strength_metrics (
     user_id,
@@ -127,7 +120,7 @@ begin
     source
   )
   select
-    v_owner_id,
+    p_user_id,
     incoming.exercise_id,
     incoming.exercise_name,
     incoming.best_1rm,
@@ -161,7 +154,7 @@ begin
          count(*) filter (where not is_current)
   into v_current_count, v_stale_count
   from public.heracles_strength_metrics
-  where user_id = v_owner_id;
+  where user_id = p_user_id;
 
   return jsonb_build_object(
     'current_count', v_current_count,
@@ -171,13 +164,13 @@ begin
 end;
 $$;
 
-comment on function public.replace_heracles_strength_snapshot(jsonb, timestamptz) is
-  'Atomically replaces the current Heracles strength snapshot for the authorized Kleos owner. Missing exercises become stale rather than being deleted.';
+comment on function public.replace_heracles_strength_snapshot(uuid, jsonb, timestamptz) is
+  'Service-only atomic replacement of one Kleos user''s Heracles strength snapshot. Missing exercises become stale rather than being deleted.';
 
-revoke all on function public.replace_heracles_strength_snapshot(jsonb, timestamptz) from public;
-revoke all on function public.replace_heracles_strength_snapshot(jsonb, timestamptz) from anon;
-revoke all on function public.replace_heracles_strength_snapshot(jsonb, timestamptz) from authenticated;
-grant execute on function public.replace_heracles_strength_snapshot(jsonb, timestamptz) to service_role;
+revoke all on function public.replace_heracles_strength_snapshot(uuid, jsonb, timestamptz) from public;
+revoke all on function public.replace_heracles_strength_snapshot(uuid, jsonb, timestamptz) from anon;
+revoke all on function public.replace_heracles_strength_snapshot(uuid, jsonb, timestamptz) from authenticated;
+grant execute on function public.replace_heracles_strength_snapshot(uuid, jsonb, timestamptz) to service_role;
 
 comment on table public.goat_strength_lifts is
   'Deprecated legacy manual strength history. Kleos no longer uses this table as canonical strength evidence; Heracles strength metrics replace it.';

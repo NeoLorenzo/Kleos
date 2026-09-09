@@ -7,20 +7,7 @@ import {
   createEmptyKleosData,
   loadKleosData
 } from "@/lib/kleos/data";
-import {
-  formatTimestampLocalDate,
-  getLocalCalendarDateValue,
-  validateLiftDraft
-} from "@/lib/kleos/measurementRecords";
 import CharacterSheet from "@/components/CharacterSheet";
-
-const STRENGTH_EXERCISES = [
-  "Flat Barbell Bench",
-  "Seated Dumbbell Hammer Curls",
-  "Overhead Dumbbell Tricep Extensions",
-  "Seated Dumbbell Lateral Raises",
-  "Seated Dumbbell Overhead Press"
-];
 
 const COGNITIVE_TESTS = [
   "Mensa Norway",
@@ -29,23 +16,10 @@ const COGNITIVE_TESTS = [
   "Sequential Digit Span"
 ];
 
-function getTodayDateValue() {
-  return getLocalCalendarDateValue();
-}
-
 function getDateTimeLocalValue() {
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   return now.toISOString().slice(0, 16);
-}
-
-function createDefaultLiftForm() {
-  return {
-    exerciseName: STRENGTH_EXERCISES[0],
-    weightKg: "",
-    reps: "",
-    performedAt: getTodayDateValue()
-  };
 }
 
 function createDefaultCognitiveForm() {
@@ -64,7 +38,6 @@ export default function KleosPage() {
   const [accessState, setAccessState] = useState("loading");
   const [user, setUser] = useState(null);
   const [kleosData, setKleosData] = useState(createEmptyKleosData);
-  const [liftForm, setLiftForm] = useState(createDefaultLiftForm);
   const [cognitiveForm, setCognitiveForm] = useState(createDefaultCognitiveForm);
   const [strengthProfileForm, setStrengthProfileForm] = useState({
     bodyWeightKg: "",
@@ -80,59 +53,12 @@ export default function KleosPage() {
   const [miscDraft, setMiscDraft] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (!supabase) {
-      setAccessState("unconfigured");
-      return undefined;
-    }
-
-    let isMounted = true;
-
-    const handleAuthUser = async (nextUser) => {
-      if (!isMounted) {
-        return;
-      }
-
-      const email = String(nextUser?.email || "").trim().toLowerCase();
-      if (!nextUser) {
-        setUser(null);
-        setAccessState("signed-out");
-        setStatusMessage("");
-        return;
-      }
-
-      if (email !== AUTHORIZED_KLEOS_EMAIL) {
-        setUser(nextUser);
-        setAccessState("unauthorized");
-        setStatusMessage("Kleos is locked to the authorized account.");
-        return;
-      }
-
-      setUser(nextUser);
-      setAccessState("authorized");
-      await loadData(nextUser.id, { isMounted: () => isMounted });
-    };
-
-    void supabase.auth.getUser().then(({ data }) => {
-      void handleAuthUser(data?.user || null);
-    });
-
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      void handleAuthUser(session?.user || null);
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+  const [isSyncingStrength, setIsSyncingStrength] = useState(false);
 
   const loadData = async (userId, options = {}) => {
     const isMounted = options.isMounted || (() => true);
-    setStatusMessage("Loading private Kleos data...");
+    const silent = Boolean(options.silent);
+    if (!silent) setStatusMessage("Loading private Kleos data...");
 
     try {
       const nextData = await loadKleosData(userId);
@@ -157,14 +83,102 @@ export default function KleosPage() {
         setCvDraft(nextData.cvText || "");
         setImmutableDraft(nextData.immutableText);
         setMiscDraft(nextData.miscText);
-        setStatusMessage("");
+        if (!silent) setStatusMessage("");
       }
     } catch (error) {
-      if (isMounted()) {
+      if (isMounted() && !silent) {
         setStatusMessage(`Kleos data failed to load: ${getErrorMessage(error)}`);
       }
     }
   };
+
+  const syncHeraclesStrength = async (userId, options = {}) => {
+    if (!supabase || !userId) return;
+    const isMounted = options.isMounted || (() => true);
+    const silent = Boolean(options.silent);
+
+    if (isMounted()) {
+      setIsSyncingStrength(true);
+      if (!silent) setStatusMessage("Syncing strength from Heracles...");
+    }
+
+    const { data, error } = await supabase.functions.invoke("sync-heracles-strength", {
+      body: {}
+    });
+
+    if (!isMounted()) return;
+    setIsSyncingStrength(false);
+
+    if (error) {
+      if (!silent) {
+        setStatusMessage(`Heracles strength sync failed: ${getErrorMessage(error)} Existing snapshot preserved.`);
+      }
+      return;
+    }
+
+    await loadData(userId, { isMounted, silent: true });
+    if (isMounted() && !silent) {
+      const current = Number(data?.current_count || 0);
+      const stale = Number(data?.stale_count || 0);
+      setStatusMessage(`Heracles strength synced: ${current} current, ${stale} stale.`);
+    }
+  };
+
+  useEffect(() => {
+    if (!supabase) {
+      setAccessState("unconfigured");
+      return undefined;
+    }
+
+    let isMounted = true;
+    let autoSyncedUserId = null;
+
+    const handleAuthUser = async (nextUser) => {
+      if (!isMounted) return;
+
+      const email = String(nextUser?.email || "").trim().toLowerCase();
+      if (!nextUser) {
+        setUser(null);
+        setAccessState("signed-out");
+        setStatusMessage("");
+        return;
+      }
+
+      if (email !== AUTHORIZED_KLEOS_EMAIL) {
+        setUser(nextUser);
+        setAccessState("unauthorized");
+        setStatusMessage("Kleos is locked to the authorized account.");
+        return;
+      }
+
+      setUser(nextUser);
+      setAccessState("authorized");
+      await loadData(nextUser.id, { isMounted: () => isMounted });
+
+      if (isMounted && autoSyncedUserId !== nextUser.id) {
+        autoSyncedUserId = nextUser.id;
+        void syncHeraclesStrength(nextUser.id, {
+          isMounted: () => isMounted,
+          silent: true
+        });
+      }
+    };
+
+    void supabase.auth.getUser().then(({ data }) => {
+      void handleAuthUser(data?.user || null);
+    });
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void handleAuthUser(session?.user || null);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -180,9 +194,7 @@ export default function KleosPage() {
   }, [user?.id]);
 
   const signInWithGoogle = async () => {
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
 
     setStatusMessage("");
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -205,9 +217,7 @@ export default function KleosPage() {
   };
 
   const signOut = async () => {
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
     setStatusMessage("");
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -215,48 +225,9 @@ export default function KleosPage() {
     }
   };
 
-  const saveStrengthLift = async (event) => {
-    event.preventDefault();
-    if (!user?.id || isSaving) {
-      return;
-    }
-
-    const validation = validateLiftDraft(liftForm);
-    if (!validation.ok) {
-      setStatusMessage(validation.message);
-      return;
-    }
-
-    setIsSaving(true);
-    setStatusMessage("");
-    const { data, error } = await supabase
-      .from("goat_strength_lifts")
-      .insert({
-        user_id: user.id,
-        ...validation.payload
-      })
-      .select("id,exercise_name,weight_kg,reps,performed_at,created_at")
-      .single();
-
-    setIsSaving(false);
-    if (error) {
-      setStatusMessage(`Lift save failed: ${error.message}`);
-      return;
-    }
-
-    setKleosData((current) => ({
-      ...current,
-      strengthLifts: [data, ...current.strengthLifts].sort(compareDatedRows("performed_at"))
-    }));
-    setLiftForm(createDefaultLiftForm());
-    setStatusMessage("Lift saved.");
-  };
-
   const saveCognitiveTest = async (event) => {
     event.preventDefault();
-    if (!user?.id || isSaving) {
-      return;
-    }
+    if (!user?.id || isSaving) return;
 
     const conditionScores = ["hunger", "distractions", "wakefulness", "mood"].reduce(
       (scores, key) => ({ ...scores, [key]: Number(cognitiveForm[key]) }),
@@ -299,9 +270,7 @@ export default function KleosPage() {
   };
 
   const saveMiscText = async () => {
-    if (!user?.id || isSaving) {
-      return;
-    }
+    if (!user?.id || isSaving) return;
 
     setIsSaving(true);
     setStatusMessage("");
@@ -329,9 +298,7 @@ export default function KleosPage() {
   };
 
   const saveAcademicNotes = async () => {
-    if (!user?.id || isSaving) {
-      return;
-    }
+    if (!user?.id || isSaving) return;
 
     setIsSaving(true);
     setStatusMessage("");
@@ -359,9 +326,7 @@ export default function KleosPage() {
   };
 
   const saveStrengthProfile = async () => {
-    if (!user?.id || isSaving) {
-      return;
-    }
+    if (!user?.id || isSaving) return;
 
     const bodyWeightKg =
       strengthProfileForm.bodyWeightKg === "" ? null : Number(strengthProfileForm.bodyWeightKg);
@@ -408,9 +373,7 @@ export default function KleosPage() {
   };
 
   const saveHealthForm = async () => {
-    if (!user?.id || isSaving) {
-      return;
-    }
+    if (!user?.id || isSaving) return;
 
     setIsSaving(true);
     setStatusMessage("");
@@ -445,9 +408,7 @@ export default function KleosPage() {
   };
 
   const saveCvText = async () => {
-    if (!user?.id || isSaving) {
-      return;
-    }
+    if (!user?.id || isSaving) return;
 
     setIsSaving(true);
     setStatusMessage("");
@@ -475,9 +436,7 @@ export default function KleosPage() {
   };
 
   const saveImmutableText = async () => {
-    if (!user?.id || isSaving) {
-      return;
-    }
+    if (!user?.id || isSaving) return;
 
     setIsSaving(true);
     setStatusMessage("");
@@ -621,8 +580,8 @@ export default function KleosPage() {
 
               <section className="kleos-card">
                 <SectionHeader
-                  title="Strength Standards"
-                  note="Dumbbell weights are per dumbbell, not total."
+                  title="Strength — Heracles"
+                  note="Read-only strength evidence. Current = ≥3 distinct completed sessions in the 30-day window; e1RM is Heracles's upper observed Brzycki/Epley estimate. Dumbbell values are per dumbbell."
                 />
                 <div className="inline-form">
                   <label>
@@ -663,69 +622,25 @@ export default function KleosPage() {
                   >
                     Save Stats
                   </button>
-                </div>
-                <form className="compact-form" onSubmit={saveStrengthLift}>
-                  <label>
-                    Exercise
-                    <select
-                      value={liftForm.exerciseName}
-                      onChange={(event) =>
-                        setLiftForm((current) => ({ ...current, exerciseName: event.target.value }))
-                      }
-                    >
-                      {STRENGTH_EXERCISES.map((exerciseName) => (
-                        <option key={exerciseName} value={exerciseName}>
-                          {exerciseName}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label title="For dumbbell exercises, enter the weight of one dumbbell, not the combined total.">
-                    KG
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={liftForm.weightKg}
-                      onChange={(event) =>
-                        setLiftForm((current) => ({ ...current, weightKg: event.target.value }))
-                      }
-                    />
-                  </label>
-                  <label>
-                    Reps
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={liftForm.reps}
-                      onChange={(event) =>
-                        setLiftForm((current) => ({ ...current, reps: event.target.value }))
-                      }
-                    />
-                  </label>
-                  <label>
-                    Date
-                    <input
-                      type="date"
-                      value={liftForm.performedAt}
-                      onChange={(event) =>
-                        setLiftForm((current) => ({ ...current, performedAt: event.target.value }))
-                      }
-                    />
-                  </label>
-                  <button type="submit" className="primary-btn" disabled={isSaving}>
-                    Save Lift
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={() => void syncHeraclesStrength(user.id)}
+                    disabled={isSyncingStrength}
+                  >
+                    {isSyncingStrength ? "Syncing…" : "Sync Heracles"}
                   </button>
-                </form>
+                </div>
                 <CompactTable
-                  columns={["Exercise", "Lift", "Date"]}
-                  rows={kleosData.strengthLifts.map((lift) => [
-                    lift.exercise_name,
-                    `${formatNumber(lift.weight_kg)} KG${isDumbbellExercise(lift.exercise_name) ? " per dumbbell" : ""} x ${lift.reps}`,
-                    formatDate(lift.performed_at)
+                  columns={["Exercise", "Estimated 1RM", "Sessions", "State", "Achieved"]}
+                  rows={kleosData.strengthMetrics.map((metric) => [
+                    metric.exercise_name,
+                    `${formatNumber(metric.best_1rm)} KG${isDumbbellExercise(metric.exercise_name) ? " per dumbbell" : ""}`,
+                    metric.qualifying_sessions,
+                    metric.is_current ? "Current" : "Stale",
+                    formatCalendarDate(metric.achieved_on)
                   ])}
-                  emptyText="No lifts recorded yet."
+                  emptyText="No Heracles strength snapshot has been synced yet."
                 />
               </section>
 
@@ -879,9 +794,7 @@ function SectionHeader({ title, note }) {
 }
 
 function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
-  if (accessState === "authorized") {
-    return null;
-  }
+  if (accessState === "authorized") return null;
 
   const titleByState = {
     loading: "Checking Kleos Access",
@@ -947,22 +860,20 @@ function compareDatedRows(dateKey) {
     new Date(right[dateKey] || 0).getTime() - new Date(left[dateKey] || 0).getTime();
 }
 
-function formatDate(value) {
-  return formatTimestampLocalDate(value);
+function formatCalendarDate(value) {
+  if (!value) return "-";
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
 }
 
 function formatDateTime(value) {
-  if (!value) {
-    return "-";
-  }
+  if (!value) return "-";
   return new Date(value).toLocaleString();
 }
 
 function formatNumber(value) {
   const numberValue = Number(value);
-  if (!Number.isFinite(numberValue)) {
-    return "-";
-  }
+  if (!Number.isFinite(numberValue)) return "-";
   return Number.isInteger(numberValue) ? String(numberValue) : numberValue.toFixed(1);
 }
 

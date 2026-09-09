@@ -38,7 +38,7 @@ For each qualifying exercise, `best_1rm` is the highest positive Heracles `estim
 
 `replace_heracles_strength_snapshot(...)` atomically persists each successful complete export. Exercises returned by the newest export are `is_current = true`; previously known exercises omitted by a successful export are retained as `is_current = false` rather than deleted. `synced_at` records the latest successful sync in which that exercise was returned, while `last_checked_at` advances on every successful full snapshot. A failed cross-project request does not invoke the replacement RPC, so the last-known snapshot remains intact.
 
-The browser never receives a Heracles privileged credential. It invokes the Kleos `sync-heracles-strength` Edge Function using the authenticated Kleos session. That function forwards the caller token to Heracles; Heracles independently validates the token against Kleos Auth before executing its narrow service-only export RPC.
+The browser never receives a Heracles privileged credential. It invokes the Kleos `sync-heracles-strength` Edge Function using the authenticated Kleos session. That function forwards the caller token to Heracles. Before using any Heracles service privileges, Heracles forwards the token to the Kleos `verify-heracles-caller` Edge Function, whose Supabase gateway and local Auth lookup verify the Kleos session and authorized account. Only then does Heracles execute its narrow service-only export RPC.
 
 ## Derived vector-state objects
 
@@ -62,7 +62,7 @@ Client applications must use only the Supabase publishable/anon client credentia
 
 `create_kleos_vector_snapshot(...)` is `SECURITY DEFINER`, so it performs its own explicit authenticated-user and authorized-email check before writing. Its execute permission is granted only to `authenticated`; `anon` and `public` execution are revoked.
 
-`replace_heracles_strength_snapshot(...)` is a backend-only `SECURITY DEFINER` RPC. Ordinary authenticated clients can read their own `heracles_strength_metrics` rows but cannot call the replacement RPC or write the table directly.
+`replace_heracles_strength_snapshot(...)` is a backend-only `SECURITY INVOKER` RPC. It accepts the already authenticated Kleos owner ID explicitly, is executable only by `service_role`, and relies on that service role's table privileges. Ordinary authenticated clients can read their own `heracles_strength_metrics` rows but cannot call the replacement RPC or write the table directly.
 
 ## Future namespace cleanup
 

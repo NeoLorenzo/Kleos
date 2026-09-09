@@ -22,12 +22,14 @@ test("character sheet maps representative raw evidence without inventing missing
     strengthMetrics: [
       {
         exercise_name: "Hammer Curl (Dumbbell) (Seated)",
+        equipment_name: "Dumbbell",
         best_1rm: 45.33,
         qualifying_sessions: 6,
         is_current: true
       },
       {
         exercise_name: "Old Press",
+        equipment_name: "Prime Press",
         best_1rm: 100,
         qualifying_sessions: 3,
         is_current: false
@@ -44,6 +46,7 @@ test("character sheet maps representative raw evidence without inventing missing
 
   assert.ok(evidence.physical.some((item) => item.includes("190 cm")));
   assert.ok(evidence.physical.some((item) => item.includes("45.3 kg per dumbbell")));
+  assert.ok(evidence.physical.some((item) => item.includes("on Dumbbell")));
   assert.ok(evidence.physical.some((item) => item.includes("6 qualifying sessions")));
   assert.ok(evidence.physical.some((item) => item.includes("1 last-known Heracles strength metric is stale")));
   assert.equal(evidence.physical.some((item) => item.includes("Old Press: estimated")), false);

@@ -52,13 +52,22 @@ function hasExpectedContract(payload: unknown): payload is {
 } {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
   const record = payload as Record<string, unknown>;
-  return record.contract_version === "1.0.0"
-    && record.source === "heracles"
-    && record.window_days === 30
-    && record.minimum_sessions === 3
-    && record.estimation_basis === "observed_e1rm_high"
-    && typeof record.generated_at === "string"
-    && Array.isArray(record.lifts);
+  if (record.contract_version !== "1.1.0"
+    || record.source !== "heracles"
+    || record.window_days !== 30
+    || record.minimum_sessions !== 3
+    || record.estimation_basis !== "observed_e1rm_high"
+    || typeof record.generated_at !== "string"
+    || !Array.isArray(record.lifts)) {
+    return false;
+  }
+
+  return record.lifts.every((lift) => {
+    if (!lift || typeof lift !== "object" || Array.isArray(lift)) return false;
+    const row = lift as Record<string, unknown>;
+    return Object.prototype.hasOwnProperty.call(row, "equipment_name")
+      && (row.equipment_name === null || typeof row.equipment_name === "string");
+  });
 }
 
 Deno.serve(async (req: Request) => {

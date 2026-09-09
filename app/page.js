@@ -581,7 +581,7 @@ export default function KleosPage() {
               <section className="kleos-card">
                 <SectionHeader
                   title="Strength — Heracles"
-                  note="Read-only strength evidence. Current = ≥3 distinct completed sessions in the 30-day window; e1RM is Heracles's upper observed Brzycki/Epley estimate. Dumbbell values are per dumbbell."
+                  note="Read-only strength evidence. Current = ≥3 distinct completed sessions in the 30-day window; e1RM is Heracles's upper observed Brzycki/Epley estimate. Machine/equipment is the historical equipment snapshot from the exact set that produced the selected e1RM. Dumbbell values are per dumbbell."
                 />
                 <div className="inline-form">
                   <label>
@@ -632,9 +632,10 @@ export default function KleosPage() {
                   </button>
                 </div>
                 <CompactTable
-                  columns={["Exercise", "Estimated 1RM", "Sessions", "State", "Achieved"]}
+                  columns={["Exercise", "Machine / Equipment", "Estimated 1RM", "Sessions", "State", "Achieved"]}
                   rows={kleosData.strengthMetrics.map((metric) => [
                     metric.exercise_name,
+                    metric.equipment_name || "Not recorded",
                     `${formatNumber(metric.best_1rm)} KG${isDumbbellExercise(metric.exercise_name) ? " per dumbbell" : ""}`,
                     metric.qualifying_sessions,
                     metric.is_current ? "Current" : "Stale",

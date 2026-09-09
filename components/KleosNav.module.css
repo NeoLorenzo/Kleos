@@ -1,0 +1,41 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(7, 9, 15, 0.94);
+  backdrop-filter: blur(14px);
+}
+
+.nav a {
+  padding: 0.42rem 0.66rem;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.nav a:hover,
+.nav a:focus-visible {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--panel-2);
+  outline: none;
+}
+
+@media (max-width: 560px) {
+  .nav {
+    justify-content: stretch;
+  }
+
+  .nav a {
+    flex: 1;
+    text-align: center;
+  }
+}

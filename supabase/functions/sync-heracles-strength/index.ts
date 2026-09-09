@@ -36,9 +36,9 @@ async function authenticateCaller(
   });
 
   if (!response.ok) return null;
-  const user = await response.json().catch(() => null) as { email?: string } | null;
+  const user = await response.json().catch(() => null) as { id?: string; email?: string } | null;
   const email = String(user?.email ?? "").trim().toLowerCase();
-  return email === AUTHORIZED_EMAIL ? user : null;
+  return user?.id && email === AUTHORIZED_EMAIL ? user : null;
 }
 
 function hasExpectedContract(payload: unknown): payload is {
@@ -88,7 +88,7 @@ Deno.serve(async (req: Request) => {
   } catch (_error) {
     return json({ error: "AUTHENTICATION_UNAVAILABLE" }, 503);
   }
-  if (!caller) {
+  if (!caller?.id) {
     return json({ error: "UNAUTHORIZED" }, 401);
   }
 
@@ -124,6 +124,7 @@ Deno.serve(async (req: Request) => {
   });
   const syncedAt = new Date().toISOString();
   const { data, error } = await admin.rpc("replace_heracles_strength_snapshot", {
+    p_user_id: caller.id,
     p_snapshot: sourcePayload.lifts,
     p_synced_at: syncedAt,
   });

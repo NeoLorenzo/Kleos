@@ -6,22 +6,22 @@ Kleos Bot produces a dated derived assessment of the eight canonical Kleos vecto
 
 Every run must use the current canonical Kleos records from the shared Supabase project. Do not evaluate from stale manually copied prompt text.
 
-Canonical evidence currently includes:
+Canonical evidence membership is defined by the enabled rows in the server-side `kleos_evidence_sources` registry. The registry is an explicit whitelist: a table does not become canonical Kleos Bot evidence merely because its name starts with `goat_`.
 
-- `goat_strength_lifts`
-- `goat_strength_profile`
-- `goat_cognitive_tests`
-- `goat_academic_stage_results`
-- `goat_academic_module_results`
-- `goat_academic_notes`
-- `goat_health_characteristics`
-- `goat_cv_characteristics`
-- `goat_immutable_characteristics`
-- `goat_misc_characteristics`
+The current registry includes, among other sources, `goat_big_five_assessments`. Big Five is personality/dispositional evidence and may inform interpretation where relevant, but it must not be treated as a direct mental-health measurement or mechanically converted into a psychological vector score.
 
-Legacy `goat_score_entries` must not determine any current vector score. Existing vector snapshots and snapshot results are derived assessments, not canonical evidence.
+Legacy `goat_score_entries` must not determine any current vector score. Existing vector snapshots and snapshot results are derived assessments, not canonical raw evidence.
 
 The bot must not silently import facts from previous ChatGPT conversations, ChatGPT memory, unrelated files, or external sources.
+
+## Evidence schema vs methodology version
+
+The Kleos Bot scoring methodology and the evidence transport contract are versioned independently.
+
+- Methodology version `1.0.0` defines how the eight vectors are interpreted, calibrated, and persisted.
+- Evidence schema version `2.0.0` defines the current transport wrapper returned by the Shortcut-facing evidence endpoint.
+
+Adding or removing a canonical evidence source through the registry does not by itself require a methodology-version bump. A methodology bump is required only when the evaluation/scoring semantics intentionally change.
 
 ## Apple Shortcuts evidence transport
 
@@ -34,21 +34,34 @@ Apple Shortcut
       ↓
 POST kleos-bot-evidence Edge Function
       ↓
-canonical evidence JSON
+versioned evidence wrapper
       ↓
 Ask ChatGPT with that JSON embedded in the invocation
 ```
 
 The Edge Function authenticates the Shortcut using a dedicated high-entropy bot token supplied in `x-kleos-bot-token`. The plaintext token is stored only in the Shortcut; the repository contains only its SHA-256 hash. Supabase database credentials remain server-side in the Edge Function environment.
 
-The Edge Function calls `get_kleos_bot_evidence_admin()` server-side and returns its canonical JSON result. That RPC:
+The Edge Function calls `get_kleos_bot_evidence_admin()` server-side and returns:
+
+```json
+{
+  "evidence_schema_version": "2.0.0",
+  "evidence_groups": {
+    "<registered group key>": []
+  }
+}
+```
+
+The underlying admin RPC:
 
 - accepts no owner UUID;
 - resolves the fixed authorized Kleos owner internally;
 - strips `user_id` from returned records;
-- returns exactly the ten canonical methodology 1.0.0 evidence groups;
-- excludes vector snapshots, snapshot results, and legacy score entries;
+- returns one array for every enabled source in `kleos_evidence_sources`;
+- excludes vector snapshots, snapshot results, and legacy score entries by registry boundary;
 - is read-only.
+
+ChatGPT must consume every group returned under `evidence_groups`. It must not require a predetermined group count or fixed list of names. This allows newly registered canonical evidence to reach the evaluator without a prompt-specific transport change.
 
 ChatGPT must treat the JSON supplied by the Shortcut as the complete authoritative evidence payload for that invocation. It must not perform raw `SELECT` queries against the underlying `goat_*` tables and must not use previous snapshots or memory as fallback evidence.
 

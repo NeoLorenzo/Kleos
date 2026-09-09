@@ -19,7 +19,20 @@ before(async () => {
 test("character sheet maps representative raw evidence without inventing missing domains", () => {
   const evidence = helpers.buildCharacterEvidence({
     strengthProfile: { heightCm: 190, bodyWeightKg: 88.9 },
-    strengthLifts: [{ exercise_name: "Flat Barbell Bench", weight_kg: 95, reps: 6 }],
+    strengthMetrics: [
+      {
+        exercise_name: "Hammer Curl (Dumbbell) (Seated)",
+        best_1rm: 45.33,
+        qualifying_sessions: 6,
+        is_current: true
+      },
+      {
+        exercise_name: "Old Press",
+        best_1rm: 100,
+        qualifying_sessions: 3,
+        is_current: false
+      }
+    ],
     cognitiveTests: [{ test_name: "Mensa Norway", score_text: "135" }],
     academicStages: [{ stage: 2, stage_mean: 75 }],
     academicModules: [{ module_name: "Example" }],
@@ -30,6 +43,10 @@ test("character sheet maps representative raw evidence without inventing missing
   });
 
   assert.ok(evidence.physical.some((item) => item.includes("190 cm")));
+  assert.ok(evidence.physical.some((item) => item.includes("45.3 kg per dumbbell")));
+  assert.ok(evidence.physical.some((item) => item.includes("6 qualifying sessions")));
+  assert.ok(evidence.physical.some((item) => item.includes("1 last-known Heracles strength metric is stale")));
+  assert.equal(evidence.physical.some((item) => item.includes("Old Press: estimated")), false);
   assert.ok(evidence.intellectual.some((item) => item.includes("75%")));
   assert.ok(evidence.professional.some((item) => item.includes("CV")));
   assert.ok(evidence.psychological.some((item) => item.includes("No dedicated structured psychological")));

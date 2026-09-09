@@ -9,7 +9,7 @@ Apple Shortcut
       ↓
 POST /functions/v1/kleos-bot-evidence
       ↓
-canonical Kleos evidence JSON
+versioned canonical evidence JSON
       ↓
 Ask ChatGPT with the JSON included in the prompt
       ↓
@@ -40,20 +40,28 @@ The plaintext token is intentionally not committed to the repository. The Edge F
 
 ## Response contract
 
-A successful request returns a JSON object containing exactly these canonical evidence groups:
+A successful request returns a versioned wrapper:
 
-- `goat_strength_lifts`
-- `goat_strength_profile`
-- `goat_cognitive_tests`
-- `goat_academic_stage_results`
-- `goat_academic_module_results`
-- `goat_academic_notes`
-- `goat_health_characteristics`
-- `goat_cv_characteristics`
-- `goat_immutable_characteristics`
-- `goat_misc_characteristics`
+```json
+{
+  "evidence_schema_version": "2.0.0",
+  "evidence_groups": {
+    "goat_big_five_assessments": [],
+    "goat_cognitive_tests": [],
+    "...": []
+  }
+}
+```
 
-The underlying database evidence RPC strips `user_id` and excludes existing vector snapshots, snapshot results, and legacy `goat_score_entries`.
+`evidence_groups` is dynamic. Its membership is defined by the enabled rows in the server-side `kleos_evidence_sources` registry, which is the authoritative whitelist of canonical raw evidence sources.
+
+The current registry includes Big Five assessments alongside the other canonical sources. Consumers must not hard-code the current number of groups or assume a permanent list of group names. Every group returned under `evidence_groups` must be passed through to the ChatGPT evaluation so future registered canonical sources are not silently discarded.
+
+The registry boundary is explicit: a database table is not exposed merely because its name follows a `goat_*` naming convention. Existing vector snapshots, snapshot results, and legacy `goat_score_entries` are not canonical raw evidence and are not included.
+
+The underlying database evidence RPC strips `user_id` from returned records.
+
+The evidence schema version is independent from the Kleos Bot scoring methodology version. A registry membership change does not require a methodology-version bump unless evaluation/scoring semantics also change.
 
 Evidence responses use `Cache-Control: no-store` and `Pragma: no-cache`.
 
@@ -72,8 +80,9 @@ Errors must not include owner identifiers, database credentials, raw SQL, or per
 2. Set the URL to the production endpoint above.
 3. Set Method to `POST`.
 4. Add request header `x-kleos-bot-token` with the dedicated Kleos Bot token.
-5. Use the returned JSON as a variable in the subsequent ChatGPT prompt.
-6. The ChatGPT prompt must treat that JSON as the complete canonical evidence payload for the current invocation and must not use the Supabase connector for evidence retrieval.
-7. ChatGPT may still use the connected Supabase administrative SQL interface for final persistence through `create_kleos_bot_snapshot_admin(...)`.
+5. Use the complete returned JSON object as a variable in the subsequent ChatGPT prompt.
+6. The ChatGPT prompt must read `evidence_schema_version`, then consume every group supplied under `evidence_groups` without filtering to a predetermined count or list of names.
+7. Treat the returned JSON as the complete canonical evidence payload for the current invocation; do not use the Supabase connector for evidence retrieval or previous snapshots/memory as fallback evidence.
+8. ChatGPT may still use the connected Supabase administrative SQL interface for final persistence through `create_kleos_bot_snapshot_admin(...)`.
 
 Do not place Supabase database URLs, secret keys, service-role keys, owner UUIDs, or authentication JWTs in the Shortcut.

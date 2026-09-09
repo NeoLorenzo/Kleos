@@ -34,8 +34,11 @@ test("edge evidence endpoint keeps database credentials server-side and reuses t
   assert.doesNotMatch(source, /SUPABASE_SECRET_KEYS\s*=\s*["']/i);
 });
 
-test("edge evidence endpoint preserves methodology 1.0.0 when newer evidence groups exist", () => {
-  assert.match(source, /delete\s+methodologyEvidence\.goat_big_five_assessments/i);
+test("edge evidence endpoint returns the registry-driven evidence payload without hard-coded methodology filtering", () => {
+  assert.match(source, /EVIDENCE_SCHEMA_VERSION\s*=\s*"2\.0\.0"/i);
+  assert.match(source, /evidence_groups:\s*evidenceGroups/i);
+  assert.doesNotMatch(source, /methodologyEvidence/i);
+  assert.doesNotMatch(source, /goat_big_five_assessments/i);
 });
 
 test("edge evidence endpoint does not duplicate raw evidence-table selection or expose owner identity", () => {

@@ -4,28 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 import { AUTHORIZED_KLEOS_EMAIL } from "@/lib/kleos/data";
 import {
   cognitiveRowToDraft,
-  liftRowToDraft,
   removeMeasurementRecord,
   replaceMeasurementRecord,
-  validateCognitiveDraft,
-  validateLiftDraft
+  validateCognitiveDraft
 } from "@/lib/kleos/measurementRecords";
 import { supabase } from "@/lib/supabase/client";
 
-const TABLES = {
-  lift: {
-    table: "goat_strength_lifts",
-    select: "id,exercise_name,weight_kg,reps,performed_at,created_at",
-    label: "strength lift"
-  },
-  cognitive: {
-    table: "goat_cognitive_tests",
-    select: "id,test_name,score_text,taken_at,hunger,distractions,wakefulness,mood,created_at",
-    label: "cognitive test"
-  }
+const COGNITIVE_TABLE = {
+  table: "goat_cognitive_tests",
+  select: "id,test_name,score_text,taken_at,hunger,distractions,wakefulness,mood,created_at",
+  label: "cognitive test"
 };
-
-const emptyRecords = () => ({ lift: [], cognitive: [] });
 
 export default function MeasurementCorrections() {
   const [authorized, setAuthorized] = useState(false);
@@ -33,8 +22,8 @@ export default function MeasurementCorrections() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
-  const [records, setRecords] = useState(emptyRecords);
-  const [editing, setEditing] = useState(null);
+  const [records, setRecords] = useState([]);
+  const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState(null);
 
   useEffect(() => {
@@ -48,9 +37,9 @@ export default function MeasurementCorrections() {
 
       if (!isAuthorized) {
         setOpen(false);
-        setEditing(null);
+        setEditingId(null);
         setDraft(null);
-        setRecords(emptyRecords());
+        setRecords([]);
       }
     };
 
@@ -69,10 +58,7 @@ export default function MeasurementCorrections() {
   }, [open, authorized, userId]);
 
   const sortedRecords = useMemo(
-    () => ({
-      lift: [...records.lift].sort((a, b) => String(b.performed_at).localeCompare(String(a.performed_at))),
-      cognitive: [...records.cognitive].sort((a, b) => String(b.taken_at).localeCompare(String(a.taken_at)))
-    }),
+    () => [...records].sort((a, b) => String(b.taken_at).localeCompare(String(a.taken_at))),
     [records]
   );
 
@@ -81,43 +67,37 @@ export default function MeasurementCorrections() {
     setLoading(true);
     setStatus("");
 
-    const [lifts, cognitive] = await Promise.all([
-      supabase.from(TABLES.lift.table).select(TABLES.lift.select).eq("user_id", userId),
-      supabase.from(TABLES.cognitive.table).select(TABLES.cognitive.select).eq("user_id", userId)
-    ]);
+    const { data, error } = await supabase
+      .from(COGNITIVE_TABLE.table)
+      .select(COGNITIVE_TABLE.select)
+      .eq("user_id", userId);
 
     setLoading(false);
-    const failed = [lifts, cognitive].find((result) => result.error);
-    if (failed?.error) {
-      setStatus(`Measurement history failed to load: ${failed.error.message}`);
+    if (error) {
+      setStatus(`Measurement history failed to load: ${error.message}`);
       return;
     }
 
-    setRecords({
-      lift: lifts.data || [],
-      cognitive: cognitive.data || []
-    });
+    setRecords(data || []);
   };
 
-  const beginEdit = (kind, row) => {
+  const beginEdit = (row) => {
     setStatus("");
-    setEditing({ kind, id: row.id });
-    setDraft(kind === "lift" ? liftRowToDraft(row) : cognitiveRowToDraft(row));
+    setEditingId(row.id);
+    setDraft(cognitiveRowToDraft(row));
   };
 
   const cancelEdit = () => {
-    setEditing(null);
+    setEditingId(null);
     setDraft(null);
     setStatus("");
   };
 
   const saveEdit = async (event) => {
     event.preventDefault();
-    if (!supabase || !editing || !draft || !userId) return;
+    if (!supabase || !editingId || !draft || !userId) return;
 
-    const validation =
-      editing.kind === "lift" ? validateLiftDraft(draft) : validateCognitiveDraft(draft);
-
+    const validation = validateCognitiveDraft(draft);
     if (!validation.ok) {
       setStatus(validation.message);
       return;
@@ -125,40 +105,38 @@ export default function MeasurementCorrections() {
 
     setLoading(true);
     setStatus("");
-    const config = TABLES[editing.kind];
     const { data, error } = await supabase
-      .from(config.table)
+      .from(COGNITIVE_TABLE.table)
       .update(validation.payload)
-      .eq("id", editing.id)
+      .eq("id", editingId)
       .eq("user_id", userId)
-      .select(config.select)
+      .select(COGNITIVE_TABLE.select)
       .single();
     setLoading(false);
 
     if (error) {
-      setStatus(`${config.label} update failed: ${error.message}`);
+      setStatus(`${COGNITIVE_TABLE.label} update failed: ${error.message}`);
       return;
     }
 
-    setRecords((current) => replaceMeasurementRecord(current, editing.kind, data));
+    setRecords((current) => replaceMeasurementRecord({ cognitive: current }, "cognitive", data).cognitive);
     window.dispatchEvent(new Event("kleos:measurements-changed"));
-    setEditing(null);
+    setEditingId(null);
     setDraft(null);
-    setStatus(`${config.label} updated.`);
+    setStatus(`${COGNITIVE_TABLE.label} updated.`);
   };
 
-  const deleteRecord = async (kind, row) => {
+  const deleteRecord = async (row) => {
     if (!supabase || !userId) return;
-    const config = TABLES[kind];
-    const summary = describeRecord(kind, row);
-    if (!window.confirm(`Delete this ${config.label}?\n\n${summary}\n\nThis cannot be undone.`)) {
+    const summary = describeRecord(row);
+    if (!window.confirm(`Delete this ${COGNITIVE_TABLE.label}?\n\n${summary}\n\nThis cannot be undone.`)) {
       return;
     }
 
     setLoading(true);
     setStatus("");
     const { error } = await supabase
-      .from(config.table)
+      .from(COGNITIVE_TABLE.table)
       .delete()
       .eq("id", row.id)
       .eq("user_id", userId)
@@ -167,13 +145,13 @@ export default function MeasurementCorrections() {
     setLoading(false);
 
     if (error) {
-      setStatus(`${config.label} deletion failed: ${error.message}`);
+      setStatus(`${COGNITIVE_TABLE.label} deletion failed: ${error.message}`);
       return;
     }
 
-    setRecords((current) => removeMeasurementRecord(current, kind, row.id));
+    setRecords((current) => removeMeasurementRecord({ cognitive: current }, "cognitive", row.id).cognitive);
     window.dispatchEvent(new Event("kleos:measurements-changed"));
-    setStatus(`${config.label} deleted.`);
+    setStatus(`${COGNITIVE_TABLE.label} deleted.`);
   };
 
   if (!authorized) return null;
@@ -201,7 +179,7 @@ export default function MeasurementCorrections() {
             <header className="correction-header">
               <div>
                 <h2>Correct recorded measurements</h2>
-                <p>Edit or delete canonical strength and cognitive history.</p>
+                <p>Edit or delete canonical cognitive history. Strength evidence is read-only from Heracles.</p>
               </div>
               <button
                 type="button"
@@ -214,11 +192,10 @@ export default function MeasurementCorrections() {
             </header>
 
             {status ? <p className="correction-status">{status}</p> : null}
-            {loading && !editing ? <p className="correction-status">Loading…</p> : null}
+            {loading && !editingId ? <p className="correction-status">Loading…</p> : null}
 
-            {editing && draft ? (
+            {editingId && draft ? (
               <EditForm
-                kind={editing.kind}
                 draft={draft}
                 setDraft={setDraft}
                 onSubmit={saveEdit}
@@ -228,17 +205,7 @@ export default function MeasurementCorrections() {
             ) : (
               <div className="correction-groups">
                 <RecordGroup
-                  title="Strength History"
-                  kind="lift"
-                  rows={sortedRecords.lift}
-                  onEdit={beginEdit}
-                  onDelete={deleteRecord}
-                  disabled={loading}
-                />
-                <RecordGroup
-                  title="Cognitive History"
-                  kind="cognitive"
-                  rows={sortedRecords.cognitive}
+                  rows={sortedRecords}
                   onEdit={beginEdit}
                   onDelete={deleteRecord}
                   disabled={loading}
@@ -310,20 +277,20 @@ export default function MeasurementCorrections() {
   );
 }
 
-function RecordGroup({ title, kind, rows, onEdit, onDelete, disabled }) {
+function RecordGroup({ rows, onEdit, onDelete, disabled }) {
   return (
     <section className="correction-group">
-      <h3>{title}</h3>
+      <h3>Cognitive History</h3>
       <div className="correction-list">
         {rows.length ? (
           rows.map((row) => (
             <div className="correction-row" key={row.id}>
-              <div className="correction-row-text">{describeRecord(kind, row)}</div>
+              <div className="correction-row-text">{describeRecord(row)}</div>
               <div className="correction-actions">
-                <button type="button" onClick={() => onEdit(kind, row)} disabled={disabled}>
+                <button type="button" onClick={() => onEdit(row)} disabled={disabled}>
                   Edit
                 </button>
-                <button type="button" onClick={() => onDelete(kind, row)} disabled={disabled}>
+                <button type="button" onClick={() => onDelete(row)} disabled={disabled}>
                   Delete
                 </button>
               </div>
@@ -337,56 +304,33 @@ function RecordGroup({ title, kind, rows, onEdit, onDelete, disabled }) {
   );
 }
 
-function EditForm({ kind, draft, setDraft, onSubmit, onCancel, disabled }) {
+function EditForm({ draft, setDraft, onSubmit, onCancel, disabled }) {
   const setField = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
 
   return (
     <form className="correction-form" onSubmit={onSubmit}>
-      <h3>Edit {TABLES[kind].label}</h3>
-
-      {kind === "lift" ? (
-        <>
-          <Field label="Exercise">
-            <input value={draft.exerciseName} onChange={(event) => setField("exerciseName", event.target.value)} />
-          </Field>
-          <Field label="Weight KG">
-            <input type="number" min="0" step="0.5" value={draft.weightKg} onChange={(event) => setField("weightKg", event.target.value)} />
-          </Field>
-          <Field label="Reps">
-            <input type="number" min="1" step="1" value={draft.reps} onChange={(event) => setField("reps", event.target.value)} />
-          </Field>
-          <Field label="Date">
-            <input type="date" value={draft.performedAt} onChange={(event) => setField("performedAt", event.target.value)} />
-          </Field>
-        </>
-      ) : null}
-
-      {kind === "cognitive" ? (
-        <>
-          <Field label="Test">
-            <input value={draft.testName} onChange={(event) => setField("testName", event.target.value)} />
-          </Field>
-          <Field label="Score">
-            <input value={draft.score} onChange={(event) => setField("score", event.target.value)} />
-          </Field>
-          <Field label="Date/time">
-            <input type="datetime-local" value={draft.takenAt} onChange={(event) => setField("takenAt", event.target.value)} />
-          </Field>
-          {["hunger", "distractions", "wakefulness", "mood"].map((field) => (
-            <Field key={field} label={`${field[0].toUpperCase()}${field.slice(1)} /10`}>
-              <input
-                type="number"
-                min="0"
-                max="10"
-                step="1"
-                value={draft[field]}
-                onChange={(event) => setField(field, event.target.value)}
-              />
-            </Field>
-          ))}
-        </>
-      ) : null}
-
+      <h3>Edit cognitive test</h3>
+      <Field label="Test">
+        <input value={draft.testName} onChange={(event) => setField("testName", event.target.value)} />
+      </Field>
+      <Field label="Score">
+        <input value={draft.score} onChange={(event) => setField("score", event.target.value)} />
+      </Field>
+      <Field label="Date/time">
+        <input type="datetime-local" value={draft.takenAt} onChange={(event) => setField("takenAt", event.target.value)} />
+      </Field>
+      {["hunger", "distractions", "wakefulness", "mood"].map((field) => (
+        <Field key={field} label={`${field[0].toUpperCase()}${field.slice(1)} /10`}>
+          <input
+            type="number"
+            min="0"
+            max="10"
+            step="1"
+            value={draft[field]}
+            onChange={(event) => setField(field, event.target.value)}
+          />
+        </Field>
+      ))}
       <div className="correction-form-actions">
         <button type="submit" disabled={disabled}>Save correction</button>
         <button type="button" onClick={onCancel} disabled={disabled}>Cancel</button>
@@ -399,22 +343,8 @@ function Field({ label, children }) {
   return <label>{label}{children}</label>;
 }
 
-function describeRecord(kind, row) {
-  if (kind === "lift") {
-    return `${row.exercise_name} — ${formatNumber(row.weight_kg)} KG × ${row.reps} — ${formatDate(row.performed_at)}`;
-  }
+function describeRecord(row) {
   return `${row.test_name} — ${row.score_text} — ${formatDateTime(row.taken_at)} — H ${row.hunger}/10, D ${row.distractions}/10, W ${row.wakefulness}/10, M ${row.mood}/10`;
-}
-
-function formatNumber(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return String(value ?? "");
-  return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(2)));
-}
-
-function formatDate(value) {
-  if (!value) return "-";
-  return new Date(value).toLocaleDateString();
 }
 
 function formatDateTime(value) {

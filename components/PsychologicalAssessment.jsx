@@ -211,8 +211,8 @@ export default function PsychologicalAssessment({ userId }) {
           <p className={styles.eyebrow}>Canonical Psychological Evidence</p>
           <h1 id="psychological-assessment-title">Psychological Battery</h1>
           <p className={styles.intro}>
-            A repeatable set of independently scored measures. Screening scores are evidence for Kleos Bot,
-            not diagnoses and not a replacement for professional assessment.
+            A repeatable set of independently scored measures plus Kleos-specific tracking facets.
+            Screening scores are evidence for Kleos Bot, not diagnoses and not a replacement for professional assessment.
           </p>
         </div>
         {!isActive ? (
@@ -344,17 +344,6 @@ function InstrumentStep({ instrument, values, onChange, phqItem9Value }) {
         </a>
       </header>
 
-      {instrument.licensedTextExternal ? (
-        <div className={styles.licenseNotice}>
-          <strong>Licensed wording is intentionally not copied into this public repository.</strong>
-          <p>
-            Open the official PSS page using “Source / terms”, read each PSS-10 item there, then record
-            the corresponding response below. Kleos stores the ten response values and scores items 4,
-            5, 7 and 8 in the reverse direction.
-          </p>
-        </div>
-      ) : null}
-
       <div className={styles.questionList}>
         {instrument.items.map((item, index) => (
           <Question
@@ -393,8 +382,9 @@ function KleosFacetStep({ values, onChange }) {
           <p className={styles.eyebrow}>Kleos-specific</p>
           <h2>Supplementary psychological facets</h2>
           <p>
-            These are stable Kleos tracking items, not validated subscales of WHO-5, SWLS, PSS-10,
-            GAD-7 or PHQ-9. They are stored individually and are not combined into a homemade score.
+            These are stable Kleos tracking items, not validated subscales of WHO-5, SWLS, GAD-7 or PHQ-9.
+            They include stress-load, coping and perceived-control coverage and are stored individually rather
+            than combined into a homemade score.
           </p>
         </div>
       </header>
@@ -450,7 +440,6 @@ function Question({ number, text, sublabel, value, options, onChange }) {
 function AssessmentHistoryCard({ assessment, latest, onEdit, onDelete, disabled }) {
   const who5 = Number(assessment.who5_percentage);
   const swls = Number(assessment.swls_score);
-  const pss10 = Number(assessment.pss10_score);
   const gad7 = Number(assessment.gad7_score);
   const phq9 = Number(assessment.phq9_score);
 
@@ -464,7 +453,6 @@ function AssessmentHistoryCard({ assessment, latest, onEdit, onDelete, disabled 
         <div className={styles.summaryScores}>
           <span>WHO-5 {Number.isFinite(who5) ? `${who5}/100` : "-"}</span>
           <span>SWLS {Number.isFinite(swls) ? `${swls}/35` : "-"}</span>
-          <span>PSS-10 {Number.isFinite(pss10) ? `${pss10}/40` : "-"}</span>
           <span>GAD-7 {Number.isFinite(gad7) ? `${gad7}/21` : "-"}</span>
           <span>PHQ-9 {Number.isFinite(phq9) ? `${phq9}/27` : "-"}</span>
         </div>
@@ -474,7 +462,6 @@ function AssessmentHistoryCard({ assessment, latest, onEdit, onDelete, disabled 
         <div className={styles.resultGrid}>
           <Result label="WHO-5" value={`${who5}/100`} detail={Number(assessment.who5_raw_score) < 13 ? "Below suggested wellbeing cut-off" : "At or above suggested wellbeing cut-off"} />
           <Result label="SWLS" value={`${swls}/35`} detail={getSwlsCategory(swls)} />
-          <Result label="PSS-10" value={`${pss10}/40`} detail="No diagnostic cut-off; compare longitudinally" />
           <Result label="GAD-7" value={`${gad7}/21`} detail={getGad7Category(gad7)} />
           <Result label="PHQ-9" value={`${phq9}/27`} detail={getPhq9Category(phq9)} />
         </div>

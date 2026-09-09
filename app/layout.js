@@ -1,5 +1,6 @@
 import "./globals.css";
 import MeasurementCorrections from "@/components/MeasurementCorrections";
+import KleosNav from "@/components/KleosNav";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        <KleosNav basePath={basePath} />
         {children}
         <MeasurementCorrections />
       </body>

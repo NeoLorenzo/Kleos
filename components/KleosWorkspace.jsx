@@ -47,10 +47,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
   const [user, setUser] = useState(null);
   const [kleosData, setKleosData] = useState(createEmptyKleosData);
   const [cognitiveForm, setCognitiveForm] = useState(createDefaultCognitiveForm);
-  const [strengthProfileForm, setStrengthProfileForm] = useState({
-    bodyWeightKg: "",
-    heightCm: ""
-  });
+  const [strengthProfileForm, setStrengthProfileForm] = useState({ heightCm: "" });
   const [academicNotesDraft, setAcademicNotesDraft] = useState("");
   const [healthForm, setHealthForm] = useState({
     bloodTestText: "",
@@ -75,10 +72,6 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
         setKleosData(nextData);
         setAcademicNotesDraft(nextData.academicNotes);
         setStrengthProfileForm({
-          bodyWeightKg:
-            nextData.strengthProfile.bodyWeightKg === ""
-              ? ""
-              : String(nextData.strengthProfile.bodyWeightKg),
           heightCm:
             nextData.strengthProfile.heightCm === ""
               ? ""
@@ -107,7 +100,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
 
     if (isMounted()) {
       setIsSyncingStrength(true);
-      if (!silent) setStatusMessage("Syncing strength from Heracles...");
+      if (!silent) setStatusMessage("Syncing strength and body weight from Heracles...");
     }
 
     const { data, error } = await supabase.functions.invoke("sync-heracles-strength", {
@@ -130,7 +123,13 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
     if (isMounted() && !silent) {
       const current = Number(data?.current_count || 0);
       const stale = Number(data?.stale_count || 0);
-      setStatusMessage(`Heracles strength synced: ${current} current, ${stale} stale.`);
+      const bodyWeight = Number(data?.body_weight_kg);
+      const bodyWeightText = Number.isFinite(bodyWeight) && bodyWeight > 0
+        ? ` Body weight ${formatNumber(bodyWeight)} KG synced.`
+        : " No current Heracles body weight available.";
+      setStatusMessage(
+        `Heracles strength synced: ${current} current, ${stale} stale.${bodyWeightText}`
+      );
     }
   };
 
@@ -337,16 +336,11 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
   const saveStrengthProfile = async () => {
     if (!user?.id || isSaving) return;
 
-    const bodyWeightKg =
-      strengthProfileForm.bodyWeightKg === "" ? null : Number(strengthProfileForm.bodyWeightKg);
     const heightCm =
       strengthProfileForm.heightCm === "" ? null : Number(strengthProfileForm.heightCm);
 
-    if (
-      (bodyWeightKg !== null && (!Number.isFinite(bodyWeightKg) || bodyWeightKg <= 0)) ||
-      (heightCm !== null && (!Number.isFinite(heightCm) || heightCm <= 0))
-    ) {
-      setStatusMessage("Body weight and height must be positive numbers when provided.");
+    if (heightCm !== null && (!Number.isFinite(heightCm) || heightCm <= 0)) {
+      setStatusMessage("Height must be a positive number when provided.");
       return;
     }
 
@@ -357,13 +351,12 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
       .upsert(
         {
           user_id: user.id,
-          body_weight_kg: bodyWeightKg,
           height_cm: heightCm,
           updated_at: new Date().toISOString()
         },
         { onConflict: "user_id" }
       )
-      .select("body_weight_kg,height_cm")
+      .select("body_weight_kg,body_weight_measured_on,height_cm")
       .single();
 
     setIsSaving(false);
@@ -376,10 +369,11 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
       ...current,
       strengthProfile: {
         bodyWeightKg: data?.body_weight_kg ?? "",
+        bodyWeightMeasuredOn: data?.body_weight_measured_on ?? "",
         heightCm: data?.height_cm ?? ""
       }
     }));
-    setStatusMessage("Physical profile saved.");
+    setStatusMessage("Height saved.");
   };
 
   const saveHealthForm = async () => {
@@ -540,23 +534,27 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
             <section className="kleos-card wide-card">
               <SectionHeader
                 title="Strength & Body Metrics"
-                note="Heracles strength evidence is read-only in Kleos. Body weight and height remain user-managed profile measurements."
+                note="Heracles strength and body weight are read-only in Kleos. Height remains user-managed."
               />
               <div className="inline-form">
                 <label>
-                  Body Weight KG
+                  Body Weight KG (Heracles)
                   <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={strengthProfileForm.bodyWeightKg}
-                    onChange={(event) =>
-                      setStrengthProfileForm((current) => ({
-                        ...current,
-                        bodyWeightKg: event.target.value
-                      }))
+                    type="text"
+                    value={
+                      kleosData.strengthProfile.bodyWeightMeasuredOn
+                        ? formatNumber(kleosData.strengthProfile.bodyWeightKg)
+                        : ""
                     }
+                    placeholder="Awaiting Heracles sync"
+                    readOnly
+                    aria-readonly="true"
                   />
+                  <small>
+                    {kleosData.strengthProfile.bodyWeightMeasuredOn
+                      ? `Measured ${formatCalendarDate(kleosData.strengthProfile.bodyWeightMeasuredOn)} · synced from Heracles`
+                      : "Synced from Heracles; not user-editable."}
+                  </small>
                 </label>
                 <label>
                   Height CM
@@ -579,7 +577,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                   onClick={saveStrengthProfile}
                   disabled={isSaving}
                 >
-                  Save Body Metrics
+                  Save Height
                 </button>
                 <button
                   type="button"
@@ -591,15 +589,29 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 </button>
               </div>
               <CompactTable
-                columns={["Exercise", "Machine / Equipment", "Estimated 1RM", "Sessions", "State", "Achieved"]}
-                rows={kleosData.strengthMetrics.map((metric) => [
-                  metric.exercise_name,
-                  metric.equipment_name || "Not recorded",
-                  `${formatNumber(metric.best_1rm)} KG${isDumbbellExercise(metric.exercise_name) ? " per dumbbell" : ""}`,
-                  metric.qualifying_sessions,
-                  metric.is_current ? "Current" : "Stale",
-                  formatCalendarDate(metric.achieved_on)
-                ])}
+                columns={[
+                  "Exercise",
+                  "Machine / Equipment",
+                  "Estimated 1RM",
+                  "Relative to BW",
+                  "Sessions",
+                  "State",
+                  "Achieved"
+                ]}
+                rows={kleosData.strengthMetrics.map((metric) => {
+                  const dumbbell = isDumbbellExercise(metric.exercise_name);
+                  return [
+                    metric.exercise_name,
+                    metric.equipment_name || "Not recorded",
+                    `${formatNumber(metric.best_1rm)} KG${dumbbell ? " per dumbbell" : ""}`,
+                    metric.best_1rm_relative_bw === null || metric.best_1rm_relative_bw === undefined
+                      ? "Unavailable"
+                      : `${formatBodyWeightMultiple(metric.best_1rm_relative_bw)}× BW${dumbbell ? " per dumbbell" : ""}`,
+                    metric.qualifying_sessions,
+                    metric.is_current ? "Current" : "Stale",
+                    formatCalendarDate(metric.achieved_on)
+                  ];
+                })}
                 emptyText="No Heracles strength snapshot has been synced yet."
               />
             </section>
@@ -960,6 +972,12 @@ function formatNumber(value) {
   const numberValue = Number(value);
   if (!Number.isFinite(numberValue)) return "-";
   return Number.isInteger(numberValue) ? String(numberValue) : numberValue.toFixed(1);
+}
+
+function formatBodyWeightMultiple(value) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return "-";
+  return numberValue.toFixed(2);
 }
 
 function getErrorMessage(error) {

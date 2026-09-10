@@ -1,6 +1,6 @@
 .stateGrid {
   display: grid;
-  grid-template-columns: minmax(160px, 0.7fr) minmax(0, 1.35fr) minmax(0, 1.35fr);
+  grid-template-columns: minmax(160px, 0.7fr) minmax(0, 2.7fr);
   gap: 0.75rem;
 }
 
@@ -37,7 +37,6 @@
 }
 
 .copy p,
-.copy ul,
 .muted {
   color: var(--muted);
   font-size: 0.8rem;
@@ -46,11 +45,6 @@
 
 .copy p {
   margin: 0.55rem 0 0;
-}
-
-.copy ul {
-  margin: 0.55rem 0 0;
-  padding-left: 1.05rem;
 }
 
 .muted {

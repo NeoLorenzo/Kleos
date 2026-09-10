@@ -40,15 +40,19 @@ test("Kleos client data layer covers active UI tables without loading retired GO
 });
 
 test("Kleos root is independent from Ariadne and uses the character-sheet orientation", () => {
-  const source = read("app/page.js");
+  const rootSource = read("app/page.js");
+  const workspaceSource = read("components/KleosWorkspace.jsx");
+  const source = `${rootSource}\n${workspaceSource}`;
 
   assert.doesNotMatch(source, /components\/AppShell/);
   assert.doesNotMatch(source, /githubProviderToken/);
   assert.doesNotMatch(source, /buildKleosScorePrompt/);
   assert.doesNotMatch(source, /Copy LLM Context/);
-  assert.match(source, /CharacterSheet/);
-  assert.match(source, /loadKleosData/);
-  assert.match(source, /window\.location\.origin/);
+  assert.match(rootSource, /KleosWorkspace/);
+  assert.match(rootSource, /activePage="character-sheet"/);
+  assert.match(workspaceSource, /CharacterSheet/);
+  assert.match(workspaceSource, /loadKleosData/);
+  assert.match(workspaceSource, /window\.location\.origin/);
 });
 
 test("legacy Kleos prompt module retains the migrated evaluation domains without owning the root UI", () => {

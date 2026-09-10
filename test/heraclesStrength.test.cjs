@@ -8,18 +8,18 @@ let equipmentMigration;
 let syncFunction;
 let verifierFunction;
 let dataSource;
-let pageSource;
+let workspaceSource;
 let correctionsSource;
 let promptSource;
 
 before(async () => {
-  [migration, equipmentMigration, syncFunction, verifierFunction, dataSource, pageSource, correctionsSource, promptSource] = await Promise.all([
+  [migration, equipmentMigration, syncFunction, verifierFunction, dataSource, workspaceSource, correctionsSource, promptSource] = await Promise.all([
     readFile(path.join(process.cwd(), "supabase/migrations/20260909_0010_heracles_strength_metrics.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/migrations/20260909_0012_heracles_strength_equipment.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/functions/sync-heracles-strength/index.ts"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/functions/verify-heracles-caller/index.ts"), "utf8"),
     readFile(path.join(process.cwd(), "lib/kleos/data.js"), "utf8"),
-    readFile(path.join(process.cwd(), "app/page.js"), "utf8"),
+    readFile(path.join(process.cwd(), "components/KleosWorkspace.jsx"), "utf8"),
     readFile(path.join(process.cwd(), "components/MeasurementCorrections.jsx"), "utf8"),
     readFile(path.join(process.cwd(), "lib/kleos/prompt.js"), "utf8")
   ]);
@@ -40,8 +40,8 @@ test("Heracles metrics persist the equipment attached to the winning e1RM", () =
   assert.match(equipmentMigration, /incoming\.equipment_name/i);
   assert.match(equipmentMigration, /equipment_name = excluded\.equipment_name/i);
   assert.match(dataSource, /exercise_name,equipment_name,best_1rm/i);
-  assert.match(pageSource, /Machine \/ Equipment/);
-  assert.match(pageSource, /metric\.equipment_name \|\| "Not recorded"/);
+  assert.match(workspaceSource, /Machine \/ Equipment/);
+  assert.match(workspaceSource, /metric\.equipment_name \|\| "Not recorded"/);
 });
 
 test("snapshot replacement is backend-only and validates the Heracles contract", () => {
@@ -84,10 +84,10 @@ test("sync function preserves the existing snapshot when Heracles cannot supply 
 test("active Kleos UI and data loading no longer read or write manual strength lifts", () => {
   assert.match(dataSource, /from\("heracles_strength_metrics"\)/);
   assert.doesNotMatch(dataSource, /from\("goat_strength_lifts"\)/);
-  assert.match(pageSource, /sync-heracles-strength/);
-  assert.match(pageSource, /Strength — Heracles/);
-  assert.doesNotMatch(pageSource, /Save Lift/);
-  assert.doesNotMatch(pageSource, /goat_strength_lifts/);
+  assert.match(workspaceSource, /sync-heracles-strength/);
+  assert.match(workspaceSource, /Strength & Body Metrics/);
+  assert.doesNotMatch(workspaceSource, /Save Lift/);
+  assert.doesNotMatch(workspaceSource, /goat_strength_lifts/);
   assert.doesNotMatch(correctionsSource, /goat_strength_lifts/);
   assert.doesNotMatch(correctionsSource, /Strength History/);
 });

@@ -133,6 +133,22 @@
   line-height: 1.5;
 }
 
+.dimensionLink {
+  display: inline-flex;
+  margin-top: 0.85rem;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.dimensionLink:hover,
+.dimensionLink:focus-visible {
+  color: var(--text);
+  text-decoration: underline;
+  outline: none;
+}
+
 .historyPanel,
 .recordsPanel {
   padding: 1rem;

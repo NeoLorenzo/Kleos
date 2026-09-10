@@ -41,6 +41,14 @@ async function authenticateCaller(
   return user?.id && email === AUTHORIZED_EMAIL ? user : null;
 }
 
+function isPositiveNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
+function isDateString(value: unknown) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
 function hasExpectedContract(payload: unknown): payload is {
   contract_version: string;
   source: string;
@@ -48,25 +56,51 @@ function hasExpectedContract(payload: unknown): payload is {
   minimum_sessions: number;
   estimation_basis: string;
   generated_at: string;
+  current_body_weight: { weight_kg: number; measured_on: string } | null;
   lifts: unknown[];
 } {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
   const record = payload as Record<string, unknown>;
-  if (record.contract_version !== "1.1.0"
+  if (record.contract_version !== "1.2.0"
     || record.source !== "heracles"
     || record.window_days !== 30
     || record.minimum_sessions !== 3
     || record.estimation_basis !== "observed_e1rm_high"
     || typeof record.generated_at !== "string"
+    || !Object.prototype.hasOwnProperty.call(record, "current_body_weight")
     || !Array.isArray(record.lifts)) {
     return false;
+  }
+
+  if (record.current_body_weight !== null) {
+    if (!record.current_body_weight
+      || typeof record.current_body_weight !== "object"
+      || Array.isArray(record.current_body_weight)) {
+      return false;
+    }
+    const bodyWeight = record.current_body_weight as Record<string, unknown>;
+    if (!isPositiveNumber(bodyWeight.weight_kg) || !isDateString(bodyWeight.measured_on)) {
+      return false;
+    }
   }
 
   return record.lifts.every((lift) => {
     if (!lift || typeof lift !== "object" || Array.isArray(lift)) return false;
     const row = lift as Record<string, unknown>;
-    return Object.prototype.hasOwnProperty.call(row, "equipment_name")
-      && (row.equipment_name === null || typeof row.equipment_name === "string");
+    if (!Object.prototype.hasOwnProperty.call(row, "equipment_name")
+      || (row.equipment_name !== null && typeof row.equipment_name !== "string")) {
+      return false;
+    }
+
+    const hasBodyWeight = row.body_weight_kg_at_achieved !== null;
+    const hasKind = row.body_weight_kind !== null;
+    const hasRelative = row.best_1rm_relative_bw !== null;
+    if (!(hasBodyWeight === hasKind && hasKind === hasRelative)) return false;
+
+    if (!hasBodyWeight) return true;
+    return isPositiveNumber(row.body_weight_kg_at_achieved)
+      && (row.body_weight_kind === "measured" || row.body_weight_kind === "interpolated")
+      && isPositiveNumber(row.best_1rm_relative_bw);
   });
 }
 
@@ -135,6 +169,7 @@ Deno.serve(async (req: Request) => {
   const { data, error } = await admin.rpc("replace_heracles_strength_snapshot", {
     p_user_id: caller.id,
     p_snapshot: sourcePayload.lifts,
+    p_current_body_weight: sourcePayload.current_body_weight,
     p_synced_at: syncedAt,
   });
 

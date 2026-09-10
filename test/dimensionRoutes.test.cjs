@@ -52,14 +52,38 @@ test("psychological measurements live on the Psychological page, not the dashboa
   assert.doesNotMatch(characterSheetSource, /<BigFiveAssessments/);
 });
 
-test("dashboard links every canonical vector to its dimension page", () => {
+test("character sheet links every canonical vector to its dimension page", () => {
   const characterSheetSource = fs.readFileSync(
     path.join(ROOT, "components", "CharacterSheet.jsx"),
     "utf8"
   );
 
   assert.match(characterSheetSource, /href=\{`\$\{basePath\}\/\$\{vector\.id\}\/`\}/);
-  assert.match(characterSheetSource, /Open \{vector\.label\}/);
+  assert.match(characterSheetSource, /aria-label=\{`Open \$\{vector\.label\} dimension`\}/);
+});
+
+test("character sheet is one profile surface with integrated dimension trajectories", () => {
+  const characterSheetSource = fs.readFileSync(
+    path.join(ROOT, "components", "CharacterSheet.jsx"),
+    "utf8"
+  );
+  const styleSource = fs.readFileSync(
+    path.join(ROOT, "components", "CharacterSheet.module.css"),
+    "utf8"
+  );
+
+  assert.match(characterSheetSource, /Character Sheet/);
+  assert.match(characterSheetSource, /Character summary/);
+  assert.match(characterSheetSource, /Current dimensional state/);
+  assert.match(characterSheetSource, /buildCharacterSummary/);
+  assert.match(characterSheetSource, /formatTrajectorySummary\(trajectory\)/);
+  assert.match(characterSheetSource, /Key facts/);
+  assert.doesNotMatch(characterSheetSource, /Vector history/);
+  assert.doesNotMatch(characterSheetSource, /Evidence & assessment/);
+  assert.doesNotMatch(characterSheetSource, /buildCharacterEvidence/);
+  assert.match(styleSource, /\.dimensionRow/);
+  assert.match(styleSource, /\.factColumns/);
+  assert.doesNotMatch(styleSource, /\.vectorCard/);
 });
 
 test("dimension state shows assessment only and does not duplicate current evidence", () => {

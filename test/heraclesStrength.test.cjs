@@ -6,6 +6,7 @@ const path = require("node:path");
 let migration;
 let equipmentMigration;
 let bodyWeightMigration;
+let legacyBodyWeightMigration;
 let syncFunction;
 let verifierFunction;
 let dataSource;
@@ -18,6 +19,7 @@ before(async () => {
     migration,
     equipmentMigration,
     bodyWeightMigration,
+    legacyBodyWeightMigration,
     syncFunction,
     verifierFunction,
     dataSource,
@@ -28,6 +30,7 @@ before(async () => {
     readFile(path.join(process.cwd(), "supabase/migrations/20260909_0010_heracles_strength_metrics.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/migrations/20260909_0012_heracles_strength_equipment.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/migrations/20260910_0015_heracles_body_weight_relative_strength.sql"), "utf8"),
+    readFile(path.join(process.cwd(), "supabase/migrations/20260910_0016_clear_legacy_manual_body_weight.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/functions/sync-heracles-strength/index.ts"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/functions/verify-heracles-caller/index.ts"), "utf8"),
     readFile(path.join(process.cwd(), "lib/kleos/data.js"), "utf8"),
@@ -80,6 +83,8 @@ test("body weight is Heracles-owned while height remains user-editable", () => {
   assert.match(bodyWeightMigration, /grant select on table public\.goat_strength_profile to authenticated/i);
   assert.match(bodyWeightMigration, /grant insert \(user_id, height_cm, updated_at\)/i);
   assert.match(bodyWeightMigration, /grant update \(height_cm, updated_at\)/i);
+  assert.match(legacyBodyWeightMigration, /set body_weight_kg = null/i);
+  assert.match(legacyBodyWeightMigration, /where body_weight_measured_on is null/i);
   assert.match(dataSource, /body_weight_kg,body_weight_measured_on,height_cm/);
   assert.match(workspaceSource, /Body Weight KG \(Heracles\)/);
   assert.match(workspaceSource, /readOnly/);

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./CharacterSheet.module.css";
+import { supabase } from "@/lib/supabase/client";
 import { loadVectorSnapshotHistory } from "@/lib/kleos/vectorSnapshotRepository";
 import { VECTOR_DEFINITIONS } from "@/lib/kleos/vectorSnapshots";
 import { formatBigFiveTestDate } from "@/lib/kleos/bigFive";
 import {
-  buildCharacterEvidence,
   buildVectorTrajectory,
   formatTrajectorySummary
 } from "@/lib/kleos/characterSheet";
@@ -17,6 +17,7 @@ export default function CharacterSheet({ userId, kleosData, basePath = "" }) {
     snapshots: [],
     message: ""
   });
+  const [subjectName, setSubjectName] = useState("Kleos Subject");
 
   useEffect(() => {
     let active = true;
@@ -47,9 +48,24 @@ export default function CharacterSheet({ userId, kleosData, basePath = "" }) {
     };
   }, [userId]);
 
+  useEffect(() => {
+    let active = true;
+    if (!supabase || !userId) return undefined;
+
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!active || data?.user?.id !== userId) return;
+      const metadata = data.user.user_metadata || {};
+      const name = String(metadata.full_name || metadata.name || "").trim();
+      if (name) setSubjectName(name);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
   const snapshots = historyState.snapshots;
   const latest = snapshots[0] || null;
-  const evidence = useMemo(() => buildCharacterEvidence(kleosData), [kleosData]);
   const assessedCount =
     latest?.results?.filter((result) => result.status === "assessed").length || 0;
   const unknownCount = VECTOR_DEFINITIONS.length - assessedCount;
@@ -63,219 +79,267 @@ export default function CharacterSheet({ userId, kleosData, basePath = "" }) {
 
   return (
     <section className={styles.sheet} aria-labelledby="character-sheet-title">
-      <header className={styles.hero}>
-        <div>
-          <p className={styles.eyebrow}>Current Character State</p>
-          <h2 id="character-sheet-title">Eight-dimensional overview</h2>
-          <p className={styles.heroMeta}>
-            {latest
-              ? `Derived assessment from ${formatDate(latest.evaluatedAt)} · ${latest.evaluator} · methodology ${latest.methodologyVersion}`
-              : historyState.status === "loading"
-                ? "Loading the latest derived vector state…"
-                : "No derived vector snapshot is available yet. Raw evidence remains accessible within each dimension."}
+      <header className={styles.identity}>
+        <div className={styles.identityPrimary}>
+          <p className={styles.eyebrow}>Character Sheet</p>
+          <h2 id="character-sheet-title">{subjectName}</h2>
+          <p className={styles.identitySubtitle}>
+            Evidence-backed current profile across eight canonical dimensions.
           </p>
         </div>
-        <div className={styles.summary} aria-label="Character-state summary">
-          <span>{assessedCount} assessed</span>
-          <span>{unknownCount} unknown / unavailable</span>
-          <span>
-            {snapshots.length} historical snapshot{snapshots.length === 1 ? "" : "s"}
-          </span>
-        </div>
+
+        <dl className={styles.metadata} aria-label="Assessment metadata">
+          <Meta label="Last assessment" value={latest ? formatDate(latest.evaluatedAt) : "Unavailable"} />
+          <Meta label="Evaluator" value={latest?.evaluator || "Unavailable"} />
+          <Meta label="Methodology" value={latest?.methodologyVersion || "Unavailable"} />
+          <Meta label="Coverage" value={`${assessedCount} assessed · ${unknownCount} unknown`} />
+          <Meta
+            label="History"
+            value={`${snapshots.length} snapshot${snapshots.length === 1 ? "" : "s"}`}
+          />
+        </dl>
       </header>
 
       {historyState.status === "error" ? (
-        <p className={styles.muted}>
-          Vector history is temporarily unavailable. Canonical evidence remains intact.
+        <p className={styles.alert}>
+          Vector history is temporarily unavailable. Canonical measurements remain intact.
         </p>
       ) : null}
 
-      <div className={styles.vectorGrid} aria-label="Eight canonical vectors">
-        {VECTOR_DEFINITIONS.map((vector) => {
-          const result = latest?.results?.find((item) => item.vectorId === vector.id) || null;
-          return (
-            <article className={styles.vectorCard} key={vector.id}>
-              <header className={styles.vectorHeader}>
-                <h3>{vector.label}</h3>
-                <span className={styles.confidence}>{confidenceLabel(result)}</span>
-              </header>
-              <p
-                className={`${styles.score} ${
-                  result?.status === "assessed" ? "" : styles.unknown
-                }`}
-              >
-                {result?.status === "assessed"
-                  ? `${formatNumber(result.score)} / 100`
-                  : "Unknown"}
-              </p>
-              <p className={styles.description}>{vector.description}</p>
-              <details className={styles.details}>
-                <summary>Evidence & assessment</summary>
-                <p className={styles.commentary}>
-                  {result?.commentary ||
-                    "No derived assessment commentary is available for this vector."}
-                </p>
-                <ul className={styles.evidenceList}>
-                  {(evidence[vector.id] || ["No mapped raw evidence summary available."]).map(
-                    (item) => (
-                      <li key={item}>{item}</li>
-                    )
-                  )}
-                </ul>
-              </details>
-              <a className={styles.dimensionLink} href={`${basePath}/${vector.id}/`}>
-                Open {vector.label}
-              </a>
-            </article>
-          );
-        })}
-      </div>
+      <section className={styles.summarySection} aria-labelledby="character-summary-title">
+        <SectionHeading eyebrow="Current State" title="Character summary" id="character-summary-title" />
+        <p className={styles.characterSummary}>{buildCharacterSummary(latest)}</p>
+      </section>
 
-      <section className={styles.historyPanel} aria-labelledby="vector-history-title">
-        <header className={styles.sectionHeader}>
-          <div>
-            <p className={styles.eyebrow}>Trajectory</p>
-            <h3 id="vector-history-title" className={styles.sectionTitle}>
-              Vector history
-            </h3>
+      <section className={styles.dimensionsSection} aria-labelledby="dimension-state-title">
+        <SectionHeading
+          eyebrow="Eight Dimensions"
+          title="Current dimensional state"
+          id="dimension-state-title"
+          note="Recent trajectory runs oldest → newest. Select a row for the full dimension."
+        />
+
+        <div className={styles.dimensionTable}>
+          <div className={styles.dimensionHeader} aria-hidden="true">
+            <span>Dimension</span>
+            <span>State</span>
+            <span>Confidence</span>
+            <span>Trajectory</span>
+            <span>Assessment</span>
+            <span />
           </div>
-          <p className={styles.muted}>Oldest → newest · ? = explicitly unknown</p>
-        </header>
-        <div className={styles.trajectoryGrid}>
-          {VECTOR_DEFINITIONS.map((vector) => {
-            const trajectory = buildVectorTrajectory(snapshots, vector.id, { limit: 8 });
-            return (
-              <article className={styles.trajectoryItem} key={vector.id}>
-                <strong>{vector.label}</strong>
-                <p className={styles.trajectory}>{formatTrajectorySummary(trajectory)}</p>
-                {trajectory.length ? (
-                  <details className={styles.historyDetails}>
-                    <summary>Inspect history</summary>
-                    <ol className={styles.historyList}>
-                      {trajectory
-                        .slice()
-                        .reverse()
-                        .map((point, index) => (
-                          <li
-                            key={
-                              point.snapshotId ||
-                              `${point.evaluatedAt || "snapshot"}-${index}`
-                            }
-                          >
-                            <span>{formatDate(point.evaluatedAt)}</span>
-                            <strong>{trajectoryValue(point)}</strong>
-                            <span>{trajectoryContext(point)}</span>
-                          </li>
-                        ))}
-                    </ol>
-                  </details>
-                ) : null}
-              </article>
-            );
-          })}
+
+          <div className={styles.dimensionRows}>
+            {VECTOR_DEFINITIONS.map((vector) => {
+              const result = latest?.results?.find((item) => item.vectorId === vector.id) || null;
+              const trajectory = buildVectorTrajectory(snapshots, vector.id, { limit: 6 });
+              return (
+                <a
+                  className={styles.dimensionRow}
+                  href={`${basePath}/${vector.id}/`}
+                  key={vector.id}
+                  aria-label={`Open ${vector.label} dimension`}
+                >
+                  <span className={styles.dimensionIdentity}>
+                    <strong>{vector.label}</strong>
+                    <small>{vector.description}</small>
+                  </span>
+                  <span className={styles.dimensionScore}>
+                    {result?.status === "assessed" ? formatNumber(result.score) : "—"}
+                    <small>{result?.status === "assessed" ? "/ 100" : "Unknown"}</small>
+                  </span>
+                  <span className={styles.dimensionConfidence}>{confidenceLabel(result)}</span>
+                  <span className={styles.dimensionTrajectory}>
+                    {trajectory.length ? formatTrajectorySummary(trajectory) : "No history"}
+                  </span>
+                  <span className={styles.dimensionAssessment}>{assessmentSummary(result)}</span>
+                  <span className={styles.dimensionArrow} aria-hidden="true">→</span>
+                </a>
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      <section className={styles.recordsPanel} aria-labelledby="key-records-title">
-        <header className={styles.sectionHeader}>
-          <div>
-            <p className={styles.eyebrow}>Canonical Evidence</p>
-            <h3 id="key-records-title" className={styles.sectionTitle}>
-              Key measurements & records
-            </h3>
-          </div>
-          <p className={styles.muted}>
-            Dashboard summaries only. Detailed evidence and editing live inside each dimension.
-          </p>
-        </header>
-        <div className={styles.recordsGrid}>
-          <Record label="Body metrics" value={bodyMetricSummary(kleosData?.strengthProfile)} />
-          <Record
-            label="Heracles strength"
-            value={strengthMetricSummary(kleosData?.strengthMetrics)}
-          />
-          <Record
-            label="Strength sync"
-            value={strengthSyncSummary(kleosData?.strengthMetrics)}
-          />
-          <Record
-            label="Latest academic stage"
-            value={
-              latestStage
-                ? `${latestStage.academic_year} · ${formatNumber(latestStage.stage_mean)}% mean`
-                : "No completed stage mean"
-            }
-          />
-          <Record
-            label="Latest cognitive test"
-            value={
-              latestCognitive
-                ? `${latestCognitive.test_name} · ${latestCognitive.score_text}`
-                : "No cognitive test recorded"
-            }
-          />
-          <Record
-            label="Big Five"
-            value={
-              latestBigFive
-                ? `${kleosData.bigFiveAssessments.length} recorded · latest ${formatBigFiveTestDate(latestBigFive.test_date)}`
-                : "No assessment recorded"
-            }
-          />
-          <Record
-            label="Academic modules"
-            value={`${kleosData?.academicModules?.length || 0} recorded`}
-          />
-          <Record
-            label="Health profile"
-            value={
-              hasText(kleosData?.healthProfile?.bloodTestText) ||
-              hasText(kleosData?.healthProfile?.miscText)
-                ? "Recorded"
-                : "Not recorded"
-            }
-          />
-          <Record
-            label="Professional profile"
-            value={hasText(kleosData?.cvText) ? "CV recorded" : "No CV recorded"}
-          />
+      <section className={styles.factsSection} aria-labelledby="key-facts-title">
+        <SectionHeading
+          eyebrow="Selected Records"
+          title="Key facts"
+          id="key-facts-title"
+          note="Summary only. Detailed measurements and editing live inside each dimension."
+        />
+
+        <div className={styles.factColumns}>
+          <FactGroup title="Physical">
+            <Fact label="Body metrics" value={bodyMetricSummary(kleosData?.strengthProfile)} />
+            <Fact label="Heracles strength" value={strengthMetricSummary(kleosData?.strengthMetrics)} />
+            <Fact label="Strength sync" value={strengthSyncSummary(kleosData?.strengthMetrics)} />
+            <Fact
+              label="Health profile"
+              value={
+                hasText(kleosData?.healthProfile?.bloodTestText) ||
+                hasText(kleosData?.healthProfile?.miscText)
+                  ? "Recorded"
+                  : "Not recorded"
+              }
+            />
+          </FactGroup>
+
+          <FactGroup title="Intellectual & psychological">
+            <Fact
+              label="Latest academic stage"
+              value={
+                latestStage
+                  ? `${latestStage.academic_year} · ${formatNumber(latestStage.stage_mean)}% mean`
+                  : "No completed stage mean"
+              }
+            />
+            <Fact
+              label="Latest cognitive test"
+              value={
+                latestCognitive
+                  ? `${latestCognitive.test_name} · ${latestCognitive.score_text}`
+                  : "No cognitive test recorded"
+              }
+            />
+            <Fact
+              label="Big Five"
+              value={
+                latestBigFive
+                  ? `${kleosData.bigFiveAssessments.length} recorded · latest ${formatBigFiveTestDate(latestBigFive.test_date)}`
+                  : "No assessment recorded"
+              }
+            />
+            <Fact
+              label="Academic modules"
+              value={`${kleosData?.academicModules?.length || 0} recorded`}
+            />
+          </FactGroup>
+
+          <FactGroup title="Professional & record status">
+            <Fact
+              label="Professional profile"
+              value={hasText(kleosData?.cvText) ? "CV recorded" : "No CV recorded"}
+            />
+            <Fact
+              label="Assessed dimensions"
+              value={`${assessedCount} of ${VECTOR_DEFINITIONS.length}`}
+            />
+            <Fact
+              label="Unknown dimensions"
+              value={`${unknownCount} of ${VECTOR_DEFINITIONS.length}`}
+            />
+            <Fact
+              label="Assessment snapshots"
+              value={`${snapshots.length} recorded`}
+            />
+          </FactGroup>
         </div>
       </section>
     </section>
   );
 }
 
-function Record({ label, value }) {
+function Meta({ label, value }) {
   return (
-    <div className={styles.record}>
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className={styles.metaRow}>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
     </div>
   );
+}
+
+function SectionHeading({ eyebrow, title, id, note = "" }) {
+  return (
+    <header className={styles.sectionHeading}>
+      <div>
+        <p className={styles.eyebrow}>{eyebrow}</p>
+        <h3 id={id}>{title}</h3>
+      </div>
+      {note ? <p className={styles.sectionNote}>{note}</p> : null}
+    </header>
+  );
+}
+
+function FactGroup({ title, children }) {
+  return (
+    <section className={styles.factGroup}>
+      <h4>{title}</h4>
+      <dl>{children}</dl>
+    </section>
+  );
+}
+
+function Fact({ label, value }) {
+  return (
+    <div className={styles.factRow}>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function buildCharacterSummary(latest) {
+  const assessed = (latest?.results || []).filter(
+    (result) => result.status === "assessed" && Number.isFinite(Number(result.score))
+  );
+
+  if (!assessed.length) {
+    return "No current character synthesis is available because no dimensions have a derived assessment yet.";
+  }
+
+  const ranked = assessed.slice().sort((a, b) => Number(b.score) - Number(a.score));
+  const highest = ranked.slice(0, Math.min(2, ranked.length));
+  const lowest = ranked.length > 2 ? ranked.slice(-2).reverse() : [];
+  const parts = [`${assessed.length} of ${VECTOR_DEFINITIONS.length} dimensions are currently assessed.`];
+
+  if (highest.length) {
+    parts.push(`Highest current scores: ${formatRankedDimensions(highest)}.`);
+  }
+  if (lowest.length) {
+    parts.push(`Lowest current scores: ${formatRankedDimensions(lowest)}.`);
+  }
+
+  const commentary = assessed
+    .map((result) => firstSentence(result.commentary))
+    .filter(Boolean)
+    .slice(0, 2);
+  if (commentary.length) {
+    parts.push(`Current assessment notes: ${commentary.join(" ")}`);
+  }
+
+  return parts.join(" ");
+}
+
+function formatRankedDimensions(results) {
+  return results
+    .map((result) => `${vectorLabel(result.vectorId)} ${formatNumber(result.score)}`)
+    .join(" · ");
+}
+
+function vectorLabel(vectorId) {
+  return VECTOR_DEFINITIONS.find((vector) => vector.id === vectorId)?.label || vectorId;
+}
+
+function firstSentence(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const match = text.match(/^.*?[.!?](?:\s|$)/);
+  return (match?.[0] || text).trim();
+}
+
+function assessmentSummary(result) {
+  if (!result) return "No current assessment.";
+  if (result.status !== "assessed") {
+    return result.commentary || "Insufficient evidence for a current assessment.";
+  }
+  return firstSentence(result.commentary) || "Assessment available on the dimension page.";
 }
 
 function confidenceLabel(result) {
   if (!result) return "No data";
   if (result.status === "unknown") return "Unknown";
-  return `${capitalize(result.confidence)} confidence`;
-}
-
-function trajectoryValue(point) {
-  if (point.status === "assessed") return `${formatNumber(point.score)} / 100`;
-  if (point.status === "unknown") return "Unknown";
-  return "Missing";
-}
-
-function trajectoryContext(point) {
-  const parts = [];
-  if (point.status === "assessed" && point.confidence) {
-    parts.push(`${capitalize(point.confidence)} confidence`);
-  } else if (point.status === "unknown") {
-    parts.push("insufficient evidence");
-  }
-  if (point.methodologyVersion) parts.push(`methodology ${point.methodologyVersion}`);
-  if (point.evaluator) parts.push(point.evaluator);
-  return parts.join(" · ") || "context unavailable";
+  return result.confidence ? capitalize(result.confidence) : "Unspecified";
 }
 
 function bodyMetricSummary(profile) {

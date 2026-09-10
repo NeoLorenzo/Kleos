@@ -61,3 +61,15 @@ test("dashboard links every canonical vector to its dimension page", () => {
   assert.match(characterSheetSource, /href=\{`\$\{basePath\}\/\$\{vector\.id\}\/`\}/);
   assert.match(characterSheetSource, /Open \{vector\.label\}/);
 });
+
+test("dimension state shows assessment only and does not duplicate current evidence", () => {
+  const dimensionStateSource = fs.readFileSync(
+    path.join(ROOT, "components", "DimensionState.jsx"),
+    "utf8"
+  );
+
+  assert.match(dimensionStateSource, /Current assessment/);
+  assert.match(dimensionStateSource, /<h3>Assessment<\/h3>/);
+  assert.doesNotMatch(dimensionStateSource, /Current evidence/);
+  assert.doesNotMatch(dimensionStateSource, /buildCharacterEvidence/);
+});

@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { buildCharacterEvidence } from "@/lib/kleos/characterSheet";
+import { useEffect, useState } from "react";
 import { loadLatestVectorSnapshot } from "@/lib/kleos/vectorSnapshotRepository";
 import { getVectorDefinition } from "@/lib/kleos/vectorSnapshots";
 import styles from "./DimensionState.module.css";
 
-export default function DimensionState({ userId, vectorId, kleosData }) {
+export default function DimensionState({ userId, vectorId }) {
   const vector = getVectorDefinition(vectorId);
-  const evidence = useMemo(
-    () => buildCharacterEvidence(kleosData || {})[vectorId] || [],
-    [kleosData, vectorId]
-  );
   const [state, setState] = useState({ status: "loading", snapshot: null, message: "" });
 
   useEffect(() => {
@@ -74,17 +69,6 @@ export default function DimensionState({ userId, vectorId, kleosData }) {
               {result?.commentary ||
                 "No derived assessment commentary is available for this dimension yet."}
             </p>
-          </div>
-
-          <div className={styles.copy}>
-            <h3>Current evidence</h3>
-            <ul>
-              {(evidence.length ? evidence : ["No mapped raw evidence summary is available."]).map(
-                (item) => (
-                  <li key={item}>{item}</li>
-                )
-              )}
-            </ul>
           </div>
         </div>
       ) : null}

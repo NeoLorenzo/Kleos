@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CurrentVectorState from "@/components/CurrentVectorState";
+import VectorSnapshotHistory from "@/components/VectorSnapshotHistory";
 import { AUTHORIZED_KLEOS_EMAIL } from "@/lib/kleos/data";
 import { supabase } from "@/lib/supabase/client";
 
@@ -85,6 +86,7 @@ export default function VectorStatePage() {
         {accessState === "authorized" ? (
           <div className="kleos-scroll">
             <CurrentVectorState userId={user?.id} />
+            <VectorSnapshotHistory userId={user?.id} />
             {message ? <p className="status-line">{message}</p> : null}
           </div>
         ) : (

@@ -107,7 +107,7 @@ test("runtime prompt cannot silently revert to holistic vector scoring", () => {
   assert.match(prompt, /Do not choose final vector scores yourself/i);
   assert.match(prompt, /explicit anchors/i);
   assert.match(prompt, /do not age-normalize or career-stage-normalize/i);
-  assert.match(prompt, /server calculates those deterministically/i);
+  assert.match(prompt, /calculate vector scores deterministically/i);
   assert.match(prompt, /p_vectors/i);
   assert.doesNotMatch(prompt, /90–100: exceptionally strong/i);
   assert.match(docs, /Snapshots from 1\.x remain immutable historical records/i);

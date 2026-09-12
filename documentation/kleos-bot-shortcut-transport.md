@@ -19,13 +19,13 @@ select public.get_kleos_evaluation_context()
       ↓
 canonical Methodology 2.0 + compact canonical evidence
       ↓
-model assesses every fixed methodology subdomain
+model classifies every fixed methodology subdomain onto a canonical anchor
       ↓
 connected Supabase project jhpsggjphoqyygthqfki
       ↓
 select public.persist_kleos_evaluation(p_execution_key, p_vectors)
       ↓
-server validates coverage, applies fixed weights/caps, calculates vector scores/confidence
+server validates anchors/coverage, applies fixed weights/caps, calculates vector scores/confidence
       ↓
 immutable methodology-2.0.0 vector + subdomain snapshot
 ```
@@ -57,7 +57,7 @@ select public.get_kleos_evaluation_context() as context;
 
 The response contains:
 
-- `context.methodology`: the current canonical vector methodology, including vector definitions, fixed subdomains and weights, explicit anchors, evidence rules, and deterministic aggregation rules;
+- `context.methodology`: the current canonical vector methodology, including vector definitions, fixed subdomains and weights, explicit anchors, allowed subdomain scores, evidence rules, and deterministic aggregation rules;
 - `context.evidence`: the compact canonical evidence package.
 
 `get_kleos_evaluation_context()` is available only through the connected Supabase management SQL session. Public, anon, authenticated, and service-role API callers have no execute privilege on it.
@@ -72,12 +72,14 @@ For each invocation, ChatGPT generates one UUID-style execution key and retains 
 
 The model no longer chooses final vector scores. It must assess every subdomain defined by the returned current methodology. Each subdomain is either:
 
-- `assessed`: score 0–100, confidence `low`, `medium`, or `high`, and concise evidence-grounded commentary; or
+- `assessed`: score exactly one of the canonical anchors `0`, `25`, `50`, `70`, `85`, `95`, or `100`, confidence `low`, `medium`, or `high`, and concise evidence-grounded commentary; or
 - `unknown`: score `null`, confidence `unknown`, and commentary explaining why canonical evidence is insufficient.
 
-The model scores subdomains against explicit anchors returned by the database. It must not invent its own scale, age-normalize, career-stage-normalize, or redefine vector scope.
+The model does not interpolate between anchors. If the evidence lies ambiguously between two anchor descriptions, it selects the better-supported anchor and lowers confidence rather than inventing an intermediate number. This reduces model calibration drift while fixed weighted aggregation still produces granular vector scores.
 
-Missing evidence is unknown, not negative evidence. Unknown subdomains reduce assessed coverage rather than receiving artificial low scores. Coverage then constrains how high the final vector can score.
+The model must not invent its own scale, age-normalize, career-stage-normalize, or redefine vector scope. A missing subdomain is `unknown`, never the `0` anchor; `0` requires direct evidence of the severely impaired state described by the methodology.
+
+Unknown subdomains reduce assessed coverage rather than receiving artificial low scores. Coverage then constrains how high the final vector can score.
 
 The canonical 2.0 methodology is documented in `documentation/kleos-vector-methodology-2.0.md`, but runtime evaluation uses the methodology returned from the database so prompt, persistence, and scoring cannot silently drift apart.
 
@@ -98,13 +100,14 @@ The database:
 
 1. resolves the canonical owner and current methodology;
 2. validates the exact vector and subdomain set;
-3. stores immutable subdomain assessments;
-4. uses the methodology's fixed weights;
-5. calculates assessed-weight coverage;
-6. calculates the weighted raw vector score;
-7. applies deterministic coverage caps;
-8. derives vector confidence from coverage and subdomain confidence;
-9. persists the final immutable vector results under methodology `2.0.0`.
+3. rejects non-anchor subdomain scores;
+4. stores immutable subdomain assessments;
+5. uses the methodology's fixed weights;
+6. calculates assessed-weight coverage;
+7. calculates the weighted raw vector score;
+8. applies deterministic coverage caps;
+9. derives vector confidence from coverage and subdomain confidence;
+10. persists the final immutable vector results under methodology `2.0.0`.
 
 If the same invocation retries persistence, reuse the same execution key. A genuinely new invocation must generate a new execution key. No daily, weekly, hourly, or other scheduling identity is used.
 

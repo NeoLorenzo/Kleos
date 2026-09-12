@@ -27,25 +27,28 @@ Kleos and Ariadne share these stable vector identifiers:
 - `creative`
 - `experiential`
 
-Kleos stores append-only dated assessments in `kleos_vector_snapshots` and `kleos_vector_snapshot_results`. Methodology 2.0 also stores the model's immutable subdomain judgments in `kleos_vector_snapshot_subdomain_results` so the final vector score is auditable.
+Kleos stores append-only dated assessments in `kleos_vector_snapshots` and `kleos_vector_snapshot_results`. Methodology 2.x also stores the model's immutable subdomain judgments in `kleos_vector_snapshot_subdomain_results` so the final vector score is auditable.
 
-A vector result is either an assessed 0–100 value with confidence and commentary, or an explicit `unknown` state when evidence coverage is insufficient. Missing evidence is never converted to zero.
+A vector result is either an assessed 0–100 value with confidence and commentary, or an explicit `unknown` state when evidence coverage is insufficient. Missing evidence is never converted to zero or treated as a mediocre score by default.
 
 ### Methodology 2.0
 
-`2.0.0` is the current canonical methodology. It replaces holistic model-selected vector scores with a fixed, versioned measurement model:
+`2.0.1` is the current canonical methodology. It preserves the fixed measurement model introduced in `2.0.0` while tightening the assessability rules:
 
 - every vector has five explicit subdomains and fixed weights;
 - every subdomain has explicit 0/25/50/70/85/95/100 anchors;
 - scoring is absolute, not age- or career-stage-relative;
+- before anchor selection, the model must decide whether affirmative evidence is sufficient to characterize the subdomain at all;
+- failure to establish a higher anchor is never evidence for a lower anchor;
+- sparse, missing, unclassified, or incomplete evidence produces `unknown` when the state itself cannot be established;
 - the model assesses only subdomains against the canonical anchors;
 - Supabase calculates final vector scores deterministically from fixed weights;
 - unknown subdomains reduce coverage rather than receiving artificial low scores;
 - deterministic coverage caps prevent narrow positive evidence from producing near-maximal whole-vector scores;
 - vector confidence is calculated deterministically from coverage and subdomain confidence;
-- there is no cross-vector overall score in 2.0.0.
+- there is no cross-vector overall score in Methodology 2.x.
 
-Existing 1.x snapshots remain immutable historical records. Because they used holistic model-calibrated scoring, they are not directly comparable with the 2.0.0 longitudinal baseline.
+Existing 1.x snapshots remain immutable historical records. Because they used holistic model-calibrated scoring, they are not directly comparable with Methodology 2.x snapshots. The `2.0.0` snapshot version is also retained unchanged; because `2.0.1` changes score-affecting evidence-sufficiency semantics, `2.0.1` is the current like-for-like longitudinal baseline.
 
 Execution remains schedule-agnostic: each invocation supplies an execution key. Retries of the same logical invocation reuse the same key and resolve to the existing snapshot; a genuinely new invocation uses a new key and creates an independent snapshot.
 
@@ -58,11 +61,11 @@ stateless normal ChatGPT conversation
       ↓
 connected Supabase management tool
       ↓
-public.get_kleos_evaluation_context()
+public.kleos_evaluation_context_read
       ↓
-Methodology 2.0 + compact canonical evidence
+current Methodology 2.x + compact canonical evidence
       ↓
-ChatGPT assesses every fixed subdomain
+ChatGPT applies assessability gate and classifies every assessable subdomain
       ↓
 public.persist_kleos_evaluation(p_execution_key, p_vectors)
       ↓
@@ -71,7 +74,7 @@ Supabase validates coverage and calculates final vector scores/confidence
 immutable vector + subdomain snapshot
 ```
 
-The Shortcut does not transport evidence JSON and does not target a Custom GPT. The tool-facing database functions are available only to the connected Supabase management SQL session.
+The Shortcut does not transport evidence JSON and does not target a Custom GPT. The tool-facing read relation and persistence function are intended for the connected Supabase management SQL session.
 
 See:
 
@@ -108,7 +111,7 @@ Kleos also owns the derived vector-state and methodology tables:
 
 The raw data was intentionally **not copied or migrated** during application extraction. Kleos reads and writes the same canonical records previously used by Ariadne's `/lab` route. Raw evidence remains authoritative source material; vector snapshots are derived historical interpretations and do not replace those records.
 
-Existing Row Level Security remains authoritative. Snapshot tables are read-only to ordinary authenticated clients; trusted writes use the atomic snapshot persistence contracts. Methodology tables are not exposed to ordinary application roles; the stateless evaluator receives the current methodology through the management-session evaluation-context function.
+Existing Row Level Security remains authoritative. Snapshot tables are read-only to ordinary authenticated clients; trusted writes use the atomic snapshot persistence contracts. Methodology tables are not exposed to ordinary application roles; the stateless evaluator receives the current methodology through the management-session evaluation context.
 
 Future schema changes that concern Kleos-owned persistence should be authored from this repository even while the physical database remains shared.
 

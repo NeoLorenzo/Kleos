@@ -4,6 +4,21 @@ Kleos separates canonical Open Banking evidence from derived financial interpret
 
 `financial_transactions` remains the normalized factual bank feed. Transaction flow/category/recurrence judgments live in `financial_transaction_classifications`, which records the deterministic classifier name/version, confidence, and a machine-readable reason for each interpretation.
 
+## Canonical transaction context
+
+Useful bank context is promoted out of opaque provider JSON into explicit canonical fields while `raw_data` remains intact for auditability.
+
+`financial_transactions` stores, when supplied:
+
+- ordered `remittance_information` strings;
+- `transaction_note`;
+- structured `bank_transaction_code` / subcode / description;
+- provider reference number.
+
+For Enable Banking/Revolut, remittance strings often contain the human-entered payment purpose or message that is not visible in the merchant/counterparty label. The Financial UI therefore treats merchant/counterparty as the primary label and shows distinct remittance/note text as secondary bank-provided context. Boilerplate such as `From <name>` / `To <name>` and text equivalent to the primary label is suppressed from display.
+
+These fields remain factual provider evidence. A note does not become an economic classification simply because it contains natural-language text.
+
 ## Why the derived layer exists
 
 A signed bank transaction is not automatically economic income or spending. Revolut history includes:
@@ -23,7 +38,7 @@ Counting every debit as spending and every credit as income would materially dis
 
 Classifier: `kleos_deterministic_rules`
 
-Version: `1.0.0`
+Baseline version: `1.0.0`; remittance/context enrichment: `1.1.0`.
 
 Provider transaction codes are the highest-confidence signal:
 
@@ -37,9 +52,11 @@ Provider transaction codes are the highest-confidence signal:
 - zero-value records -> `zero_value` regardless of provider code;
 - unrecognized provider codes remain `unknown` unless they explicitly indicate salary/income, interest, investment, or tax activity.
 
-Card spending/refunds receive a deterministic merchant category using normalized merchant/counterparty text. Current categories include food & dining, groceries, transport, travel, subscriptions/software, entertainment, fitness/health, education, telecom/utilities, household, shopping, bank fees, transfers, cash withdrawal, currency exchange, and `other`.
+Card spending/refunds receive a deterministic merchant category using normalized merchant/counterparty text. Current categories include food & dining, groceries, transport, travel, subscriptions/software, entertainment, fitness/health, education, telecom/utilities, household, housing, shopping, bank fees, transfers, cash withdrawal, currency exchange, and `other`.
 
-`other` is intentionally different from `unknown`: the economic flow is known to be spending, but the merchant is not specific enough for a narrower category.
+Version 1.1.0 may use bank-provided remittance/note context to improve an otherwise generic category or attach a purpose subcategory such as `rent` to a transfer. It does **not** promote a generic positive transfer to income merely because a note exists; structured provider flow evidence remains authoritative.
+
+`other` is intentionally different from `unknown`: the economic flow is known to be spending, but the merchant/context is not specific enough for a narrower category.
 
 ## Recurrence detection
 
@@ -77,11 +94,11 @@ A newer pending/abandoned reconnect does not mask the last-known-good synchroniz
 
 ## Refresh behavior
 
-`refresh_financial_transaction_classifications(user_id, connection_id)` reclassifies the scoped ledger using the current classifier version and recomputes recurrence.
+`refresh_financial_transaction_classifications(user_id, connection_id)` produces the baseline deterministic interpretation and recurrence state. `enhance_financial_transaction_classifications(user_id, connection_id)` then applies conservative remittance/context enrichment and records classifier version `1.1.0`.
 
-A database trigger runs the classifier after a successful bank sync when `last_synced_at` changes. The trigger catches classifier errors deliberately: transaction intelligence is derived data and must never roll back or destroy a successful canonical Open Banking synchronization.
+A database trigger runs both stages after a successful bank sync when `last_synced_at` changes. The trigger catches classifier errors deliberately: transaction intelligence is derived data and must never roll back or destroy a successful canonical Open Banking synchronization.
 
-Deployment migration `20260912_0019_transaction_intelligence.sql` backfills all historical synchronized transactions. Subsequent syncs refresh the relevant connection automatically.
+Deployment migration `20260912_0019_transaction_intelligence.sql` backfills baseline classifications. Migration `20260912_0023_transaction_remittance_metadata.sql` promotes existing remittance/code fields from raw evidence and backfills contextual enrichment without requiring a bank reauthorization or resync.
 
 ## Derived relations
 
@@ -95,4 +112,4 @@ The primary derived relations are:
 - `financial_recurring_expenses`
 - `financial_classification_coverage`
 
-The monthly cash-flow, category, recurring-expense, and classification-coverage views are registered as canonical Kleos Bot financial evidence. Raw provider payloads are not exposed through those evidence relations.
+The monthly cash-flow, category, recurring-expense, and classification-coverage views are registered as canonical Kleos Bot financial evidence. Raw provider payloads and free-form remittance messages are not added to those aggregate evidence relations.

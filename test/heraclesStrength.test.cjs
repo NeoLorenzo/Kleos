@@ -7,10 +7,12 @@ let migration;
 let equipmentMigration;
 let bodyWeightMigration;
 let legacyBodyWeightMigration;
+let staticHeightMigration;
 let syncFunction;
 let verifierFunction;
 let dataSource;
 let workspaceSource;
+let physicalWorkspaceSource;
 let correctionsSource;
 let promptSource;
 
@@ -20,10 +22,12 @@ before(async () => {
     equipmentMigration,
     bodyWeightMigration,
     legacyBodyWeightMigration,
+    staticHeightMigration,
     syncFunction,
     verifierFunction,
     dataSource,
     workspaceSource,
+    physicalWorkspaceSource,
     correctionsSource,
     promptSource
   ] = await Promise.all([
@@ -31,10 +35,12 @@ before(async () => {
     readFile(path.join(process.cwd(), "supabase/migrations/20260909_0012_heracles_strength_equipment.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/migrations/20260910_0015_heracles_body_weight_relative_strength.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/migrations/20260910_0016_clear_legacy_manual_body_weight.sql"), "utf8"),
+    readFile(path.join(process.cwd(), "supabase/migrations/20260912_0025_static_physical_height.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/functions/sync-heracles-strength/index.ts"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/functions/verify-heracles-caller/index.ts"), "utf8"),
     readFile(path.join(process.cwd(), "lib/kleos/data.js"), "utf8"),
     readFile(path.join(process.cwd(), "components/KleosWorkspace.jsx"), "utf8"),
+    readFile(path.join(process.cwd(), "components/PhysicalWorkspace.jsx"), "utf8"),
     readFile(path.join(process.cwd(), "components/MeasurementCorrections.jsx"), "utf8"),
     readFile(path.join(process.cwd(), "lib/kleos/prompt.js"), "utf8")
   ]);
@@ -59,8 +65,8 @@ test("Heracles metrics persist equipment and bodyweight context attached to the 
   assert.match(bodyWeightMigration, /body_weight_kg_at_achieved = excluded\.body_weight_kg_at_achieved/i);
   assert.match(bodyWeightMigration, /best_1rm_relative_bw = excluded\.best_1rm_relative_bw/i);
   assert.match(dataSource, /best_1rm,body_weight_kg_at_achieved,body_weight_kind,best_1rm_relative_bw/i);
-  assert.match(workspaceSource, /Relative to BW/);
-  assert.match(workspaceSource, /metric\.equipment_name \|\| "Not recorded"/);
+  assert.match(physicalWorkspaceSource, /Relative to BW/);
+  assert.match(physicalWorkspaceSource, /metric\.equipment_name \|\| "Not recorded"/);
 });
 
 test("snapshot replacement atomically persists current body weight and validates relative strength", () => {
@@ -78,19 +84,19 @@ test("snapshot replacement atomically persists current body weight and validates
   assert.doesNotMatch(bodyWeightMigration, /from auth\.users/i);
 });
 
-test("body weight is Heracles-owned while height remains user-editable", () => {
-  assert.match(bodyWeightMigration, /revoke all on table public\.goat_strength_profile from authenticated/i);
-  assert.match(bodyWeightMigration, /grant select on table public\.goat_strength_profile to authenticated/i);
-  assert.match(bodyWeightMigration, /grant insert \(user_id, height_cm, updated_at\)/i);
-  assert.match(bodyWeightMigration, /grant update \(height_cm, updated_at\)/i);
+test("height is canonical and static while Heracles body weight remains strength context only", () => {
   assert.match(legacyBodyWeightMigration, /set body_weight_kg = null/i);
   assert.match(legacyBodyWeightMigration, /where body_weight_measured_on is null/i);
-  assert.match(dataSource, /body_weight_kg,body_weight_measured_on,height_cm/);
-  assert.match(workspaceSource, /Body Weight KG \(Heracles\)/);
-  assert.match(workspaceSource, /readOnly/);
-  assert.match(workspaceSource, /Save Height/);
-  assert.doesNotMatch(workspaceSource, /body_weight_kg: bodyWeightKg/);
-  assert.doesNotMatch(workspaceSource, /bodyWeightKg: event\.target\.value/);
+  assert.match(staticHeightMigration, /set height_cm = 190/i);
+  assert.match(staticHeightMigration, /alter column height_cm set default 190/i);
+  assert.match(staticHeightMigration, /alter column height_cm set not null/i);
+  assert.match(staticHeightMigration, /check \(height_cm = 190\)/i);
+  assert.match(staticHeightMigration, /revoke insert, update, delete[\s\S]*from authenticated/i);
+  assert.match(staticHeightMigration, /grant select[\s\S]*to authenticated/i);
+  assert.match(physicalWorkspaceSource, /STATIC_HEIGHT_CM = 190/);
+  assert.match(physicalWorkspaceSource, /weight_body_mass/);
+  assert.doesNotMatch(physicalWorkspaceSource, /Save Height/);
+  assert.doesNotMatch(physicalWorkspaceSource, /Body Weight KG \(Heracles\)/);
 });
 
 test("Kleos Bot switches canonical strength evidence away from the manual table", () => {
@@ -123,16 +129,26 @@ test("sync function preserves the existing snapshot when Heracles cannot supply 
   assert.match(syncFunction, /best_1rm_relative_bw/);
 });
 
-test("active Kleos UI and data loading use Heracles strength and body weight", () => {
+test("active Physical UI uses Health for general body state and Heracles for strength performance", () => {
   assert.match(dataSource, /from\("heracles_strength_metrics"\)/);
   assert.doesNotMatch(dataSource, /from\("goat_strength_lifts"\)/);
-  assert.match(workspaceSource, /sync-heracles-strength/);
-  assert.match(workspaceSource, /Strength & Body Metrics/);
-  assert.match(workspaceSource, /synced from Heracles/i);
-  assert.doesNotMatch(workspaceSource, /Save Lift/);
-  assert.doesNotMatch(workspaceSource, /goat_strength_lifts/);
+  assert.match(physicalWorkspaceSource, /sync-heracles-strength/);
+  assert.match(physicalWorkspaceSource, /Strength Performance/);
+  assert.match(physicalWorkspaceSource, /from\("goat_health_metrics"\)/);
+  assert.match(physicalWorkspaceSource, /weight_body_mass/);
+  assert.match(physicalWorkspaceSource, /Body weight is a general Physical metric/);
+  assert.doesNotMatch(physicalWorkspaceSource, /Body Weight KG \(Heracles\)/);
+  assert.doesNotMatch(physicalWorkspaceSource, /Save Lift/);
+  assert.doesNotMatch(physicalWorkspaceSource, /goat_strength_lifts/);
   assert.doesNotMatch(correctionsSource, /goat_strength_lifts/);
   assert.doesNotMatch(correctionsSource, /Strength History/);
+});
+
+test("legacy shared workspace is no longer the routed Physical surface", () => {
+  assert.match(workspaceSource, /case "physical"/);
+  const physicalRoute = require("node:fs").readFileSync(path.join(process.cwd(), "app/physical/page.js"), "utf8");
+  assert.match(physicalRoute, /PhysicalWorkspace/);
+  assert.doesNotMatch(physicalRoute, /KleosWorkspace/);
 });
 
 test("Kleos prompt distinguishes current and stale strength and explains bodyweight-relative evidence", () => {

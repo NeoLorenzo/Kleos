@@ -11,11 +11,13 @@ before(async () => {
   const snapshotUrl = `data:text/javascript;base64,${Buffer.from(snapshotSource).toString("base64")}`;
   snapshotModel = await import(snapshotUrl);
 
+  const methodologySource = await readFile(path.join(process.cwd(), "lib/kleos/vectorMethodology.mjs"), "utf8");
+  const methodologyUrl = `data:text/javascript;base64,${Buffer.from(methodologySource).toString("base64")}`;
+
   const botSource = await readFile(path.join(process.cwd(), "lib/kleos/kleosBotEvaluation.js"), "utf8");
-  const patchedSource = botSource.replace(
-    'from "@/lib/kleos/vectorSnapshots";',
-    `from "${snapshotUrl}";`
-  );
+  const patchedSource = botSource
+    .replace('from "@/lib/kleos/vectorSnapshots";', `from "${snapshotUrl}";`)
+    .replace('from "@/lib/kleos/vectorMethodology.mjs";', `from "${methodologyUrl}";`);
   bot = await import(`data:text/javascript;base64,${Buffer.from(patchedSource).toString("base64")}`);
 });
 
@@ -37,7 +39,7 @@ function validResults() {
       });
 }
 
-test("Kleos Bot owns stable evaluator and methodology metadata", () => {
+test("Kleos Bot owns stable evaluator and Methodology 2.0 metadata", () => {
   const result = bot.normalizeKleosBotEvaluation(
     { results: validResults() },
     {
@@ -48,7 +50,7 @@ test("Kleos Bot owns stable evaluator and methodology metadata", () => {
 
   assert.equal(result.ok, true);
   assert.equal(result.value.evaluator, "kleos-bot");
-  assert.equal(result.value.methodologyVersion, "1.0.0");
+  assert.equal(result.value.methodologyVersion, "2.0.0");
   assert.equal(result.value.executionKey, "shortcut-2026-09-07T10:00:00Z-a");
 });
 

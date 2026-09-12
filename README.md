@@ -8,7 +8,7 @@ It was extracted from the former **GOAT Lab** surface inside [NeoLorenzo/Ariadne
 
 - **Ariadne** owns desired movement: directions, objectives, goals, projects, tasks, and execution planning.
 - **Kleos** owns current state: raw personal evidence, dated derived vector snapshots, benchmarking, and character/profile data.
-- **Kleos Bot** owns vector evaluation methodology and writes new derived snapshots through the trusted Kleos contract.
+- **Kleos Bot** applies the canonical vector methodology to current evidence and writes new derived snapshots through the trusted Kleos contract.
 - The applications are separate repositories and deployments.
 - They deliberately share the existing Ariadne Supabase project for database and authentication infrastructure.
 
@@ -27,13 +27,29 @@ Kleos and Ariadne share these stable vector identifiers:
 - `creative`
 - `experiential`
 
-Kleos stores append-only dated assessments in `kleos_vector_snapshots` and `kleos_vector_snapshot_results`. A vector result is either an assessed 0–100 value with confidence and commentary, or an explicit `unknown` state when evidence is insufficient. Missing evidence is never converted to zero.
+Kleos stores append-only dated assessments in `kleos_vector_snapshots` and `kleos_vector_snapshot_results`. Methodology 2.0 also stores the model's immutable subdomain judgments in `kleos_vector_snapshot_subdomain_results` so the final vector score is auditable.
 
-Kleos Bot is the canonical evaluator. Execution is schedule-agnostic: each invocation supplies an `executionKey`, applies methodology `1.0.0`, validates all eight vector results, and persists a derived snapshot through the trusted snapshot contract. Retries of the same logical invocation must reuse the same execution key and therefore resolve to the existing snapshot; a genuinely new invocation uses a new execution key and creates an independent snapshot even if it runs shortly after another evaluation.
+A vector result is either an assessed 0–100 value with confidence and commentary, or an explicit `unknown` state when evidence coverage is insufficient. Missing evidence is never converted to zero.
 
-The primary authenticated Kleos home surface is the character sheet. It renders the latest state across all eight vectors, exposes the evidence behind the assessment, and provides inspectable dated vector trajectories from persisted snapshot history. The `/vector-state/` route remains a secondary minimal current-state reader rather than the canonical home experience.
+### Methodology 2.0
 
-Kleos Bot's current production evidence flow is:
+`2.0.0` is the current canonical methodology. It replaces holistic model-selected vector scores with a fixed, versioned measurement model:
+
+- every vector has five explicit subdomains and fixed weights;
+- every subdomain has explicit 0/25/50/70/85/95/100 anchors;
+- scoring is absolute, not age- or career-stage-relative;
+- the model assesses only subdomains against the canonical anchors;
+- Supabase calculates final vector scores deterministically from fixed weights;
+- unknown subdomains reduce coverage rather than receiving artificial low scores;
+- deterministic coverage caps prevent narrow positive evidence from producing near-maximal whole-vector scores;
+- vector confidence is calculated deterministically from coverage and subdomain confidence;
+- there is no cross-vector overall score in 2.0.0.
+
+Existing 1.x snapshots remain immutable historical records. Because they used holistic model-calibrated scoring, they are not directly comparable with the 2.0.0 longitudinal baseline.
+
+Execution remains schedule-agnostic: each invocation supplies an execution key. Retries of the same logical invocation reuse the same key and resolve to the existing snapshot; a genuinely new invocation uses a new key and creates an independent snapshot.
+
+Kleos Bot's current production evaluation flow is:
 
 ```text
 Apple Shortcut
@@ -42,23 +58,26 @@ stateless normal ChatGPT conversation
       ↓
 connected Supabase management tool
       ↓
-public.get_kleos_evaluation_evidence()
+public.get_kleos_evaluation_context()
       ↓
-compact canonical evidence
+Methodology 2.0 + compact canonical evidence
       ↓
-ChatGPT evaluation
+ChatGPT assesses every fixed subdomain
       ↓
-public.persist_kleos_evaluation(...)
+public.persist_kleos_evaluation(p_execution_key, p_vectors)
       ↓
-immutable vector snapshot
+Supabase validates coverage and calculates final vector scores/confidence
+      ↓
+immutable vector + subdomain snapshot
 ```
 
-The Shortcut does not transport evidence JSON and does not target a Custom GPT. The tool-facing database facade is available only to the connected Supabase management SQL session and delegates to the existing canonical evidence and snapshot functions.
+The Shortcut does not transport evidence JSON and does not target a Custom GPT. The tool-facing database functions are available only to the connected Supabase management SQL session.
 
 See:
 
 - [`documentation/vector-snapshot-contract.md`](documentation/vector-snapshot-contract.md) for the stable snapshot interoperability contract.
-- [`documentation/kleos-bot-methodology-v1.md`](documentation/kleos-bot-methodology-v1.md) for the current evaluation methodology.
+- [`documentation/kleos-vector-methodology-2.0.md`](documentation/kleos-vector-methodology-2.0.md) for the current scoring methodology.
+- [`documentation/kleos-bot-methodology-v1.md`](documentation/kleos-bot-methodology-v1.md) for the legacy 1.x methodology record.
 - [`documentation/kleos-bot-shortcut-transport.md`](documentation/kleos-bot-shortcut-transport.md) for the current stateless ChatGPT/Supabase execution flow.
 
 ## Current persistence
@@ -75,17 +94,21 @@ Kleos owns the existing `public.goat_*` raw-evidence tables used by the applicat
 - `goat_cv_characteristics`
 - `goat_immutable_characteristics`
 - `goat_misc_characteristics`
+- `goat_health_metrics`
 
 Legacy persistence such as `goat_score_entries` may still exist in the shared database for compatibility/history, but the global GOAT Score product workflow has been removed and is not part of the current Kleos UI or scoring model.
 
-Kleos also owns the derived vector-state tables:
+Kleos also owns the derived vector-state and methodology tables:
 
 - `kleos_vector_snapshots`
 - `kleos_vector_snapshot_results`
+- `kleos_vector_snapshot_subdomain_results`
+- `kleos_vector_methodologies`
+- `kleos_vector_methodology_subdomains`
 
 The raw data was intentionally **not copied or migrated** during application extraction. Kleos reads and writes the same canonical records previously used by Ariadne's `/lab` route. Raw evidence remains authoritative source material; vector snapshots are derived historical interpretations and do not replace those records.
 
-Existing Row Level Security remains authoritative. The policies require the authenticated row owner and the authorized Google account. Snapshot tables are read-only to ordinary authenticated clients; trusted writes use the atomic snapshot persistence contracts.
+Existing Row Level Security remains authoritative. Snapshot tables are read-only to ordinary authenticated clients; trusted writes use the atomic snapshot persistence contracts. Methodology tables are not exposed to ordinary application roles; the stateless evaluator receives the current methodology through the management-session evaluation-context function.
 
 Future schema changes that concern Kleos-owned persistence should be authored from this repository even while the physical database remains shared.
 
@@ -93,7 +116,7 @@ Future schema changes that concern Kleos-owned persistence should be authored fr
 
 Apply the additive SQL migrations under [`supabase/migrations/`](supabase/migrations/) to the shared Supabase project in filename order. They must not seed, reset, or silently rewrite private data.
 
-The migration history includes the superseded weekly-idempotency implementation followed by the schedule-agnostic execution-key migration. The current runtime contract is defined by the latest migrations, not by the historical weekly migration filename.
+The migration history includes superseded execution and scoring implementations. The current runtime contract is defined by the latest migrations. Historical migrations remain present to describe how the database reached its current state.
 
 ## Development
 
@@ -146,7 +169,7 @@ https://neolorenzo.github.io/Kleos/
 The primary character sheet and the measurement editor have separate roles:
 
 - the character sheet is the canonical current-state surface for eight-vector derived assessments and their history;
-- the measurement editor manages raw evidence such as cognitive tests, strength lifts/body metrics, academic results and notes, health context, CV context, immutable characteristics, and miscellaneous characteristics;
+- the measurement editor manages raw evidence such as cognitive tests, strength metrics, academic results and notes, health context, CV context, immutable characteristics, miscellaneous characteristics, financial records, and Apple Health metrics;
 - the former global GOAT Score entry/history workflow has been removed;
 - raw measurement records remain editable independently of derived vector snapshots.
 

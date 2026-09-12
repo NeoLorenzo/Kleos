@@ -1,6 +1,6 @@
 # Kleos vector snapshot contract
 
-This contract is the interoperability boundary introduced by Kleos issue #4.
+This contract is the interoperability boundary introduced by Kleos issue #4 and extended by issue #69 for Methodology 2.0.
 
 Kleos owns **current-state assessment**. Ariadne owns **desired movement**. Both use the same eight stable vector identifiers:
 
@@ -24,25 +24,62 @@ The physical Supabase project remains shared with Ariadne, but the tables and wr
 - `evaluated_at`
 - `evaluator`
 - `methodology_version`
-- optional `overall_score`
+- optional `overall_score` (null for Methodology 2.0)
+- `execution_key` for retry-safe Kleos Bot runs
 - `created_at`
 
-`public.kleos_vector_snapshot_results` contains exactly one result for every canonical vector in a snapshot:
+`public.kleos_vector_snapshot_results` contains exactly one final result for every canonical vector in a snapshot:
 
 - `snapshot_id`
 - `vector_id`
 - `status`: `assessed` or `unknown`
-- nullable `score` from 0–100
+- nullable final `score` from 0–100
 - `confidence`: `low`, `medium`, `high`, or `unknown`
 - `commentary`
+- optional `coverage_pct`
+- optional `raw_score`
+- optional `aggregation_details`
 
 An assessed vector requires a numeric score and `low`/`medium`/`high` confidence. An unknown vector must have `score = null` and `confidence = unknown`. Missing evidence must never be converted to zero.
 
-Snapshots are append-only historical interpretations. Raw `goat_*` measurements remain canonical evidence and are not copied into snapshot tables.
+For Methodology 2.0 snapshots, `coverage_pct`, `raw_score`, and `aggregation_details` make the deterministic server-side aggregation auditable. Legacy 1.x snapshots legitimately have null values for those fields.
+
+`public.kleos_vector_snapshot_subdomain_results` stores the immutable model judgments underlying a Methodology 2.0 snapshot:
+
+- `snapshot_id`
+- `vector_id`
+- `subdomain_id`
+- `methodology_version`
+- canonical `weight`
+- `status`
+- nullable `score`
+- `confidence`
+- `commentary`
+
+The model assesses subdomains. The database calculates final vector scores. The stored weight is copied from the canonical methodology at persistence time rather than accepted from model output.
+
+Snapshots are append-only historical interpretations. Raw measurements and other canonical evidence remain authoritative and are not copied wholesale into snapshot tables.
+
+## Methodology model
+
+The active scoring specification is versioned in:
+
+- `public.kleos_vector_methodologies`
+- `public.kleos_vector_methodology_subdomains`
+
+Methodology 2.0 defines five fixed subdomains per vector, fixed weights, explicit score anchors, evidence rules, and deterministic aggregation/coverage rules.
+
+The management-session evaluator retrieves the complete current scoring contract plus canonical evidence through:
+
+```sql
+select public.get_kleos_evaluation_context() as context;
+```
+
+The evaluator must apply the returned methodology rather than relying on a hard-coded or model-invented scale.
 
 ## Authenticated read contract
 
-Owner-authorized clients may read the tables directly using the normal publishable Supabase client and authenticated user session. RLS requires both the row owner and the authorized Google account.
+Owner-authorized clients may read snapshot tables directly using the normal publishable Supabase client and authenticated user session. RLS requires both the row owner and the authorized Google account.
 
 Kleos exposes client helpers:
 
@@ -51,69 +88,88 @@ loadLatestVectorSnapshot(userId)
 loadVectorSnapshotHistory(userId, { limit })
 ```
 
-The latest query orders by `evaluated_at DESC`, then `created_at DESC`. Ariadne #21 should use the same read semantics and must treat unavailable data as non-blocking.
+The latest query orders by `evaluated_at DESC`, then `created_at DESC`.
 
-Ariadne may read these records but must not update, delete, recompute, or copy them into Ariadne-owned persistence.
+Ariadne may read these records but must not update, delete, recompute, or copy them into Ariadne-owned persistence. Consumers must retain `methodology_version`; cross-version score differences must not be presented as ordinary longitudinal changes.
 
-## Trusted write contract
+## Trusted Methodology 2.0 write contract
 
-New snapshots are written atomically through the database RPC:
+The production stateless Kleos Bot writes through:
 
-```text
-create_kleos_vector_snapshot(
-  p_evaluated_at,
-  p_evaluator,
-  p_methodology_version,
-  p_results,
-  p_overall_score
-)
+```sql
+select public.persist_kleos_evaluation(
+  p_execution_key := '<execution-key>',
+  p_vectors := '<complete-eight-vector-subdomain-json-array>'::jsonb
+) as persistence_result;
 ```
 
-`p_results` must be an array containing all eight distinct canonical vectors. Example:
+`p_vectors` contains exactly eight vector objects. Each vector contains whole-vector commentary and every canonical subdomain defined for that vector. Example shape:
 
 ```json
 [
   {
     "vector_id": "physical",
-    "status": "assessed",
-    "score": 72,
-    "confidence": "high",
-    "commentary": "Representative physical evidence supports this assessment."
-  },
-  {
-    "vector_id": "psychological",
-    "status": "unknown",
-    "score": null,
-    "confidence": "unknown",
-    "commentary": "Insufficient canonical psychological evidence."
+    "commentary": "Whole-vector synthesis.",
+    "subdomains": [
+      {
+        "subdomain_id": "clinical_health",
+        "status": "assessed",
+        "score": 78,
+        "confidence": "high",
+        "commentary": "Evidence-grounded subdomain assessment."
+      },
+      {
+        "subdomain_id": "cardiorespiratory_activity",
+        "status": "unknown",
+        "score": null,
+        "confidence": "unknown",
+        "commentary": "Canonical evidence cannot support a defensible score."
+      }
+    ]
   }
 ]
 ```
 
-The real payload must include the remaining six canonical vectors as well. The RPC validates authorization and completeness and writes the parent snapshot plus all eight results inside one database transaction. If any result is malformed, no partial snapshot is committed.
+The real payload must include every methodology vector and every methodology subdomain exactly once.
 
-Direct `insert`, `update`, and `delete` privileges on the snapshot tables are revoked from ordinary authenticated clients. The RPC is the stable writer surface for Kleos Bot or another trusted authenticated automation.
+The model does **not** provide:
 
-The repository helper `persistVectorSnapshot(payload)` validates the same application-level contract before invoking the RPC.
+- canonical weights;
+- methodology version;
+- final vector score;
+- vector confidence;
+- evidence coverage;
+- user ID;
+- overall score.
 
-## Versioning
+The database resolves those values or calculates them deterministically. The write is atomic: invalid vector/subdomain membership, malformed assessed/unknown states, or other validation failures leave the previous snapshots untouched.
 
-Every snapshot records both:
+Execution-key idempotency is part of the write contract. Retrying the same logical invocation with the same execution key returns the existing snapshot. A genuinely new evaluation uses a new key and may run at any cadence.
 
-- a stable evaluator identity, expected to be `kleos-bot` for the scheduled evaluator; and
-- a methodology version such as `1.0.0`.
+The underlying older writers remain part of migration history and may support legacy/authenticated application paths, but they are not the production Methodology 2.0 stateless evaluator contract.
 
-A methodology change creates future snapshots with a new version. Historical records are not rewritten.
+## Versioning and comparability
+
+Every snapshot records:
+
+- evaluator identity, normally `kleos-bot` for automated runs; and
+- methodology version.
+
+Methodology changes that alter vector definitions, subdomains, weights, anchors, missing-evidence handling, aggregation semantics, or other score-affecting rules require a version bump.
+
+Historical records are never rewritten to a new methodology. In particular, 1.x holistic scores are not numerically interchangeable with 2.0.0 deterministic scores.
 
 ## UI contract
 
-The minimal `/vector-state/` route reads the latest snapshot and renders:
+The `/vector-state/` route renders:
 
-- all eight vectors;
+- all eight current vectors;
 - numeric assessment or explicit `Unknown` state;
 - evaluation timestamp;
 - evaluator and methodology version;
-- confidence for assessed vectors; and
-- commentary in secondary detail.
+- confidence;
+- Methodology 2.0 evidence coverage;
+- Methodology 2.0 subdomain scores/weights/confidence in secondary detail;
+- snapshot history with methodology versions and methodology-boundary labeling.
 
-The full character-sheet redesign remains Kleos #10.
+The UI must not imply that a score change crossing a methodology boundary is necessarily a real change in the user's life state.

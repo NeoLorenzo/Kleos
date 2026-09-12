@@ -5,13 +5,17 @@ const { before, test } = require("node:test");
 
 let methodology;
 let migration;
+let writerGuardMigration;
+let snapshotRepository;
 let prompt;
 let docs;
 
 before(async () => {
   methodology = await import("../lib/kleos/vectorMethodology.mjs");
-  [migration, prompt, docs] = await Promise.all([
+  [migration, writerGuardMigration, snapshotRepository, prompt, docs] = await Promise.all([
     readFile(path.join(process.cwd(), "supabase/migrations/20260912_0028_kleos_vector_methodology_2_0.sql"), "utf8"),
+    readFile(path.join(process.cwd(), "supabase/migrations/20260912_0029_enforce_current_methodology_server_writer.sql"), "utf8"),
+    readFile(path.join(process.cwd(), "lib/kleos/vectorSnapshotRepository.js"), "utf8"),
     readFile(path.join(process.cwd(), "documentation/kleos-bot-shortcuts-prompt.md"), "utf8"),
     readFile(path.join(process.cwd(), "documentation/kleos-vector-methodology-2.0.md"), "utf8")
   ]);
@@ -100,6 +104,15 @@ test("database migration persists explicit methodology, subdomains, anchors and 
   assert.match(migration, /kleos_vector_snapshot_subdomain_results/i);
   assert.match(migration, /weighted_assessed_subdomains_with_coverage_cap/i);
   assert.match(migration, /overall_score,execution_key\)\s*values\(v_owner_id,now\(\),'kleos-bot',v_methodology_version,null/i);
+});
+
+test("current methodology cannot be written through the older authenticated holistic writer", () => {
+  assert.match(writerGuardMigration, /new\.methodology_version = v_current_version/i);
+  assert.match(writerGuardMigration, /session_user <> 'postgres'/i);
+  assert.match(writerGuardMigration, /KLEOS_CURRENT_METHODOLOGY_SERVER_WRITER_REQUIRED/i);
+  assert.match(writerGuardMigration, /before insert on public\.kleos_vector_snapshots/i);
+  assert.match(snapshotRepository, /snapshot\.methodologyVersion === "2\.0\.0"/i);
+  assert.match(snapshotRepository, /KLEOS_CURRENT_METHODOLOGY_SERVER_WRITER_REQUIRED/i);
 });
 
 test("runtime prompt cannot silently revert to holistic vector scoring", () => {

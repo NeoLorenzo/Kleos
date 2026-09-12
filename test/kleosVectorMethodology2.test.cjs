@@ -141,13 +141,12 @@ test("current methodology cannot be written through the older authenticated holi
 });
 
 test("runtime prompt cannot silently revert to holistic or arbitrary numeric scoring", () => {
-  assert.match(prompt, /every subdomain/i);
-  assert.match(prompt, /Do not choose final vector scores yourself/i);
-  assert.match(prompt, /exactly one of the canonical anchor values/i);
-  assert.match(prompt, /do \*\*not\*\* interpolate/i);
+  assert.match(prompt, /every methodology subdomain exactly once/i);
+  assert.match(prompt, /exactly one of the methodology's allowed anchor values/i);
+  assert.match(prompt, /do not interpolate/i);
   assert.match(prompt, /do not age-normalize or career-stage-normalize/i);
-  assert.match(prompt, /calculate vector scores deterministically/i);
-  assert.match(prompt, /p_vectors/i);
+  assert.match(prompt, /server calculates final vector state deterministically/i);
+  assert.match(prompt, /"vectors"/i);
   assert.doesNotMatch(prompt, /90–100: exceptionally strong/i);
   assert.match(docs, /Snapshots from 1\.x remain immutable historical records/i);
 });

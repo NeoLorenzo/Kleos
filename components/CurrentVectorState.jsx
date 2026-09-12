@@ -61,7 +61,7 @@ export default function CurrentVectorState({ userId }) {
 
   const snapshot = state.snapshot;
   const resultsByVectorId = new Map(snapshot.results.map((result) => [result.vectorId, result]));
-  const deterministic = snapshot.methodologyVersion === "2.0.0";
+  const deterministic = snapshot.methodologyVersion.startsWith("2.");
 
   return (
     <section className="kleos-card wide-card" aria-labelledby="current-vector-state-title">
@@ -73,8 +73,8 @@ export default function CurrentVectorState({ userId }) {
         </p>
         <p>
           {deterministic
-            ? "Methodology 2.0: final vector scores are calculated deterministically from fixed weighted subdomains and coverage rules."
-            : "Legacy 1.x methodology: this snapshot used holistic model scoring and is not directly comparable with 2.0.0 snapshots."}
+            ? "Methodology 2.x: final vector scores are calculated deterministically from fixed weighted subdomains and coverage rules."
+            : "Legacy 1.x methodology: this snapshot used holistic model scoring and is not directly comparable with Methodology 2.x snapshots."}
         </p>
       </div>
 

@@ -12,11 +12,19 @@
   gap: 0.65rem;
 }
 
-.connectionGrid {
+.connectionGrid,
+.analyticsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.8rem;
   margin-top: 1rem;
+}
+
+.rollingGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
 }
 
 .metric {
@@ -43,10 +51,18 @@
   white-space: nowrap;
 }
 
-.errorNote {
+.errorNote,
+.analyticsNote,
+.warningNote {
   margin: 0.85rem 0 0;
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+.warningNote {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 .accountGrid {
@@ -79,6 +95,80 @@
   text-align: right;
 }
 
+.currencyTabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.currencyButton {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.4rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.currencyButton:hover,
+.activeCurrency {
+  color: inherit;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.analyticsColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+  margin-top: 0.8rem;
+}
+
+.subheading {
+  margin: 0 0 0.7rem;
+  font-size: 0.9rem;
+}
+
+.categoryList {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.categoryRow {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.categoryMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.84rem;
+}
+
+.categoryRow small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.categoryTrack {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.categoryFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0.58;
+}
+
 .statusBadge {
   display: inline-flex;
   align-items: center;
@@ -98,19 +188,28 @@
     flex-direction: column;
   }
 
-  .actions {
+  .actions,
+  .currencyTabs {
     justify-content: flex-start;
   }
 
   .connectionGrid,
-  .accountGrid {
+  .analyticsGrid,
+  .accountGrid,
+  .analyticsColumns {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .rollingGrid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 600px) {
   .connectionGrid,
-  .accountGrid {
+  .analyticsGrid,
+  .accountGrid,
+  .analyticsColumns {
     grid-template-columns: 1fr;
   }
 

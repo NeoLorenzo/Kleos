@@ -33,32 +33,33 @@ Kleos Bot is the canonical evaluator. Execution is schedule-agnostic: each invoc
 
 The primary authenticated Kleos home surface is the character sheet. It renders the latest state across all eight vectors, exposes the evidence behind the assessment, and provides inspectable dated vector trajectories from persisted snapshot history. The `/vector-state/` route remains a secondary minimal current-state reader rather than the canonical home experience.
 
-Kleos Bot's current production flow is:
+Kleos Bot's current production evidence flow is:
 
 ```text
 Apple Shortcut
       ↓
-stateless Ask ChatGPT run
+stateless normal ChatGPT conversation
       ↓
-connected Supabase tool
+connected Supabase management tool
       ↓
-compact canonical evidence RPC
+public.get_kleos_evaluation_evidence()
+      ↓
+compact canonical evidence
       ↓
 ChatGPT evaluation
       ↓
-connected Supabase tool
+public.persist_kleos_evaluation(...)
       ↓
-privileged snapshot persistence RPC
+immutable vector snapshot
 ```
 
-Apple Shortcuts is only the trigger and instruction carrier. It does not download or inject canonical evidence JSON. Each fresh ChatGPT run retrieves compact canonical evidence directly from the connected Supabase project through `get_kleos_bot_evaluation_evidence_admin()` and persists the validated eight-vector result through `create_kleos_bot_snapshot_admin(...)`.
+The Shortcut does not transport evidence JSON and does not target a Custom GPT. The tool-facing database facade is available only to the connected Supabase management SQL session and delegates to the existing canonical evidence and snapshot functions.
 
 See:
 
 - [`documentation/vector-snapshot-contract.md`](documentation/vector-snapshot-contract.md) for the stable snapshot interoperability contract.
 - [`documentation/kleos-bot-methodology-v1.md`](documentation/kleos-bot-methodology-v1.md) for the current evaluation methodology.
-- [`documentation/kleos-bot-shortcut-transport.md`](documentation/kleos-bot-shortcut-transport.md) for the current stateless ChatGPT/Supabase transport and privileged persistence flow.
-- [`documentation/kleos-bot-shortcuts-prompt.md`](documentation/kleos-bot-shortcuts-prompt.md) for the complete prompt used by the Shortcut.
+- [`documentation/kleos-bot-shortcut-transport.md`](documentation/kleos-bot-shortcut-transport.md) for the current stateless ChatGPT/Supabase execution flow.
 
 ## Current persistence
 

@@ -1,5 +1,5 @@
-import KleosWorkspace from "@/components/KleosWorkspace";
+import FinancialWorkspace from "@/components/FinancialWorkspace";
 
 export default function Page() {
-  return <KleosWorkspace activePage="financial" />;
+  return <FinancialWorkspace activePage="financial" />;
 }

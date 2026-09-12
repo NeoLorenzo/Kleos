@@ -1,5 +1,5 @@
 import FinancialWorkspace from "@/components/FinancialWorkspace";
 
 export default function Page() {
-  return <FinancialWorkspace />;
+  return <FinancialWorkspace activePage="financial" />;
 }

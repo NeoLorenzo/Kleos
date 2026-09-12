@@ -22,8 +22,28 @@ test("Kleos exposes a dashboard plus all eight dimension routes", () => {
     const pagePath = path.join(ROOT, "app", dimension, "page.js");
     assert.ok(fs.existsSync(pagePath), `missing route for ${dimension}`);
     const source = fs.readFileSync(pagePath, "utf8");
-    assert.match(source, new RegExp(`activePage="${dimension}"`));
+    if (dimension === "physical") {
+      assert.match(source, /PhysicalWorkspace/);
+      assert.doesNotMatch(source, /activePage="physical"/);
+    } else {
+      assert.match(source, new RegExp(`activePage="${dimension}"`));
+    }
   }
+});
+
+test("Physical route owns its health time-series loader without changing the canonical route registry", () => {
+  const source = fs.readFileSync(
+    path.join(ROOT, "components", "PhysicalWorkspace.jsx"),
+    "utf8"
+  );
+
+  assert.match(source, /from\("goat_health_metrics"\)/);
+  assert.match(source, /HEALTH_WINDOW_DAYS = 90/);
+  assert.match(source, /STATIC_HEIGHT_CM = 190/);
+  assert.match(source, /weight_body_mass/);
+  assert.match(source, /sleep_analysis/);
+  assert.match(source, /Strength Performance/);
+  assert.doesNotMatch(source, /Save Height/);
 });
 
 test("navigation is driven by the canonical nine-page route registry", () => {

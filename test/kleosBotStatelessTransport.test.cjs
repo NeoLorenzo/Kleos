@@ -80,7 +80,7 @@ test("stateless Shortcut prompt validates eight vectors and persists through can
     "creative",
     "experiential"
   ]) {
-    assert.match(shortcutPrompt, new RegExp(`\\`${vector}\\``));
+    assert.ok(shortcutPrompt.includes(`\`${vector}\``), `missing canonical vector ${vector}`);
   }
   assert.match(shortcutPrompt, /create_kleos_bot_snapshot_admin/i);
   assert.match(shortcutPrompt, /p_evaluated_at := now\(\)/i);

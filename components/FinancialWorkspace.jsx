@@ -80,16 +80,7 @@ export default function FinancialWorkspace() {
       let analytics = EMPTY_ANALYTICS;
 
       if (accountIds.length) {
-        const [
-          balanceResult,
-          transactionResult,
-          monthlyResult,
-          categoryResult,
-          rollingResult,
-          recurringResult,
-          coverageResult,
-          topMerchantResult
-        ] = await Promise.all([
+        const results = await Promise.all([
           supabase
             .from("financial_account_balances")
             .select("id,account_id,balance_type,amount,currency,reference_date,provider_changed_at,observed_at")
@@ -99,7 +90,7 @@ export default function FinancialWorkspace() {
             .limit(Math.max(accountIds.length * 12, 60)),
           supabase
             .from("financial_transactions")
-            .select("id,account_id,status,booking_date,value_date,amount,currency,counterparty_name,merchant_name,description,first_seen_at,last_seen_at")
+            .select("id,account_id,status,booking_date,value_date,amount,currency,counterparty_name,merchant_name,description,remittance_information,transaction_note,bank_transaction_code,bank_transaction_subcode,bank_transaction_description,provider_reference_number,first_seen_at,last_seen_at")
             .eq("user_id", userId)
             .in("account_id", accountIds)
             .order("last_seen_at", { ascending: false })
@@ -140,10 +131,9 @@ export default function FinancialWorkspace() {
             .limit(80)
         ]);
 
-        for (const result of [balanceResult, transactionResult, monthlyResult, categoryResult, rollingResult, recurringResult, coverageResult, topMerchantResult]) {
-          if (result.error) throw result.error;
-        }
+        for (const result of results) if (result.error) throw result.error;
 
+        const [balanceResult, transactionResult, monthlyResult, categoryResult, rollingResult, recurringResult, coverageResult, topMerchantResult] = results;
         balances = balanceResult.data || [];
         transactions = transactionResult.data || [];
 
@@ -152,7 +142,7 @@ export default function FinancialWorkspace() {
         if (transactionIds.length) {
           const classificationResult = await supabase
             .from("financial_transaction_classifications")
-            .select("transaction_id,display_label,normalized_label,flow_type,category,is_internal_transfer,is_fx_conversion,is_recurring,classifier_version,confidence")
+            .select("transaction_id,display_label,normalized_label,flow_type,category,subcategory,is_internal_transfer,is_fx_conversion,is_recurring,classifier_version,confidence,classification_reason")
             .eq("user_id", userId)
             .in("transaction_id", transactionIds);
           if (classificationResult.error) throw classificationResult.error;
@@ -199,16 +189,13 @@ export default function FinancialWorkspace() {
     setIsSyncing(false);
     if (error) {
       setStatusMessage(
-        "Revolut sync did not complete. Existing financial evidence was preserved. "
-          + errorMessage(error)
+        "Revolut sync did not complete. Existing financial evidence was preserved. " + errorMessage(error)
       );
       return false;
     }
 
     await loadFinance(user.id, { silent: true });
-    const accountCount = Number(data?.account_count || 0);
-    const transactionCount = Number(data?.transaction_count || 0);
-    setStatusMessage(`Revolut synced: ${accountCount} account(s), ${transactionCount} transaction record(s).`);
+    setStatusMessage(`Revolut synced: ${Number(data?.account_count || 0)} account(s), ${Number(data?.transaction_count || 0)} transaction record(s).`);
     return true;
   }, [isSyncing, loadFinance, user?.id]);
 
@@ -223,17 +210,12 @@ export default function FinancialWorkspace() {
 
     setIsSyncing(false);
     if (error) {
-      setStatusMessage(
-        "Revolut authorization returned, but the financial import did not complete. "
-          + errorMessage(error)
-      );
+      setStatusMessage("Revolut authorization returned, but the financial import did not complete. " + errorMessage(error));
       return;
     }
 
     await loadFinance(user.id, { silent: true });
-    const accountCount = Number(data?.account_count || 0);
-    const transactionCount = Number(data?.transaction_count || 0);
-    setStatusMessage(`Revolut connected: ${accountCount} account(s), ${transactionCount} transaction record(s) imported.`);
+    setStatusMessage(`Revolut connected: ${Number(data?.account_count || 0)} account(s), ${Number(data?.transaction_count || 0)} transaction record(s) imported.`);
   }, [isSyncing, loadFinance, user?.id]);
 
   useEffect(() => {
@@ -258,7 +240,6 @@ export default function FinancialWorkspace() {
         setFinance(EMPTY_DATA);
         return;
       }
-
       setUser(nextUser);
       setAccessState("authorized");
       await loadFinance(nextUser.id);
@@ -286,14 +267,11 @@ export default function FinancialWorkspace() {
 
     callbackHandled.current = true;
     const cleanCallbackUrl = () => {
-      const cleanUrl = `${window.location.origin}${window.location.pathname}`;
-      window.history.replaceState({}, "", cleanUrl);
+      window.history.replaceState({}, "", `${window.location.origin}${window.location.pathname}`);
     };
 
     if (providerError) {
-      setStatusMessage(
-        `Revolut authorization was not completed${providerErrorDescription ? `: ${providerErrorDescription}` : "."}`
-      );
+      setStatusMessage(`Revolut authorization was not completed${providerErrorDescription ? `: ${providerErrorDescription}` : "."}`);
       if (state) {
         void supabase.functions.invoke("sync-financial-bank", {
           body: { action: "authorization-error", state, error: providerError }
@@ -330,18 +308,15 @@ export default function FinancialWorkspace() {
     if (!supabase || !user?.id || isConnecting) return;
     setIsConnecting(true);
     setStatusMessage("Creating a secure read-only Revolut authorization through Enable Banking...");
-
     const redirectUrl = `${window.location.origin}${window.location.pathname}`;
     const { data, error } = await supabase.functions.invoke("sync-financial-bank", {
       body: { action: "connect", country: "PT", redirectUrl }
     });
-
     if (error || !data?.authorization_url) {
       setIsConnecting(false);
       setStatusMessage(`Revolut connection could not be started: ${errorMessage(error)}`);
       return;
     }
-
     window.location.assign(data.authorization_url);
   };
 
@@ -355,12 +330,8 @@ export default function FinancialWorkspace() {
     .filter((row) => row.currency === selectedCurrency && String(row.month).slice(0, 10) === currentMonth)
     .sort((left, right) => Number(right.spending_amount) - Number(left.spending_amount));
   const coverage = finance.analytics.coverage.find((row) => row.currency === selectedCurrency) || null;
-  const recurringRows = finance.analytics.recurring
-    .filter((row) => row.currency === selectedCurrency)
-    .slice(0, 8);
-  const topMerchantRows = finance.analytics.topMerchants
-    .filter((row) => row.currency === selectedCurrency)
-    .slice(0, 8);
+  const recurringRows = finance.analytics.recurring.filter((row) => row.currency === selectedCurrency).slice(0, 8);
+  const topMerchantRows = finance.analytics.topMerchants.filter((row) => row.currency === selectedCurrency).slice(0, 8);
   const trendRows = [...monthlyRows]
     .sort((left, right) => String(right.month).localeCompare(String(left.month)))
     .slice(0, 6);
@@ -397,21 +368,11 @@ export default function FinancialWorkspace() {
                   <p>Read-only Open Banking synchronization. Kleos never stores your Revolut password or a full account identifier.</p>
                 </div>
                 <div className={styles.actions}>
-                  <button
-                    type="button"
-                    className="primary-btn"
-                    onClick={connectRevolut}
-                    disabled={isConnecting || isSyncing}
-                  >
+                  <button type="button" className="primary-btn" onClick={connectRevolut} disabled={isConnecting || isSyncing}>
                     {isConnecting ? "Opening…" : currentConnection ? "Reconnect Revolut" : "Connect Revolut"}
                   </button>
                   {currentConnection?.provider_session_id ? (
-                    <button
-                      type="button"
-                      className="secondary-btn"
-                      onClick={() => void syncConnection(currentConnection.id)}
-                      disabled={isSyncing}
-                    >
+                    <button type="button" className="secondary-btn" onClick={() => void syncConnection(currentConnection.id)} disabled={isSyncing}>
                       {isSyncing ? "Syncing…" : "Sync Revolut"}
                     </button>
                   ) : null}
@@ -428,9 +389,7 @@ export default function FinancialWorkspace() {
                 <p className={styles.errorNote}>Consent valid until {formatDateTime(currentConnection.consent_valid_until)}.</p>
               ) : null}
               {currentConnection?.last_error_code ? (
-                <p className={styles.errorNote}>
-                  Last provider error: {currentConnection.last_error_code} · {formatDateTime(currentConnection.last_error_at)}
-                </p>
+                <p className={styles.errorNote}>Last provider error: {currentConnection.last_error_code} · {formatDateTime(currentConnection.last_error_at)}</p>
               ) : null}
             </section>
 
@@ -459,9 +418,7 @@ export default function FinancialWorkspace() {
                   })}
                 </div>
               ) : (
-                <p className="kleos-subtitle">
-                  {isLoading ? "Loading accounts…" : "No synchronized Revolut accounts yet."}
-                </p>
+                <p className="kleos-subtitle">{isLoading ? "Loading accounts…" : "No synchronized Revolut accounts yet."}</p>
               )}
             </section>
 
@@ -493,7 +450,6 @@ export default function FinancialWorkspace() {
                   <Metric label="Net cash flow · month" value={formatSignedMoney(currentMonthSummary?.net_cash_flow || 0, selectedCurrency)} />
                   <Metric label="Refunds · month" value={formatMoney(currentMonthSummary?.refund_amount || 0, selectedCurrency)} />
                 </div>
-
                 <div className={styles.rollingGrid}>
                   <Metric label="30d spending" value={formatMoney(rolling30?.spending_amount || 0, selectedCurrency)} />
                   <Metric label="90d spending" value={formatMoney(rolling90?.spending_amount || 0, selectedCurrency)} />
@@ -505,7 +461,6 @@ export default function FinancialWorkspace() {
                     Transfers excluded from cash-flow KPIs this month: {formatMoney(currentMonthSummary.transfer_in || 0, selectedCurrency)} in · {formatMoney(currentMonthSummary.transfer_out || 0, selectedCurrency)} out.
                   </p>
                 ) : null}
-
                 {coverage ? (
                   <p className={Number(coverage.spending_category_coverage_pct || 0) < 85 ? styles.warningNote : styles.analyticsNote}>
                     Flow classification {formatPercent(coverage.flow_coverage_pct)} · specific spending categories {formatPercent(coverage.spending_category_coverage_pct)} · {Number(coverage.fx_transactions || 0)} FX records excluded.
@@ -521,7 +476,6 @@ export default function FinancialWorkspace() {
                   <h2>{formatMonthLabel(currentMonth)} · {selectedCurrency}</h2>
                   <p>Gross booked spending by deterministic transaction category. Refunds are tracked separately rather than counted as income.</p>
                 </div>
-
                 <div className={styles.analyticsColumns}>
                   <div>
                     <h3 className={styles.subheading}>Categories</h3>
@@ -546,14 +500,11 @@ export default function FinancialWorkspace() {
                       </div>
                     ) : <p className="kleos-subtitle">No booked spending in this currency for the current month.</p>}
                   </div>
-
                   <div>
                     <h3 className={styles.subheading}>Monthly trend</h3>
                     <div className="table-wrap">
                       <table>
-                        <thead>
-                          <tr><th>Month</th><th>Income</th><th>Spend</th><th>Net</th></tr>
-                        </thead>
+                        <thead><tr><th>Month</th><th>Income</th><th>Spend</th><th>Net</th></tr></thead>
                         <tbody>
                           {trendRows.length ? trendRows.map((row) => (
                             <tr key={`${row.month}-${row.currency}`}>
@@ -582,9 +533,7 @@ export default function FinancialWorkspace() {
                     </div>
                     <div className="table-wrap">
                       <table>
-                        <thead>
-                          <tr><th>Merchant</th><th>Typical</th><th>Cadence</th></tr>
-                        </thead>
+                        <thead><tr><th>Merchant</th><th>Typical</th><th>Cadence</th></tr></thead>
                         <tbody>
                           {recurringRows.length ? recurringRows.map((row) => (
                             <tr key={`${row.currency}-${row.normalized_label}`}>
@@ -597,7 +546,6 @@ export default function FinancialWorkspace() {
                       </table>
                     </div>
                   </div>
-
                   <div>
                     <div className="section-header">
                       <p className="kleos-kicker">365-Day Spend</p>
@@ -606,9 +554,7 @@ export default function FinancialWorkspace() {
                     </div>
                     <div className="table-wrap">
                       <table>
-                        <thead>
-                          <tr><th>Merchant</th><th>Category</th><th>Spend</th></tr>
-                        </thead>
+                        <thead><tr><th>Merchant</th><th>Category</th><th>Spend</th></tr></thead>
                         <tbody>
                           {topMerchantRows.length ? topMerchantRows.map((row) => (
                             <tr key={`${row.currency}-${row.normalized_label}-${row.category}`}>
@@ -629,7 +575,7 @@ export default function FinancialWorkspace() {
               <div className="section-header">
                 <p className="kleos-kicker">Cash Flow Evidence</p>
                 <h2>Recent Transactions</h2>
-                <p>Raw bank rows remain canonical evidence; flow and category are versioned derived interpretations.</p>
+                <p>Raw bank rows remain canonical evidence; flow/category are derived, while remittance notes and transaction codes remain bank-provided context.</p>
               </div>
               <div className="table-wrap">
                 <table>
@@ -646,21 +592,31 @@ export default function FinancialWorkspace() {
                   <tbody>
                     {finance.transactions.length ? finance.transactions.map((transaction) => {
                       const classification = finance.analytics.classificationsByTransaction[transaction.id];
+                      const primaryLabel = classification?.display_label || transactionDescription(transaction);
+                      const contextNote = transactionContextNote(transaction, primaryLabel);
                       return (
                         <tr key={transaction.id}>
                           <td>{formatCalendarDate(transaction.booking_date || transaction.value_date)}</td>
-                          <td>{classification?.display_label || transactionDescription(transaction)}</td>
+                          <td>
+                            <div className={styles.transactionDescription}>
+                              <strong>{primaryLabel}</strong>
+                              {contextNote ? <span>{contextNote}</span> : null}
+                              {transaction.bank_transaction_code ? <small>{humanize(transaction.bank_transaction_code)}</small> : null}
+                            </div>
+                          </td>
                           <td><span className={styles.statusBadge}>{classification ? humanize(classification.flow_type) : "—"}</span></td>
-                          <td>{classification ? humanize(classification.category) : "—"}{classification?.is_recurring ? " · Recurring" : ""}</td>
+                          <td>
+                            {classification ? humanize(classification.category) : "—"}
+                            {classification?.subcategory ? ` · ${humanize(classification.subcategory)}` : ""}
+                            {classification?.is_recurring ? " · Recurring" : ""}
+                          </td>
                           <td><span className={styles.statusBadge}>{humanize(transaction.status)}</span></td>
                           <td className={Number(transaction.amount) < 0 ? styles.negativeAmount : ""}>
                             {formatMoney(transaction.amount, transaction.currency)}
                           </td>
                         </tr>
                       );
-                    }) : (
-                      <tr><td colSpan="6">No synchronized transactions yet.</td></tr>
-                    )}
+                    }) : <tr><td colSpan="6">No synchronized transactions yet.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -697,7 +653,6 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
     "signed-out": `Sign in with ${AUTHORIZED_KLEOS_EMAIL} to open Kleos.`,
     unauthorized: `${user?.email || "This account"} is not authorized for Kleos.`
   }[accessState];
-
   return (
     <section className="access-panel">
       <div className="access-mark">K</div>
@@ -713,18 +668,14 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
 function selectPreferredConnection(connections) {
   const rows = Array.isArray(connections) ? connections : [];
   if (!rows.length) return null;
-
   const invalidStatuses = new Set(["EXPIRED", "REVOKED", "CLOSED", "INVALID", "CANCELLED"]);
   const usable = rows
     .filter((connection) => {
       const status = String(connection?.requisition_status || "").toUpperCase();
-      return Boolean(connection?.provider_session_id && connection?.last_synced_at)
-        && !invalidStatuses.has(status);
+      return Boolean(connection?.provider_session_id && connection?.last_synced_at) && !invalidStatuses.has(status);
     })
     .sort((left, right) => connectionRecency(right) - connectionRecency(left));
-
-  if (usable.length) return usable[0];
-  return rows[0] || null;
+  return usable[0] || rows[0] || null;
 }
 
 function connectionRecency(connection) {
@@ -784,22 +735,53 @@ function currentMonthKey() {
 }
 
 function connectionLabel(connection) {
-  if (connection.last_synced_at && String(connection.requisition_status || "").toUpperCase() === "AUTHORIZED") {
-    return "Connected";
-  }
+  if (connection.last_synced_at && String(connection.requisition_status || "").toUpperCase() === "AUTHORIZED") return "Connected";
   const status = String(connection.requisition_status || "").toUpperCase();
   if (status === "AUTHORIZED") return "Authorized";
-  if (["EXPIRED", "REVOKED", "CLOSED", "INVALID", "CANCELLED"].includes(status)) {
-    return "Reauthorization required";
-  }
+  if (["EXPIRED", "REVOKED", "CLOSED", "INVALID", "CANCELLED"].includes(status)) return "Reauthorization required";
   return status ? `Pending (${humanize(status)})` : "Pending";
 }
 
 function transactionDescription(transaction) {
-  return transaction.merchant_name
-    || transaction.counterparty_name
-    || transaction.description
-    || "Transaction";
+  return transaction.merchant_name || transaction.counterparty_name || transaction.description || "Transaction";
+}
+
+export function transactionContextNote(transaction, primaryLabel) {
+  const candidates = [
+    transaction?.transaction_note,
+    ...(Array.isArray(transaction?.remittance_information) ? transaction.remittance_information : [])
+  ].map((value) => String(value || "").trim()).filter(Boolean);
+  const primary = normalizeComparable(primaryLabel);
+  const seen = new Set();
+  const useful = [];
+
+  for (const candidate of candidates) {
+    const comparable = normalizeComparable(candidate);
+    if (!comparable || seen.has(comparable)) continue;
+    seen.add(comparable);
+    if (isRedundantTransactionContext(comparable, primary)) continue;
+    useful.push(candidate);
+    if (useful.length >= 2) break;
+  }
+
+  return useful.join(" · ") || null;
+}
+
+function isRedundantTransactionContext(candidate, primary) {
+  if (!candidate) return true;
+  if (primary && (candidate === primary || candidate.startsWith(primary) || primary.startsWith(candidate))) return true;
+  if (/^(from|to)\s+/.test(candidate)) return true;
+  if (/^payment from\s+/.test(candidate)) return true;
+  return false;
+}
+
+function normalizeComparable(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 function formatMoney(amount, currency) {

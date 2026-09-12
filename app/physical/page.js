@@ -1,5 +1,5 @@
-import KleosWorkspace from "@/components/KleosWorkspace";
+import PhysicalWorkspace from "@/components/PhysicalWorkspace";
 
 export default function Page() {
-  return <KleosWorkspace activePage="physical" />;
+  return <PhysicalWorkspace />;
 }

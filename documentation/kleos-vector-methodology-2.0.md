@@ -6,14 +6,21 @@ Methodology `2.0.0` is the first Kleos vector methodology designed for longitudi
 
 Scores are **absolute current-state scores**, not percentiles for age, career stage, wealth cohort, student status, or any other peer group. The evaluator must not raise a score because a state is unusually strong "for a 22-year-old" or similar.
 
-The upper tail is intentionally difficult:
+Every assessed subdomain must be classified onto exactly one of seven canonical anchors:
 
-- `70`: strong, clearly beyond merely adequate;
-- `85`: very strong, broad and well-supported with only limited material weaknesses;
-- `95`: exceptional, rare, highly complete and strongly evidenced;
-- `100`: practical ceiling, reserved for an extraordinarily complete and durable state with essentially no meaningful unmet dimension.
+- `0`: direct evidence of severe impairment, near-total failure, or an effectively absent functional state;
+- `25`: clearly weak, with substantial deficits, instability, or repeated failure;
+- `50`: functional but ordinary, mixed, inconsistent, narrow, or materially constrained;
+- `70`: clearly strong, beyond merely adequate, with meaningful demonstrated strengths and manageable limitations;
+- `85`: very strong, sustained, broad, and well-supported with only limited material weaknesses;
+- `95`: exceptional, rare, highly complete, and strongly evidenced, with important weaknesses absent or minor;
+- `100`: practical ceiling, extraordinarily complete, durable, and independently supported, with essentially no meaningful unmet dimension.
 
-The database stores explicit `0`, `25`, `50`, `70`, `85`, `95`, and `100` anchors for every methodology subdomain. They are returned to the evaluator by `get_kleos_evaluation_context()`.
+The evaluator **does not interpolate** between anchors. If evidence sits ambiguously between two anchors, it chooses the better-supported anchor and lowers confidence rather than inventing a number such as 78 or 92. Weighted aggregation across subdomains still produces granular final vector scores.
+
+Missing evidence must never receive the `0` anchor. Missing evidence is `unknown`.
+
+The database stores these explicit anchors for every methodology subdomain and returns them through `get_kleos_evaluation_context()`.
 
 ## Missing evidence and coverage
 
@@ -47,6 +54,7 @@ Kleos 2.0 does not calculate a cross-vector overall score.
 - Prefer structured, objective, or externally validated evidence when available. Self-report remains canonical evidence but can lower confidence when it is the principal support for a consequential claim.
 - When evidence conflicts, prefer the more direct, recent, and reliable source and reduce confidence rather than silently selecting the favorable source.
 - The same record may support multiple vectors only through a distinct vector-specific property. An impressive project is not generic positive evidence everywhere.
+- When the evidence cannot defensibly distinguish an anchor classification, reduce confidence or return `unknown`; do not manufacture precision.
 
 ## Vector definitions and weights
 
@@ -140,7 +148,7 @@ A stateless evaluator retrieves both the current methodology and compact evidenc
 select public.get_kleos_evaluation_context() as context;
 ```
 
-The model returns only vector commentary plus the complete set of subdomain assessments. It does **not** supply final vector scores, weights, methodology version, vector confidence, or overall score.
+The model returns only vector commentary plus the complete set of subdomain anchor classifications. It does **not** supply final vector scores, weights, methodology version, vector confidence, or overall score.
 
 Persistence is performed through:
 
@@ -151,10 +159,28 @@ select public.persist_kleos_evaluation(
 ) as persistence_result;
 ```
 
-The database validates the canonical vector/subdomain set, applies fixed methodology weights, computes coverage, score caps, final score and vector confidence, then stores the immutable snapshot and all subdomain results.
+The database validates the canonical vector/subdomain set, rejects non-anchor subdomain scores, applies fixed methodology weights, computes coverage, score caps, final score and vector confidence, then stores the immutable snapshot and all subdomain results.
+
+The current methodology cannot be written through the older authenticated holistic snapshot writer. Current-version snapshots must pass through the server-side deterministic aggregation path.
+
+## Reproducibility
+
+Methodology 2.0 removes several previously model-selected quantities from the run:
+
+- vector definitions are fixed;
+- subdomain membership and weights are fixed;
+- subdomain score choices are restricted to seven anchors;
+- evidence-coverage treatment is fixed;
+- vector aggregation is fixed;
+- vector confidence is fixed;
+- methodology version is selected server-side.
+
+Model judgment remains only in deciding whether a subdomain is assessable, which anchor best fits the evidence, and the subdomain confidence/commentary. Regression tests use fixed subdomain fixtures to verify that identical classifications always produce identical final vectors and that incomplete coverage produces the documented caps.
+
+A future model-level repeated-evaluation benchmark can quantify residual anchor-classification variance using the same canonical evidence fixture. Such variance is now separable from aggregation drift because the database—not the model—owns final vector calculation.
 
 ## Versioning
 
 Snapshots from 1.x remain immutable historical records. They used holistic model scoring and are not directly comparable to `2.0.0` snapshots.
 
-Any future change to vector definitions, subdomains, weights, score anchors, coverage caps, aggregation semantics, or other score-affecting methodology rules requires a methodology-version bump. The Vector State UI shows methodology versions explicitly and marks 1.x snapshots as legacy.
+Any future change to vector definitions, subdomains, weights, score anchors, allowed anchor values, coverage caps, aggregation semantics, or other score-affecting methodology rules requires a methodology-version bump. The Vector State UI shows methodology versions explicitly and marks 1.x snapshots as legacy.

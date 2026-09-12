@@ -1,0 +1,51 @@
+.legalShell {
+  width: min(900px, calc(100% - 2rem));
+  margin: 2rem auto 4rem;
+}
+
+.legalCard {
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.legalCard header {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.legalCard h1 {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.legalCard h2 {
+  margin: 1.75rem 0 0.55rem;
+  font-size: 1.05rem;
+}
+
+.legalCard p,
+.legalCard li {
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.legalCard ul {
+  padding-left: 1.25rem;
+}
+
+.meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.homeLink {
+  display: inline-flex;
+  margin-top: 1.5rem;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

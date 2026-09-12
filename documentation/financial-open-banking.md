@@ -1,8 +1,8 @@
 # Financial Open Banking
 
-Kleos synchronizes Lorenzo's personal Revolut banking evidence through the read-only GoCardless Bank Account Data API (PSD2/Open Banking).
+Kleos synchronizes Lorenzo's personal Revolut banking evidence through Enable Banking using read-only Open Banking account-information access.
 
-This is an account-information integration. It does **not** use Revolut credentials, initiate payments, place trades, or expose a write-capable banking API.
+This integration does **not** use Revolut credentials, initiate payments, place trades, or expose a write-capable banking API.
 
 ## Architecture
 
@@ -13,25 +13,44 @@ Kleos /financial (authenticated browser)
         v
 sync-financial-bank Edge Function
         |
-        | server-side GoCardless credentials
+        | server-side Enable Banking app ID + RSA private key
         v
-GoCardless Bank Account Data
+Enable Banking API
         |
-        | PSD2 consent
+        | Open Banking consent
         v
 Revolut
 ```
 
-Kleos is statically exported to GitHub Pages, so all provider credentials and provider API calls live in the Supabase Edge Function. The browser receives only an authorization URL and reads normalized financial evidence through existing Supabase Auth + RLS.
+Kleos is statically exported to GitHub Pages. The Enable Banking private key and all provider API calls remain inside the Supabase Edge Function. The browser receives only provider authorization URLs and reads normalized financial evidence through Supabase Auth and RLS.
+
+## Enable Banking production application registration
+
+Register a **Production** application in the Enable Banking Control Panel using browser-generated key material.
+
+Use these production URLs:
+
+- Application name: `Kleos`
+- Allowed redirect URL: `https://neolorenzo.github.io/Kleos/financial/`
+- Privacy URL: `https://neolorenzo.github.io/Kleos/privacy/`
+- Terms URL: `https://neolorenzo.github.io/Kleos/terms/`
+
+Suggested description:
+
+> Private personal finance dashboard for the account owner. Uses read-only account information access to synchronize balances and transactions from the owner's linked bank accounts into Kleos. Not available to third parties.
+
+The browser-generated private RSA key is downloaded locally when the application is registered. Treat that PEM file as a secret. The file is not committed to this repository.
+
+For restricted personal use, activate the production application through Enable Banking's **Activate by linking accounts** flow and link every Revolut account that Kleos should be able to retrieve. Restricted applications can only return accounts that were explicitly linked/whitelisted.
 
 ## Required Edge Function secrets
 
-Configure these in the shared Kleos/Ariadne Supabase project before using the connection flow:
+Configure these in the shared Kleos/Ariadne Supabase project:
 
-- `GOCARDLESS_SECRET_ID`
-- `GOCARDLESS_SECRET_KEY`
+- `ENABLE_BANKING_APP_ID` — the UUID assigned to the Enable Banking application;
+- `ENABLE_BANKING_PRIVATE_KEY` — the complete browser-generated PEM private key.
 
-Do not put either value in `.env.example`, GitHub Actions, frontend code, GitHub Pages settings, database rows, or documentation.
+Do not put either value in `.env.example`, GitHub Actions, frontend code, GitHub Pages settings, database rows, issues, or documentation.
 
 The Edge Function also uses Supabase-provided runtime values:
 
@@ -39,57 +58,74 @@ The Edge Function also uses Supabase-provided runtime values:
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-The service role remains server-side inside the Edge Function.
+## Provider authentication
+
+Every Enable Banking API request is authenticated with a short-lived RS256 JWT generated server-side. The JWT contains:
+
+- header `typ=JWT`;
+- header `alg=RS256`;
+- header `kid=<ENABLE_BANKING_APP_ID>`;
+- issuer `enablebanking.com`;
+- audience `api.enablebanking.com`;
+- short `iat`/`exp` lifetime.
+
+The RSA private key never reaches the browser.
 
 ## Connect flow
 
 1. Open `/financial/` while authenticated as the authorized Kleos account.
 2. Select **Connect Revolut**.
 3. The browser invokes `sync-financial-bank` with `action=connect`, country `PT`, and the current Financial-page callback URL.
-4. The Edge Function authenticates the Supabase caller.
-5. It obtains a short-lived GoCardless access token from the server-side secrets.
-6. It discovers the available Revolut institution for Portugal from GoCardless's institutions endpoint. The implementation intentionally does not hard-code a UK or other country-specific Revolut institution ID.
-7. It creates a GoCardless requisition with a UUID connection reference and persists only the requisition/connection metadata in `financial_bank_connections`.
-8. The browser follows the returned hosted authorization URL and the user authorizes read-only account access.
-9. GoCardless redirects back to `/financial/?bank_connection=<uuid>`.
-10. The page immediately invokes `action=sync` for that owned connection and removes the callback query parameter afterward.
+4. The Edge Function authenticates the Supabase caller and signs an Enable Banking JWT.
+5. It calls `GET /aspsps?country=PT&psu_type=personal&service=AIS` and selects the Revolut ASPSP returned by Enable Banking rather than hard-coding a bank identifier.
+6. It creates a random Kleos connection/state UUID and calls `POST /auth`, requesting balances and transactions with a consent expiry no longer than the provider-reported maximum consent validity.
+7. Kleos persists the pending authorization metadata in `financial_bank_connections` and returns the provider authorization URL.
+8. The browser follows that URL and the owner completes the Revolut authorization flow.
+9. Enable Banking redirects to `/financial/?code=<code>&state=<connection-uuid>` or returns OAuth-style error parameters.
+10. Kleos validates the state against the authenticated owner's pending connection, then sends the callback code to `POST /sessions`.
+11. The returned Enable Banking `session_id` is stored server-side with the connection and the authorized accounts are synchronized.
 
-Selecting **Reconnect Revolut** creates a new requisition/connection rather than mutating a historical provider authorization in place.
+Selecting **Reconnect Revolut** starts a new authorization rather than rewriting historical provider authorization metadata.
 
 ## Sync semantics
 
-A successful sync retrieves every account currently returned by the requisition and attempts to retrieve:
+On initial authorization and later manual syncs, Kleos retrieves:
 
-- provider account metadata;
+- session/account identifiers;
 - account details;
-- balances;
-- booked transactions;
-- pending transactions.
+- account balances;
+- all transaction pages returned by the account transactions endpoint.
 
-Account details are optional when the provider reports that resource as unavailable, but account metadata, balances, and transactions are required for a successful snapshot.
+Enable Banking `entry_reference` is used as the preferred stable transaction identity. When it is unavailable, Kleos creates a deterministic SHA-256 fallback identity from normalized transaction characteristics. Debit transactions are stored with negative amounts and credits with positive amounts.
 
-The complete upstream payload is normalized in memory first. Kleos then calls `persist_financial_bank_sync(...)`, which updates the synchronized snapshot atomically. If an upstream request or persistence operation fails, the last successful financial evidence remains intact and the connection records an error code/time.
+Provider statuses are normalized to Kleos's `booked` or `pending` model. Cancelled and rejected provider transactions are not persisted as active financial evidence.
 
-Pending transactions are replaced on each complete successful sync because pending provider records are transient. Booked transactions are upserted idempotently. Provider transaction IDs are used when available; transactions without an ID receive a deterministic SHA-256 fallback identity derived from the provider payload.
+The complete upstream snapshot is normalized in memory before `persist_financial_bank_sync(...)` updates the current financial evidence. If provider retrieval or persistence fails, the previously successful evidence remains intact and the connection records an error code/time.
+
+Pending transactions are replaced on each successful complete sync because they are transient. Booked transactions are upserted idempotently.
+
+## Privacy handling
+
+Kleos does not persist full account IBAN/BBAN values. The normalized account record stores only a masked final-four representation.
+
+Transaction `raw_data` is reduced before persistence. Counterparty names and transaction metadata useful for auditability may be retained, while creditor/debtor account identifiers, additional account identifiers, and postal-address structures are deliberately omitted from the stored raw payload.
+
+Currencies are stored explicitly on balances and transactions. Kleos does not silently convert or sum different currencies.
 
 ## Persistence
 
 Kleos owns:
 
-- `financial_bank_connections` — provider/requisition status and synchronization metadata;
+- `financial_bank_connections` — provider authorization/session and synchronization metadata;
 - `financial_accounts` — normalized current accounts;
 - `financial_account_balances` — append-only balance observations;
-- `financial_transactions` — normalized booked/pending transactions plus raw provider evidence for auditability.
+- `financial_transactions` — normalized booked/pending transactions plus privacy-reduced provider evidence.
 
-Ordinary authenticated clients have read-only access to their own rows. Synchronization writes are backend-only through the service role and `persist_financial_bank_sync(...)`.
-
-Full IBAN/BBAN values are not persisted. The normalized account table stores at most a masked identifier containing the final four characters.
-
-Currencies are stored explicitly on balances and transactions. Kleos does not silently convert or sum different currencies.
+Ordinary authenticated clients have read-only access to their own synchronized financial rows. Provider synchronization writes remain backend-only through the service role and `persist_financial_bank_sync(...)`.
 
 ## Kleos Bot evidence
 
-The migration registers these canonical Financial evidence relations:
+The canonical Financial evidence relations remain:
 
 - `financial_accounts`
 - `financial_current_balances`
@@ -99,10 +135,10 @@ The migration registers these canonical Financial evidence relations:
 
 ## Deployment
 
-Apply `supabase/migrations/20260912_0017_financial_open_banking.sql` to the shared Supabase project, configure the two GoCardless secrets, then deploy the `sync-financial-bank` Edge Function with JWT verification enabled.
+Apply the financial migrations in order, including `20260912_0018_enable_banking_provider.sql`, configure the two Enable Banking secrets, then deploy `sync-financial-bank` with JWT verification enabled.
 
-The static Kleos frontend requires no provider secret or server runtime.
+The static Kleos frontend requires no provider private key or server runtime.
 
 ## Reauthorization
 
-Open Banking consent can expire or be revoked. A failed/expired provider authorization never deletes existing evidence. The Financial page surfaces the connection/provider state and offers **Reconnect Revolut** to create a fresh requisition.
+Open Banking consent can expire or be revoked. A failed or expired provider session does not delete existing evidence. The Financial page surfaces the provider state and offers **Reconnect Revolut** to start a fresh authorization.

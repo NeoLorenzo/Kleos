@@ -35,8 +35,9 @@ export default function FinancialWorkspace() {
     try {
       const { data: connections, error: connectionError } = await supabase
         .from("financial_bank_connections")
-        .select("id,provider,institution_id,institution_name,institution_country,requisition_status,connected_at,last_synced_at,last_error_code,last_error_at,created_at")
+        .select("id,provider,institution_id,institution_name,institution_country,requisition_status,provider_session_id,consent_valid_until,connected_at,last_synced_at,last_error_code,last_error_at,created_at")
         .eq("user_id", userId)
+        .eq("provider", "enable_banking")
         .order("created_at", { ascending: false })
         .limit(10);
       if (connectionError) throw connectionError;
@@ -68,7 +69,7 @@ export default function FinancialWorkspace() {
             .eq("user_id", userId)
             .in("account_id", accountIds)
             .order("observed_at", { ascending: false })
-            .limit(Math.max(accountIds.length * 10, 50)),
+            .limit(Math.max(accountIds.length * 12, 60)),
           supabase
             .from("financial_transactions")
             .select("id,account_id,status,booking_date,value_date,amount,currency,counterparty_name,merchant_name,description,first_seen_at,last_seen_at")
@@ -97,12 +98,10 @@ export default function FinancialWorkspace() {
     }
   }, []);
 
-  const syncConnection = useCallback(async (connectionId, options = {}) => {
+  const syncConnection = useCallback(async (connectionId) => {
     if (!supabase || !user?.id || !connectionId || isSyncing) return false;
     setIsSyncing(true);
-    setStatusMessage(options.callback
-      ? "Finalizing Revolut authorization and syncing financial evidence..."
-      : "Syncing Revolut financial evidence...");
+    setStatusMessage("Syncing Revolut financial evidence through Enable Banking...");
 
     const { data, error } = await supabase.functions.invoke("sync-financial-bank", {
       body: { action: "sync", connectionId }
@@ -122,6 +121,30 @@ export default function FinancialWorkspace() {
     const transactionCount = Number(data?.transaction_count || 0);
     setStatusMessage(`Revolut synced: ${accountCount} account(s), ${transactionCount} transaction record(s).`);
     return true;
+  }, [isSyncing, loadFinance, user?.id]);
+
+  const finalizeAuthorization = useCallback(async ({ code, state }) => {
+    if (!supabase || !user?.id || !code || !state || isSyncing) return;
+    setIsSyncing(true);
+    setStatusMessage("Finalizing Revolut authorization and importing financial evidence...");
+
+    const { data, error } = await supabase.functions.invoke("sync-financial-bank", {
+      body: { action: "finalize", code, state }
+    });
+
+    setIsSyncing(false);
+    if (error) {
+      setStatusMessage(
+        "Revolut authorization returned, but the financial import did not complete. "
+          + errorMessage(error)
+      );
+      return;
+    }
+
+    await loadFinance(user.id, { silent: true });
+    const accountCount = Number(data?.account_count || 0);
+    const transactionCount = Number(data?.transaction_count || 0);
+    setStatusMessage(`Revolut connected: ${accountCount} account(s), ${transactionCount} transaction record(s) imported.`);
   }, [isSyncing, loadFinance, user?.id]);
 
   useEffect(() => {
@@ -166,15 +189,34 @@ export default function FinancialWorkspace() {
   useEffect(() => {
     if (accessState !== "authorized" || !user?.id || callbackHandled.current) return;
     const params = new URLSearchParams(window.location.search);
-    const connectionId = params.get("bank_connection");
-    if (!connectionId) return;
+    const code = params.get("code");
+    const state = params.get("state");
+    const providerError = params.get("error");
+    const providerErrorDescription = params.get("error_description");
+    if (!code && !providerError) return;
 
     callbackHandled.current = true;
-    void syncConnection(connectionId, { callback: true }).finally(() => {
+    const cleanCallbackUrl = () => {
       const cleanUrl = `${window.location.origin}${window.location.pathname}`;
       window.history.replaceState({}, "", cleanUrl);
-    });
-  }, [accessState, syncConnection, user?.id]);
+    };
+
+    if (providerError) {
+      setStatusMessage(
+        `Revolut authorization was not completed${providerErrorDescription ? `: ${providerErrorDescription}` : "."}`
+      );
+      if (state) {
+        void supabase.functions.invoke("sync-financial-bank", {
+          body: { action: "authorization-error", state, error: providerError }
+        }).finally(cleanCallbackUrl);
+      } else {
+        cleanCallbackUrl();
+      }
+      return;
+    }
+
+    void finalizeAuthorization({ code, state }).finally(cleanCallbackUrl);
+  }, [accessState, finalizeAuthorization, user?.id]);
 
   const signIn = async () => {
     if (!supabase) return;
@@ -198,7 +240,7 @@ export default function FinancialWorkspace() {
   const connectRevolut = async () => {
     if (!supabase || !user?.id || isConnecting) return;
     setIsConnecting(true);
-    setStatusMessage("Creating a secure read-only Revolut authorization...");
+    setStatusMessage("Creating a secure read-only Revolut authorization through Enable Banking...");
 
     const redirectUrl = `${window.location.origin}${window.location.pathname}`;
     const { data, error } = await supabase.functions.invoke("sync-financial-bank", {
@@ -241,8 +283,8 @@ export default function FinancialWorkspace() {
               <div className={styles.sectionHeaderRow}>
                 <div className="section-header">
                   <p className="kleos-kicker">Bank Connectivity</p>
-                  <h2>Revolut Open Banking</h2>
-                  <p>Read-only PSD2 synchronization. Kleos never stores your Revolut password or full account identifier.</p>
+                  <h2>Revolut via Enable Banking</h2>
+                  <p>Read-only Open Banking synchronization. Kleos never stores your Revolut password or a full account identifier.</p>
                 </div>
                 <div className={styles.actions}>
                   <button
@@ -253,7 +295,7 @@ export default function FinancialWorkspace() {
                   >
                     {isConnecting ? "Opening…" : currentConnection ? "Reconnect Revolut" : "Connect Revolut"}
                   </button>
-                  {currentConnection ? (
+                  {currentConnection?.provider_session_id ? (
                     <button
                       type="button"
                       className="secondary-btn"
@@ -272,6 +314,9 @@ export default function FinancialWorkspace() {
                 <Metric label="Last sync" value={formatDateTime(currentConnection?.last_synced_at)} />
                 <Metric label="Accounts" value={currentAccounts.length ? String(currentAccounts.length) : "—"} />
               </div>
+              {currentConnection?.consent_valid_until ? (
+                <p className={styles.errorNote}>Consent valid until {formatDateTime(currentConnection.consent_valid_until)}.</p>
+              ) : null}
               {currentConnection?.last_error_code ? (
                 <p className={styles.errorNote}>
                   Last provider error: {currentConnection.last_error_code} · {formatDateTime(currentConnection.last_error_at)}
@@ -405,7 +450,7 @@ function latestBalancesByAccount(rows) {
 }
 
 function pickDisplayBalance(balances) {
-  const priority = ["interimAvailable", "closingBooked", "expected", "openingBooked", "interimBooked"];
+  const priority = ["CLAV", "ITAV", "CLBD", "ITBD", "XPCD", "FWAV", "OPAV", "OPBD"];
   for (const type of priority) {
     const match = balances.find((balance) => balance.balance_type === type);
     if (match) return match;
@@ -422,11 +467,15 @@ function sortTransactions(rows) {
 }
 
 function connectionLabel(connection) {
-  if (connection.last_synced_at) return "Connected";
+  if (connection.last_synced_at && String(connection.requisition_status || "").toUpperCase() === "AUTHORIZED") {
+    return "Connected";
+  }
   const status = String(connection.requisition_status || "").toUpperCase();
-  if (["LN", "GA"].includes(status)) return "Authorized";
-  if (["RJ", "EX"].includes(status)) return "Reauthorization required";
-  return status ? `Pending (${status})` : "Pending";
+  if (status === "AUTHORIZED") return "Authorized";
+  if (["EXPIRED", "REVOKED", "CLOSED", "INVALID", "CANCELLED"].includes(status)) {
+    return "Reauthorization required";
+  }
+  return status ? `Pending (${humanize(status)})` : "Pending";
 }
 
 function transactionDescription(transaction) {

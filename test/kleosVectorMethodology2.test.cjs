@@ -6,15 +6,17 @@ const { before, test } = require("node:test");
 let methodology;
 let migration;
 let writerGuardMigration;
+let fixedAnchorMigration;
 let snapshotRepository;
 let prompt;
 let docs;
 
 before(async () => {
   methodology = await import("../lib/kleos/vectorMethodology.mjs");
-  [migration, writerGuardMigration, snapshotRepository, prompt, docs] = await Promise.all([
+  [migration, writerGuardMigration, fixedAnchorMigration, snapshotRepository, prompt, docs] = await Promise.all([
     readFile(path.join(process.cwd(), "supabase/migrations/20260912_0028_kleos_vector_methodology_2_0.sql"), "utf8"),
     readFile(path.join(process.cwd(), "supabase/migrations/20260912_0029_enforce_current_methodology_server_writer.sql"), "utf8"),
+    readFile(path.join(process.cwd(), "supabase/migrations/20260912_0030_restrict_methodology_2_to_fixed_anchor_scores.sql"), "utf8"),
     readFile(path.join(process.cwd(), "lib/kleos/vectorSnapshotRepository.js"), "utf8"),
     readFile(path.join(process.cwd(), "documentation/kleos-bot-shortcuts-prompt.md"), "utf8"),
     readFile(path.join(process.cwd(), "documentation/kleos-vector-methodology-2.0.md"), "utf8")
@@ -23,6 +25,7 @@ before(async () => {
 
 test("Methodology 2.0 has exactly eight vectors and every vector sums to 100%", () => {
   assert.equal(methodology.KLEOS_VECTOR_METHODOLOGY_VERSION, "2.0.0");
+  assert.deepEqual(methodology.KLEOS_SUBDOMAIN_ANCHOR_SCORES, [0, 25, 50, 70, 85, 95, 100]);
   const vectors = methodology.KLEOS_VECTOR_METHODOLOGY.vectors;
   assert.equal(vectors.length, 8);
   assert.deepEqual(vectors.map((vector) => vector.id), [
@@ -35,23 +38,45 @@ test("Methodology 2.0 has exactly eight vectors and every vector sums to 100%", 
   }
 });
 
-test("100% coverage makes deterministic final score equal the weighted raw score", () => {
+test("100% coverage makes deterministic final score equal the weighted raw anchor score", () => {
   const result = methodology.aggregateVectorSubdomains([
-    { weight: 20, status: "assessed", score: 80, confidence: "high" },
-    { weight: 20, status: "assessed", score: 80, confidence: "high" },
-    { weight: 20, status: "assessed", score: 80, confidence: "high" },
-    { weight: 20, status: "assessed", score: 80, confidence: "high" },
-    { weight: 20, status: "assessed", score: 80, confidence: "high" }
+    { weight: 20, status: "assessed", score: 85, confidence: "high" },
+    { weight: 20, status: "assessed", score: 85, confidence: "high" },
+    { weight: 20, status: "assessed", score: 85, confidence: "high" },
+    { weight: 20, status: "assessed", score: 85, confidence: "high" },
+    { weight: 20, status: "assessed", score: 85, confidence: "high" }
   ]);
   assert.deepEqual(result, {
     status: "assessed",
-    score: 80,
-    rawScore: 80,
+    score: 85,
+    rawScore: 85,
     confidence: "high",
     coveragePct: 100,
     scoreCap: 100,
     confidenceMean: 3
   });
+});
+
+test("weighted fixed anchors still produce granular deterministic vector scores", () => {
+  const result = methodology.aggregateVectorSubdomains([
+    { weight: 25, status: "assessed", score: 85, confidence: "high" },
+    { weight: 20, status: "assessed", score: 70, confidence: "high" },
+    { weight: 20, status: "assessed", score: 85, confidence: "medium" },
+    { weight: 20, status: "assessed", score: 95, confidence: "high" },
+    { weight: 15, status: "assessed", score: 70, confidence: "medium" }
+  ]);
+  assert.equal(result.coveragePct, 100);
+  assert.equal(result.rawScore, 81.8);
+  assert.equal(result.score, 81.8);
+});
+
+test("non-anchor model scores are rejected rather than creating false precision", () => {
+  assert.throws(() => methodology.aggregateVectorSubdomains([
+    { weight: 100, status: "assessed", score: 82, confidence: "high" }
+  ]), /INVALID_KLEOS_SUBDOMAIN_RESULT/);
+  assert.match(fixedAnchorMigration, /score is null or score in \(0,25,50,70,85,95,100\)/i);
+  assert.match(fixedAnchorMigration, /Do not interpolate/i);
+  assert.match(fixedAnchorMigration, /Missing evidence alone must never receive 0/i);
 });
 
 test("incomplete evidence is not scored negatively but caps the whole-vector result", () => {
@@ -94,16 +119,16 @@ test("coverage score caps make 95+ impossible without near-complete domain cover
 test("database migration persists explicit methodology, subdomains, anchors and deterministic aggregation", () => {
   assert.match(migration, /Kleos Vector Methodology 2\.0/i);
   assert.match(migration, /age_or_career_stage_normalization',false/i);
-  assert.match(migration, /'0','No functional evidence/i);
-  assert.match(migration, /'25','Very weak/i);
-  assert.match(migration, /'50','Basic\/adequate/i);
-  assert.match(migration, /'70','Strong/i);
-  assert.match(migration, /'85','Very strong/i);
-  assert.match(migration, /'95','Exceptional/i);
-  assert.match(migration, /'100','Practical ceiling/i);
   assert.match(migration, /kleos_vector_snapshot_subdomain_results/i);
   assert.match(migration, /weighted_assessed_subdomains_with_coverage_cap/i);
   assert.match(migration, /overall_score,execution_key\)\s*values\(v_owner_id,now\(\),'kleos-bot',v_methodology_version,null/i);
+  assert.match(fixedAnchorMigration, /'0'.*Missing evidence alone must never receive 0/is);
+  assert.match(fixedAnchorMigration, /'25'.*clearly weak/is);
+  assert.match(fixedAnchorMigration, /'50'.*functional but ordinary/is);
+  assert.match(fixedAnchorMigration, /'70'.*clearly strong/is);
+  assert.match(fixedAnchorMigration, /'85'.*very strong/is);
+  assert.match(fixedAnchorMigration, /'95'.*exceptional/is);
+  assert.match(fixedAnchorMigration, /'100'.*practical ceiling/is);
 });
 
 test("current methodology cannot be written through the older authenticated holistic writer", () => {
@@ -115,10 +140,11 @@ test("current methodology cannot be written through the older authenticated holi
   assert.match(snapshotRepository, /KLEOS_CURRENT_METHODOLOGY_SERVER_WRITER_REQUIRED/i);
 });
 
-test("runtime prompt cannot silently revert to holistic vector scoring", () => {
-  assert.match(prompt, /assess every subdomain/i);
+test("runtime prompt cannot silently revert to holistic or arbitrary numeric scoring", () => {
+  assert.match(prompt, /every subdomain/i);
   assert.match(prompt, /Do not choose final vector scores yourself/i);
-  assert.match(prompt, /explicit anchors/i);
+  assert.match(prompt, /exactly one of the canonical anchor values/i);
+  assert.match(prompt, /do \*\*not\*\* interpolate/i);
   assert.match(prompt, /do not age-normalize or career-stage-normalize/i);
   assert.match(prompt, /calculate vector scores deterministically/i);
   assert.match(prompt, /p_vectors/i);

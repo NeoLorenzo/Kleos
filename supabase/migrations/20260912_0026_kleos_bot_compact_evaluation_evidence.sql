@@ -1,4 +1,4 @@
--- Kleos #68: compact server-side evidence contract for GPT Actions.
+-- Kleos #68: compact server-side evidence contract for stateless ChatGPT evaluation.
 -- The existing full dynamic evidence reader remains unchanged for debugging/backward compatibility.
 
 create or replace function public.get_kleos_bot_evaluation_evidence_admin()

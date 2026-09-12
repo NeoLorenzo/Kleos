@@ -42,7 +42,7 @@ export default function FinancialWorkspace() {
         .limit(10);
       if (connectionError) throw connectionError;
 
-      const connection = connections?.[0] || null;
+      const connection = selectPreferredConnection(connections);
       if (!connection) {
         setFinance(EMPTY_DATA);
         if (!silent) setStatusMessage("");
@@ -436,6 +436,29 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
       ) : null}
     </section>
   );
+}
+
+function selectPreferredConnection(connections) {
+  const rows = Array.isArray(connections) ? connections : [];
+  if (!rows.length) return null;
+
+  const invalidStatuses = new Set(["EXPIRED", "REVOKED", "CLOSED", "INVALID", "CANCELLED"]);
+  const usable = rows
+    .filter((connection) => {
+      const status = String(connection?.requisition_status || "").toUpperCase();
+      return Boolean(connection?.provider_session_id && connection?.last_synced_at)
+        && !invalidStatuses.has(status);
+    })
+    .sort((left, right) => connectionRecency(right) - connectionRecency(left));
+
+  if (usable.length) return usable[0];
+  return rows[0] || null;
+}
+
+function connectionRecency(connection) {
+  const value = connection?.last_synced_at || connection?.connected_at || connection?.created_at;
+  const timestamp = value ? new Date(value).getTime() : 0;
+  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function latestBalancesByAccount(rows) {

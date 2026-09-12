@@ -55,9 +55,9 @@ test("Shortcut transport uses a stateless ChatGPT run and connected Supabase dir
   assert.match(transportDoc, /create_kleos_bot_snapshot_admin/i);
   assert.match(transportDoc, /Remove the old \*\*Get Contents of URL\*\*/i);
   assert.match(transportDoc, /must contain the complete operational instructions/i);
+  assert.match(transportDoc, /No Custom GPT, GPT Action, OpenAPI schema, API token/i);
   assert.doesNotMatch(transportDoc, /Select the \*\*Kleos Bot\*\* GPT/i);
-  assert.doesNotMatch(transportDoc, /GPT Action endpoint/i);
-  assert.doesNotMatch(transportDoc, /OpenAPI schema/i);
+  assert.doesNotMatch(transportDoc, /## GPT Action endpoint/i);
 });
 
 test("stateless Shortcut prompt retrieves compact evidence before evaluating", () => {

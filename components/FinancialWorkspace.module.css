@@ -179,6 +179,30 @@
   color: var(--muted);
 }
 
+.transactionDescription {
+  display: grid;
+  gap: 0.16rem;
+  min-width: 12rem;
+  max-width: 28rem;
+}
+
+.transactionDescription strong {
+  font-weight: 600;
+}
+
+.transactionDescription span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.transactionDescription small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  opacity: 0.82;
+}
+
 .negativeAmount {
   font-variant-numeric: tabular-nums;
 }
@@ -221,5 +245,9 @@
   .accountBalance {
     align-items: flex-start;
     text-align: left;
+  }
+
+  .transactionDescription {
+    min-width: 9rem;
   }
 }

@@ -5,6 +5,7 @@ const test = require("node:test");
 
 const migrationPath = path.join(process.cwd(), "supabase/migrations/20260913_0033_financial_balance_sheet.sql");
 const currencyFixMigrationPath = path.join(process.cwd(), "supabase/migrations/20260913_0034_financial_balance_sheet_unvalued_currency.sql");
+const accessFixMigrationPath = path.join(process.cwd(), "supabase/migrations/20260913_0035_fix_financial_balance_sheet_view_access.sql");
 const positionPath = path.join(process.cwd(), "components/FinancialPosition.jsx");
 const dimensionPath = path.join(process.cwd(), "components/DimensionState.jsx");
 
@@ -53,6 +54,23 @@ test("derived balance-sheet views remain currency-native and preserve provenance
   const currencyFixSql = fs.readFileSync(currencyFixMigrationPath, "utf8");
   assert.match(currencyFixSql, /coalesce\(v\.currency, a\.currency\) as currency/i);
   assert.match(currencyFixSql, /coalesce\(b\.currency, l\.currency\) as currency/i);
+});
+
+test("authenticated balance-sheet reads include nested current-balance dependency and anon view access is revoked", () => {
+  const sql = fs.readFileSync(accessFixMigrationPath, "utf8");
+  assert.match(sql, /grant select on table public\.financial_current_balances to authenticated/i);
+
+  for (const view of [
+    "financial_current_assets",
+    "financial_current_liabilities",
+    "financial_balance_sheet_current",
+    "financial_asset_allocation_current",
+    "financial_net_worth_history",
+    "financial_liability_status"
+  ]) {
+    assert.match(sql, new RegExp(`revoke all on table public\\.${view} from public, anon, authenticated`, "i"));
+    assert.match(sql, new RegExp(`grant select on table public\\.${view} to authenticated`, "i"));
+  }
 });
 
 test("only compact balance-sheet relations are registered for Kleos Bot", () => {

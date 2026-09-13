@@ -1,0 +1,205 @@
+.headerRow,
+.formHeader,
+.subheader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.actions,
+.recordActions,
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.balanceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.currencyCard,
+.recordCard,
+.attestationBox,
+.formPanel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.currencyCard {
+  padding: 1rem;
+}
+
+.currencyTitle {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.currencyTitle span,
+.recordCard span,
+.recordCard small,
+.subheader p,
+.attestationBox p,
+.metric span,
+.field span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.metric {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+  margin-top: 1.25rem;
+}
+
+.subheader h3,
+.formHeader h3 {
+  margin: 0;
+}
+
+.subheader p {
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+.recordList {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+
+.recordCard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem;
+}
+
+.recordCard > div:first-child,
+.recordValue {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.recordValue {
+  justify-items: end;
+  text-align: right;
+}
+
+.recordActions button {
+  padding: 0.35rem 0.55rem;
+}
+
+.attestationBox {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+  padding: 0.9rem;
+}
+
+.attestationBox p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.attestationBox button {
+  justify-self: start;
+}
+
+.formPanel {
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.85rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.16);
+  color: inherit;
+  padding: 0.62rem 0.7rem;
+  font: inherit;
+}
+
+.field option {
+  color: #111;
+}
+
+.formActions {
+  margin-top: 0.85rem;
+}
+
+.status {
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 900px) {
+  .headerRow,
+  .recordCard {
+    flex-direction: column;
+  }
+
+  .actions,
+  .recordActions,
+  .recordValue {
+    justify-content: flex-start;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .columns,
+  .balanceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .formGrid,
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+}

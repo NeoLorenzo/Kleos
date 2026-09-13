@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import FinancialPosition from "@/components/FinancialPosition";
+import FinancialTransactionCorrections from "@/components/FinancialTransactionCorrections";
 import { loadLatestVectorSnapshot } from "@/lib/kleos/vectorSnapshotRepository";
 import { getVectorDefinition } from "@/lib/kleos/vectorSnapshots";
 import styles from "./DimensionState.module.css";
@@ -76,7 +77,12 @@ export default function DimensionState({ userId, vectorId }) {
         ) : null}
       </section>
 
-      {vectorId === "financial" ? <FinancialPosition userId={userId} /> : null}
+      {vectorId === "financial" ? (
+        <>
+          <FinancialPosition userId={userId} />
+          <FinancialTransactionCorrections userId={userId} />
+        </>
+      ) : null}
     </>
   );
 }

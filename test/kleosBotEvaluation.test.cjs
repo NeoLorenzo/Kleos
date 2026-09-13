@@ -39,7 +39,7 @@ function validResults() {
       });
 }
 
-test("Kleos Bot owns stable evaluator and Methodology 2.0 metadata", () => {
+test("Kleos Bot owns stable evaluator and current Methodology 2.x metadata", () => {
   const result = bot.normalizeKleosBotEvaluation(
     { results: validResults() },
     {
@@ -50,7 +50,7 @@ test("Kleos Bot owns stable evaluator and Methodology 2.0 metadata", () => {
 
   assert.equal(result.ok, true);
   assert.equal(result.value.evaluator, "kleos-bot");
-  assert.equal(result.value.methodologyVersion, "2.0.0");
+  assert.equal(result.value.methodologyVersion, "2.0.1");
   assert.equal(result.value.executionKey, "shortcut-2026-09-07T10:00:00Z-a");
 });
 

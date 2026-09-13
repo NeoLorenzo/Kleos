@@ -51,7 +51,7 @@ export default function VectorSnapshotHistory({ userId }) {
         <h2 id="snapshot-history-title">Snapshot History</h2>
         <p>
           Methodology versions are shown explicitly. Scores produced under different methodology versions are historical records,
-          not directly comparable longitudinal measurements. Methodology 2.0.0 establishes the new deterministic baseline.
+          not directly comparable longitudinal measurements. Methodology 2.0.1 is the current like-for-like baseline.
         </p>
       </div>
       <div className="table-wrap">
@@ -68,12 +68,13 @@ export default function VectorSnapshotHistory({ userId }) {
               const scores = new Map(snapshot.results.map((result) => [result.vectorId, result]));
               const versionChanged = index < state.snapshots.length - 1
                 && state.snapshots[index + 1].methodologyVersion !== snapshot.methodologyVersion;
+              const deterministic = String(snapshot.methodologyVersion || "").startsWith("2.");
               return (
                 <tr key={snapshot.id || `${snapshot.evaluatedAt}-${index}`}>
                   <td>{formatDate(snapshot.evaluatedAt)}</td>
                   <td>
                     {snapshot.methodologyVersion}
-                    {snapshot.methodologyVersion === "2.0.0" ? " · deterministic" : " · legacy"}
+                    {deterministic ? " · deterministic" : " · legacy"}
                     {versionChanged ? " · baseline boundary" : ""}
                   </td>
                   {VECTOR_DEFINITIONS.map((vector) => {

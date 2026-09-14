@@ -22,7 +22,7 @@ const CATEGORY_SUGGESTIONS = [
   "food_dining", "groceries", "transport", "travel", "subscriptions_software", "entertainment",
   "fitness_health", "education", "telecom_utilities", "household", "shopping", "bank_fees",
   "transfers", "currency_exchange", "account_topup", "cash_withdrawal", "income", "interest",
-  "investments", "taxes", "other"
+  "investments", "taxes", "family_support", "trust_distribution", "refund_reimbursement", "other"
 ];
 
 const SEMANTIC_FLOW = {
@@ -51,7 +51,7 @@ export default function FinancialTransactionCorrections({ userId }) {
     setIsLoading(true);
     const { data, error } = await supabase
       .from("financial_transaction_review_queue")
-      .select("user_id,transaction_id,status,transaction_date,amount,currency,counterparty_name,merchant_name,description,remittance_information,transaction_note,bank_transaction_code,display_label,normalized_label,flow_type,category,subcategory,is_internal_transfer,is_fx_conversion,is_recurring,economic_inflow_type,interpretation_source,interpretation_override_id,interpretation_rule_id,user_confirmed_at,base_display_label,base_normalized_label,base_flow_type,base_category")
+      .select("user_id,transaction_id,status,transaction_date,amount,currency,counterparty_name,merchant_name,description,remittance_information,transaction_note,bank_transaction_code,display_label,normalized_label,flow_type,category,subcategory,is_internal_transfer,is_fx_conversion,is_recurring,economic_inflow_type,interpretation_source,interpretation_override_id,interpretation_rule_id,user_confirmed_at,base_display_label,base_normalized_label,base_flow_type,base_category,interpretation_rule_match_amount")
       .eq("user_id", userId)
       .order("transaction_date", { ascending: false })
       .limit(60);
@@ -77,6 +77,7 @@ export default function FinancialTransactionCorrections({ userId }) {
   }, [filter, rows]);
 
   const openEditor = (row) => {
+    const isCredit = Number(row.amount) > 0;
     setEditing(row);
     setForm({
       flow_type: row.flow_type || "unknown",
@@ -85,7 +86,8 @@ export default function FinancialTransactionCorrections({ userId }) {
       display_label: row.display_label || "",
       economic_inflow_type: row.economic_inflow_type || "",
       internal_transfer: "auto",
-      apply_matching: false
+      apply_matching: false,
+      match_exact_amount: row.interpretation_rule_match_amount != null ? true : isCredit
     });
     setMessage("");
   };
@@ -125,12 +127,13 @@ export default function FinancialTransactionCorrections({ userId }) {
       p_display_label: form.display_label.trim() || null,
       p_economic_inflow_type: form.economic_inflow_type || null,
       p_is_internal_transfer: form.internal_transfer === "auto" ? null : form.internal_transfer === "yes",
-      p_apply_matching: Boolean(form.apply_matching)
+      p_apply_matching: Boolean(form.apply_matching),
+      p_match_exact_amount: Boolean(form.apply_matching && form.match_exact_amount)
     });
 
     setIsSaving(false);
     if (error) {
-      setMessage(`Correction could not be saved: ${error.message || "Unknown error"}`);
+      setMessage(`Correction could not be saved: ${friendlyCorrectionError(error)}`);
       return;
     }
 
@@ -156,13 +159,15 @@ export default function FinancialTransactionCorrections({ userId }) {
     window.location.reload();
   };
 
+  const exactAmountLabel = editing ? formatMoney(Math.abs(Number(editing.amount)), editing.currency) : "";
+
   return (
     <section className="kleos-card wide-card">
       <div className={styles.headerRow}>
         <div className="section-header">
           <p className="kleos-kicker">User-confirmed interpretation</p>
           <h2>Review Transactions</h2>
-          <p>Correct derived meaning without changing the canonical Revolut transaction. Reusable rules match only the same normalized label, currency, and debit/credit direction.</p>
+          <p>Correct derived meaning without changing the canonical Revolut transaction. Reusable rules can match the same label, currency and direction, with an optional exact-amount constraint.</p>
         </div>
         <select className={styles.filter} value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Transaction review filter">
           <option value="all">Recent</option>
@@ -220,9 +225,14 @@ export default function FinancialTransactionCorrections({ userId }) {
           <div className={styles.formGrid}>
             <label className={styles.field}>
               <span>Flow</span>
-              <select value={form.flow_type} onChange={(event) => setForm({ ...form, flow_type: event.target.value })}>
+              <select
+                value={form.flow_type}
+                disabled={Boolean(form.economic_inflow_type)}
+                onChange={(event) => setForm({ ...form, flow_type: event.target.value })}
+              >
                 {FLOW_TYPES.map((value) => <option value={value} key={value}>{humanize(value)}</option>)}
               </select>
+              {form.economic_inflow_type ? <small>Derived from inflow meaning.</small> : null}
             </label>
             <label className={styles.field}>
               <span>Category</span>
@@ -253,7 +263,18 @@ export default function FinancialTransactionCorrections({ userId }) {
             <input type="checkbox" checked={form.apply_matching} onChange={(event) => setForm({ ...form, apply_matching: event.target.checked })} />
             <span>Apply to matching historical and future transactions</span>
           </label>
-          <p className={styles.ruleNote}>Match scope: “{editing.base_display_label || editing.display_label}” · {editing.currency} · {Number(editing.amount) >= 0 ? "credit" : "debit"}. No fuzzy matching is used.</p>
+
+          {form.apply_matching ? (
+            <label className={styles.ruleToggle}>
+              <input type="checkbox" checked={form.match_exact_amount} onChange={(event) => setForm({ ...form, match_exact_amount: event.target.checked })} />
+              <span>Require the same amount ({exactAmountLabel})</span>
+            </label>
+          ) : null}
+
+          <p className={styles.ruleNote}>
+            Match scope: “{editing.base_display_label || editing.display_label}” · {editing.currency} · {Number(editing.amount) >= 0 ? "credit" : "debit"}
+            {form.apply_matching && form.match_exact_amount ? ` · exactly ${exactAmountLabel}` : ""}. No fuzzy matching is used.
+          </p>
 
           <div className={styles.editorActions}>
             <button type="submit" className="primary-btn" disabled={isSaving}>{isSaving ? "Saving…" : "Save correction"}</button>
@@ -290,6 +311,12 @@ function independenceLabel(semantic) {
   if (semantic === "sale_proceeds") return "asset_sale";
   if (semantic === "refund_reimbursement") return "refund";
   return "other";
+}
+
+function friendlyCorrectionError(error) {
+  const message = String(error?.message || "Unknown error");
+  if (message.includes("semantic_flow_consistency")) return "The selected inflow meaning and flow were inconsistent. Please reselect the inflow meaning and save again.";
+  return message;
 }
 
 function formatMoney(amount, currency) {

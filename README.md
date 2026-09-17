@@ -1,18 +1,45 @@
 # Kleos
 
-Kleos is Lorenzo's private personal measurement, benchmarking, and self-knowledge application.
+**A personal intelligence system for building an evidence-based model of who you are and how you're changing.**
 
-It was extracted from the former **GOAT Lab** surface inside [NeoLorenzo/Ariadne](https://github.com/NeoLorenzo/Ariadne) as part of Ariadne issue #7.
+Personal evidence is fragmented across health data, training, academic and cognitive results, finances, career history, relationships, and other records. Kleos brings that evidence into a structured current-state model so change can be assessed longitudinally without collapsing a person into a single opaque score.
 
-## Product boundary
+Kleos is currently a private, owner-focused application. The repository is public because the architecture, methodology, and implementation are intended to be inspectable.
 
-- **Ariadne** owns desired movement: directions, objectives, goals, projects, tasks, and execution planning.
-- **Kleos** owns current state: raw personal evidence, dated derived vector snapshots, benchmarking, and character/profile data.
-- **Kleos Bot** applies the canonical vector methodology to current evidence and writes new derived snapshots through the trusted Kleos contract.
-- The applications are separate repositories and deployments.
-- They deliberately share the existing Ariadne Supabase project for database and authentication infrastructure.
+## What Kleos does
 
-A separate Supabase project is not required for the current architecture.
+Kleos separates **evidence** from **interpretation**.
+
+Raw and structured evidence remains the underlying source material. Kleos Bot then applies an explicit methodology to that evidence and writes immutable dated snapshots across eight life vectors. Each assessment carries coverage and confidence information, and a subdomain can remain `unknown` when the evidence is insufficient rather than receiving an invented low or average score.
+
+This creates a longitudinal record of current state that is auditable: the evidence, methodology version, subdomain judgments, and resulting vector values remain distinguishable from one another.
+
+## Position in the system
+
+Kleos sits between domain-specific evidence and execution:
+
+- **Heracles** owns resistance-training performance and domain-specific strength/training analysis.
+- **Kleos** owns the broader model of current state across life domains.
+- **Ariadne** owns desired movement, priorities, opportunities, projects, tasks, and execution planning.
+
+Conceptually:
+
+```text
+Domain evidence → Kleos current-state model → Ariadne strategy and action
+```
+
+Kleos asks **where am I now, and how is that changing?** Ariadne asks **where do I want to go, and what should I do next?** Heracles goes deeper inside one domain rather than trying to model the whole person.
+
+## Current evidence boundaries
+
+Kleos combines several evidence sources while keeping their ownership explicit:
+
+- **Apple Health / Health Auto Export** supplies structured physiological, body, activity, and nutrition evidence through `goat_health_metrics`. General displayed body weight comes from this health pipeline.
+- **Heracles** owns resistance-training performance. `heracles_strength_metrics` is the current/last-known canonical strength evidence consumed by Kleos; Heracles may retain body-weight context for relative-strength calculations without becoming Kleos's general body-weight authority.
+- **Height** is a canonical static characteristic fixed at 190 cm and is not user-editable.
+- **Structured Big Five assessments** are stored as canonical psychological evidence.
+- Academic, cognitive, CV/professional, financial, immutable, miscellaneous, and supplemental health/context records provide evidence for the other parts of the model.
+- Legacy stores such as `goat_strength_lifts` may remain for history or compatibility but are not the active strength workflow.
 
 ## Eight-vector current-state model
 
@@ -83,12 +110,22 @@ See:
 - [`documentation/kleos-bot-methodology-v1.md`](documentation/kleos-bot-methodology-v1.md) for the legacy 1.x methodology record.
 - [`documentation/kleos-bot-shortcut-transport.md`](documentation/kleos-bot-shortcut-transport.md) for the current stateless ChatGPT/Supabase execution flow.
 
+## Product boundary
+
+- **Ariadne** owns desired movement: Directions, Strategic Objectives, opportunities, projects, tasks, and execution planning.
+- **Kleos** owns current state: personal evidence, dated derived vector snapshots, benchmarking, and character/profile data.
+- **Heracles** owns resistance-training history and training-specific analytics; Kleos consumes bounded strength evidence rather than recreating Heracles.
+- **Kleos Bot** applies the canonical vector methodology to current evidence and writes new derived snapshots through the trusted Kleos contract.
+- Ariadne and Kleos are separate repositories and deployments but deliberately share the existing Ariadne Supabase project for database and authentication infrastructure.
+
+A separate Supabase project is not required for the current architecture.
+
+Kleos originated as the former **GOAT Lab** surface inside [`NeoLorenzo/Ariadne`](https://github.com/NeoLorenzo/Ariadne), but it is now an independent application with its own product and persistence boundary.
+
 ## Current persistence
 
-Kleos owns the existing `public.goat_*` raw-evidence tables used by the application, including:
+Kleos owns structured raw/context evidence including records such as:
 
-- `goat_strength_lifts`
-- `goat_strength_profile`
 - `goat_cognitive_tests`
 - `goat_academic_stage_results`
 - `goat_academic_module_results`
@@ -98,8 +135,12 @@ Kleos owns the existing `public.goat_*` raw-evidence tables used by the applicat
 - `goat_immutable_characteristics`
 - `goat_misc_characteristics`
 - `goat_health_metrics`
+- `goat_big_five_assessments`
+- `heracles_strength_metrics`
 
-Legacy persistence such as `goat_score_entries` may still exist in the shared database for compatibility/history, but the global GOAT Score product workflow has been removed and is not part of the current Kleos UI or scoring model.
+`goat_health_metrics` is the structured Apple Health/Health Auto Export evidence store used for general physiological, body, activity, and nutrition evidence. `heracles_strength_metrics` is the bounded current/last-known strength store sourced from Heracles.
+
+Legacy persistence such as `goat_strength_lifts` and `goat_score_entries` may still exist in the shared database for compatibility/history, but neither represents an active canonical product workflow. The former global GOAT Score workflow has been removed.
 
 Kleos also owns the derived vector-state and methodology tables:
 
@@ -109,11 +150,24 @@ Kleos also owns the derived vector-state and methodology tables:
 - `kleos_vector_methodologies`
 - `kleos_vector_methodology_subdomains`
 
-The raw data was intentionally **not copied or migrated** during application extraction. Kleos reads and writes the same canonical records previously used by Ariadne's `/lab` route. Raw evidence remains authoritative source material; vector snapshots are derived historical interpretations and do not replace those records.
+The raw evidence was intentionally **not copied or migrated** when Kleos was extracted from Ariadne. Raw evidence remains authoritative source material; vector snapshots are derived historical interpretations and do not replace those records.
 
 Existing Row Level Security remains authoritative. Snapshot tables are read-only to ordinary authenticated clients; trusted writes use the atomic snapshot persistence contracts. Methodology tables are not exposed to ordinary application roles; the stateless evaluator receives the current methodology through the management-session evaluation context.
 
 Future schema changes that concern Kleos-owned persistence should be authored from this repository even while the physical database remains shared.
+
+## Measurement and character-state capabilities
+
+The current-state surfaces and evidence-management surfaces have separate roles:
+
+- the character sheet is the canonical surface for eight-vector derived assessments and their history;
+- structured Apple Health evidence supplies general health/body/activity/nutrition state, including general displayed body weight;
+- Heracles-sourced strength evidence supplies resistance-training performance without turning Kleos into a workout logger;
+- manually managed evidence covers appropriate cognitive, academic, health-context, CV/professional, financial, immutable, and miscellaneous records;
+- height is a fixed canonical characteristic rather than a user-editable measurement;
+- raw evidence remains separate from derived vector snapshots.
+
+Kleos Bot evaluations are the source of new derived vector snapshots. The browser evidence-management surfaces do not calculate or manually author those vector assessments.
 
 ## Database migrations
 
@@ -166,14 +220,3 @@ Expected production URL:
 ```text
 https://neolorenzo.github.io/Kleos/
 ```
-
-## Measurement and character-state capabilities
-
-The primary character sheet and the measurement editor have separate roles:
-
-- the character sheet is the canonical current-state surface for eight-vector derived assessments and their history;
-- the measurement editor manages raw evidence such as cognitive tests, strength metrics, academic results and notes, health context, CV context, immutable characteristics, miscellaneous characteristics, financial records, and Apple Health metrics;
-- the former global GOAT Score entry/history workflow has been removed;
-- raw measurement records remain editable independently of derived vector snapshots.
-
-Kleos Bot evaluations are the source of new derived vector snapshots. The browser measurement editor does not calculate or manually author those vector assessments.

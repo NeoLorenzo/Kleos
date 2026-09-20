@@ -11,7 +11,7 @@ import {
   formatTrajectorySummary
 } from "@/lib/kleos/characterSheet";
 
-export default function CharacterSheet({ userId, kleosData, basePath = "" }) {
+export default function CharacterSheet({ userId, kleosData }) {
   const [historyState, setHistoryState] = useState({
     status: "loading",
     snapshots: [],
@@ -136,7 +136,7 @@ export default function CharacterSheet({ userId, kleosData, basePath = "" }) {
               return (
                 <a
                   className={styles.dimensionRow}
-                  href={`${basePath}/${vector.id}/`}
+                  href={`/${vector.id}/`}
                   key={vector.id}
                   aria-label={`Open ${vector.label} dimension`}
                 >

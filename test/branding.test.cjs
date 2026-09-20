@@ -79,7 +79,7 @@ test("Kleos application is wired to the canonical Fabbro snapshot", () => {
 
   assert.match(globals, /@import "\.\.\/fabbro-design\/fabbro-tokens\.css";/);
   assert.match(layout, /data-fabbro-product="kleos"/);
-  assert.match(layout, /<KleosAppShell basePath=\{basePath\}>/);
+  assert.match(layout, /<KleosAppShell>/);
   assert.doesNotMatch(layout, /KleosNav/);
   assert.equal(manifest.background_color.toUpperCase(), "#000000");
   assert.equal(manifest.theme_color.toUpperCase(), "#000000");
@@ -157,7 +157,7 @@ test("Kleos uses the shadcn Sidebar composition for desktop primary navigation",
   assert.match(sidebar, /KLEOS_PAGES\.map/);
   assert.match(shell, /fabbro-design\/components\/application-sidebar\/react\/sidebar/);
   assert.match(shell, /<SidebarProvider defaultOpen>/);
-  assert.match(shell, /<KleosSidebar basePath=\{basePath\} \/>/);
+  assert.match(shell, /<KleosSidebar \/>/);
   assert.match(shell, /<SidebarInset/);
   assert.equal(packageJson.dependencies["lucide-react"], "^1.47.0");
 });

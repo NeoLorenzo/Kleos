@@ -40,33 +40,30 @@ const PAGE_ICONS = {
   experiential: Compass
 };
 
-function normalizeRelativePath(pathname, basePath) {
+function normalizeRelativePath(pathname) {
   let value = pathname || "/";
-  if (basePath && value.startsWith(basePath)) {
-    value = value.slice(basePath.length) || "/";
-  }
 
   if (!value.startsWith("/")) value = `/${value}`;
   if (value !== "/" && !value.endsWith("/")) value += "/";
   return value;
 }
 
-export default function KleosSidebar({ basePath = "" }) {
+export default function KleosSidebar() {
   const pathname = usePathname();
   const { state, isMobile, setOpenMobile } = useSidebar();
-  const relativePath = normalizeRelativePath(pathname, basePath);
+  const relativePath = normalizeRelativePath(pathname);
   const compact = state === "collapsed" && !isMobile;
 
   return (
     <Sidebar collapsible="icon" aria-label="Kleos primary navigation">
       <SidebarHeader className={styles.header}>
-        <a className={styles.brandLink} href={`${basePath}/`} aria-label="Kleos home">
+        <a className={styles.brandLink} href="/" aria-label="Kleos home">
           <img
             className={compact ? styles.brandMark : styles.brandLockup}
             src={
               compact
-                ? `${basePath}/brand/kleos-mark.svg`
-                : `${basePath}/brand/kleos-lockup.svg`
+                ? "/brand/kleos-mark.svg"
+                : "/brand/kleos-lockup.svg"
             }
             alt="Kleos"
           />
@@ -88,7 +85,7 @@ export default function KleosSidebar({ basePath = "" }) {
                 return (
                   <SidebarMenuItem key={page.id}>
                     <SidebarMenuButton
-                      href={`${basePath}${page.path}`}
+                      href={page.path}
                       icon={Icon}
                       isActive={active}
                       tooltip={page.label}

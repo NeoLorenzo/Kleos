@@ -6,7 +6,7 @@ Kleos is a Fabbro Systems product. It owns evidence-based current-state modeling
 
 ## Fabbro Design System adoption
 
-Kleos currently adopts **Fabbro Design System 0.1.2**.
+Kleos currently adopts **Fabbro Design System 0.1.3**.
 
 The local upstream snapshot lives in `fabbro-design/`.
 
@@ -37,7 +37,7 @@ Kleos must consume the Fabbro source for:
 - shared neutral colors
 - shared spacing/radius/control tokens where applicable
 - Kleos product mark and lockup
-- Fabbro Systems mark
+- Fabbro Systems mark and its canonical mark-only application-nav treatment
 - shared motion primitives
 
 Kleos may define locally:
@@ -49,6 +49,8 @@ Kleos may define locally:
 - product-specific information architecture and interaction patterns
 
 Do not force the Fabbro public marketing shell onto the authenticated Kleos application.
+
+In authenticated navigation, the family endorsement must use the standalone Fabbro Systems mark only. Do not render visible `Fabbro Systems` text or a Fabbro wordmark lockup in that slot.
 
 ## Change workflow
 

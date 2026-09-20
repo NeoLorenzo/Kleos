@@ -25,20 +25,27 @@ function collectTextFiles(relativeDir, extensions) {
   return files;
 }
 
-test("Kleos adopts Fabbro Design System 0.1.2", () => {
-  assert.equal(read("fabbro-design/VERSION").trim(), "0.1.2");
+test("Kleos adopts Fabbro Design System 0.1.3", () => {
+  assert.equal(read("fabbro-design/VERSION").trim(), "0.1.3");
 
   const product = JSON.parse(read("fabbro-design/product.json"));
-  assert.equal(product.version, "0.1.2");
+  assert.equal(product.version, "0.1.3");
   assert.equal(product.product, "Kleos");
   assert.equal(product.symbol, "Radiance");
   assert.equal(product.coreIdea, "Recognition");
   assert.equal(product.accent.toUpperCase(), "#CB30E0");
 
   const core = JSON.parse(read("fabbro-design/core.json"));
-  assert.equal(core.version, "0.1.2");
+  assert.equal(core.version, "0.1.3");
   assert.equal(core.color.background.toUpperCase(), "#000000");
   assert.match(core.typography.familyPrimary, /Inter/);
+
+  const endorsement = core.branding.applicationFamilyEndorsement;
+  assert.equal(endorsement.asset, "Fabbro Systems Logo.svg");
+  assert.equal(endorsement.treatment, "mark-only");
+  assert.equal(endorsement.desktopSize, "24px");
+  assert.equal(endorsement.visibleTextLabel, false);
+  assert.equal(endorsement.orderBeforeSessionAction, true);
 });
 
 test("Kleos application is wired to the canonical Fabbro snapshot", () => {
@@ -113,4 +120,18 @@ test("shared navigation owns sign-out and Physical does not duplicate the app na
   assert.doesNotMatch(physical, /<KleosNav/);
   assert.doesNotMatch(physical, /onClick=\{signOut\}/);
   assert.doesNotMatch(workspace, /onClick=\{signOut\}/);
+});
+
+
+test("shared navigation uses the canonical mark-only Fabbro endorsement", () => {
+  const nav = read("components/KleosNav.jsx");
+  const navCss = read("components/KleosNav.module.css");
+  const tokens = read("fabbro-design/fabbro-tokens.css");
+
+  assert.match(nav, /\/brand\/fabbro-mark\.svg/);
+  assert.match(nav, /alt="Fabbro Systems"/);
+  assert.doesNotMatch(nav, />Fabbro Systems</);
+  assert.doesNotMatch(nav, /Fabbro Systems Logo With Text/);
+  assert.match(navCss, /var\(--fs-family-mark-size\)/);
+  assert.match(tokens, /--fs-family-mark-size:\s*24px/);
 });

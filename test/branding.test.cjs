@@ -107,7 +107,7 @@ test("shared navigation owns sign-out and Physical does not duplicate the app na
 
   assert.match(layout, /<KleosNav basePath=\{basePath\} \/>/);
   assert.match(nav, /supabase\.auth\.signOut\(\)/);
-  assert.match(nav, />Sign Out</);
+  assert.match(nav, /"Sign Out"/);
 
   assert.doesNotMatch(physical, /import KleosNav/);
   assert.doesNotMatch(physical, /<KleosNav/);

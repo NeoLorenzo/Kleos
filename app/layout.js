@@ -3,8 +3,28 @@ import KleosAppShell from "@/components/KleosAppShell";
 import MeasurementCorrections from "@/components/MeasurementCorrections";
 
 export const metadata = {
+  metadataBase: new URL("https://kleos.fabbrosystems.com"),
   title: "Kleos",
   description: "Evidence-based current-state modeling and self-knowledge workspace",
+  alternates: {
+    canonical: "/"
+  },
+  robots: {
+    index: false,
+    follow: false
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Kleos",
+    title: "Kleos",
+    description: "Evidence-based current-state modeling and self-knowledge workspace",
+    url: "/"
+  },
+  twitter: {
+    card: "summary",
+    title: "Kleos",
+    description: "Evidence-based current-state modeling and self-knowledge workspace"
+  },
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.svg"

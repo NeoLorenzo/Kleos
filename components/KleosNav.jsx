@@ -55,7 +55,7 @@ export default function KleosNav({ basePath = "" }) {
       </div>
 
       <div className={styles.actions}>
-        <span className={styles.family}>Fabbro Systems</span>
+        <img className={styles.familyMark} src={`${basePath}/brand/fabbro-mark.svg`} alt="Fabbro Systems" />
         {hasSession ? (
           <button
             className={styles.signOut}

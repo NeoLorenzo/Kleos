@@ -2,7 +2,7 @@
 
 Kleos consumes a local snapshot of the canonical Fabbro Design System.
 
-**Adopted version:** 0.1.2  
+**Adopted version:** 0.1.3  
 **Upstream:** `NeoLorenzo/Fabbro-Systems/design-system`
 
 ## Rules
@@ -12,6 +12,7 @@ Kleos consumes a local snapshot of the canonical Fabbro Design System.
 - Shared family-level changes must be made in Fabbro Systems first, versioned there, then synced here explicitly.
 - Kleos may extend the system for domain-specific workflows, data visualizations, semantic states, and dense application UI.
 - Public/deployment copies of approved assets under `public/brand/` must remain byte-identical to the matching snapshot assets where applicable.
+- Authenticated product navigation uses the standalone Fabbro Systems mark only for family endorsement; visible family text and wordmark lockups are not allowed in that slot.
 
 ## Snapshot contents
 

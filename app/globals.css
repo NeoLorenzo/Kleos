@@ -53,7 +53,7 @@ button:disabled {
 }
 
 .kleos-shell {
-  min-height: 100vh;
+  min-height: calc(100dvh - 3.55rem);
   padding: 1.5rem;
   background:
     radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 30rem),
@@ -343,7 +343,7 @@ tbody tr:last-child td {
   }
 
   .kleos-board {
-    min-height: 100vh;
+    min-height: calc(100dvh - 3.55rem);
     border: 0;
     border-radius: 0;
   }

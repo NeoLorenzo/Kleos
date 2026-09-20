@@ -25,18 +25,18 @@ function collectTextFiles(relativeDir, extensions) {
   return files;
 }
 
-test("Kleos adopts Fabbro Design System 0.1.3", () => {
-  assert.equal(read("fabbro-design/VERSION").trim(), "0.1.3");
+test("Kleos adopts Fabbro Design System 0.1.4", () => {
+  assert.equal(read("fabbro-design/VERSION").trim(), "0.1.4");
 
   const product = JSON.parse(read("fabbro-design/product.json"));
-  assert.equal(product.version, "0.1.3");
+  assert.equal(product.version, "0.1.4");
   assert.equal(product.product, "Kleos");
   assert.equal(product.symbol, "Radiance");
   assert.equal(product.coreIdea, "Recognition");
   assert.equal(product.accent.toUpperCase(), "#CB30E0");
 
   const core = JSON.parse(read("fabbro-design/core.json"));
-  assert.equal(core.version, "0.1.3");
+  assert.equal(core.version, "0.1.4");
   assert.equal(core.color.background.toUpperCase(), "#000000");
   assert.match(core.typography.familyPrimary, /Inter/);
 
@@ -46,6 +46,13 @@ test("Kleos adopts Fabbro Design System 0.1.3", () => {
   assert.equal(endorsement.desktopSize, "24px");
   assert.equal(endorsement.visibleTextLabel, false);
   assert.equal(endorsement.orderBeforeSessionAction, true);
+
+  const shell = core.applicationShell;
+  assert.equal(shell.desktop.primaryNavigationPlacement, "left");
+  assert.equal(shell.desktop.primaryNavigationBehavior, "persistent");
+  assert.equal(shell.desktop.primaryNavigationCollapsible, true);
+  assert.equal(shell.desktop.topUtilityRegionMayReplacePrimaryNavigation, false);
+  assert.equal(shell.desktop.duplicateGlobalPrimaryNavigationInPageContent, false);
 });
 
 test("Kleos application is wired to the canonical Fabbro snapshot", () => {
@@ -55,6 +62,8 @@ test("Kleos application is wired to the canonical Fabbro snapshot", () => {
 
   assert.match(globals, /@import "\.\.\/fabbro-design\/fabbro-tokens\.css";/);
   assert.match(layout, /data-fabbro-product="kleos"/);
+  assert.match(layout, /<KleosAppShell basePath=\{basePath\}>/);
+  assert.doesNotMatch(layout, /KleosNav/);
   assert.equal(manifest.background_color.toUpperCase(), "#000000");
   assert.equal(manifest.theme_color.toUpperCase(), "#000000");
 });
@@ -105,33 +114,63 @@ test("legacy Kleos brand violet and boxed-K identity do not return", () => {
   assert.doesNotMatch(workspace, /className="access-mark">K</);
 });
 
+test("Kleos uses the shadcn Sidebar composition for desktop primary navigation", () => {
+  const primitive = read("components/ui/sidebar.jsx");
+  const sidebar = read("components/KleosSidebar.jsx");
+  const shell = read("components/KleosAppShell.jsx");
+  const packageJson = JSON.parse(read("package.json"));
 
-test("shared navigation owns sign-out and Physical does not duplicate the app nav", () => {
-  const layout = read("app/layout.js");
-  const nav = read("components/KleosNav.jsx");
-  const physical = read("components/PhysicalWorkspace.jsx");
-  const workspace = read("components/KleosWorkspace.jsx");
+  for (const exportName of [
+    "SidebarProvider",
+    "Sidebar",
+    "SidebarContent",
+    "SidebarGroup",
+    "SidebarMenu",
+    "SidebarMenuButton",
+    "SidebarRail",
+    "SidebarTrigger",
+    "SidebarInset"
+  ]) {
+    assert.match(primitive, new RegExp(exportName));
+  }
 
-  assert.match(layout, /<KleosNav basePath=\{basePath\} \/>/);
-  assert.match(nav, /supabase\.auth\.signOut\(\)/);
-  assert.match(nav, /"Sign Out"/);
-
-  assert.doesNotMatch(physical, /import KleosNav/);
-  assert.doesNotMatch(physical, /<KleosNav/);
-  assert.doesNotMatch(physical, /onClick=\{signOut\}/);
-  assert.doesNotMatch(workspace, /onClick=\{signOut\}/);
+  assert.match(sidebar, /<Sidebar collapsible="icon"/);
+  assert.match(sidebar, /<SidebarRail \/>/);
+  assert.match(sidebar, /KLEOS_PAGES\.map/);
+  assert.match(shell, /<SidebarProvider defaultOpen>/);
+  assert.match(shell, /<KleosSidebar basePath=\{basePath\} \/>/);
+  assert.match(shell, /<SidebarInset/);
+  assert.equal(packageJson.dependencies["lucide-react"], "^1.47.0");
 });
 
+test("primary navigation is left-side only and page content does not duplicate it", () => {
+  const shell = read("components/KleosAppShell.jsx");
+  const physical = read("components/PhysicalWorkspace.jsx");
+  const workspace = read("components/KleosWorkspace.jsx");
+  const sidebarCss = read("components/ui/sidebar.module.css");
 
-test("shared navigation uses the canonical mark-only Fabbro endorsement", () => {
-  const nav = read("components/KleosNav.jsx");
-  const navCss = read("components/KleosNav.module.css");
+  assert.match(sidebarCss, /border-right:/);
+  assert.match(sidebarCss, /position:\s*sticky/);
+  assert.doesNotMatch(physical, /KleosNav|KleosSidebar|<Sidebar/);
+  assert.doesNotMatch(workspace, /KleosNav|KleosSidebar|<Sidebar/);
+  assert.doesNotMatch(shell, /KLEOS_PAGES\.map/);
+});
+
+test("shared application shell owns sign-out and mark-only Fabbro endorsement", () => {
+  const shell = read("components/KleosAppShell.jsx");
+  const shellCss = read("components/KleosAppShell.module.css");
+  const physical = read("components/PhysicalWorkspace.jsx");
+  const workspace = read("components/KleosWorkspace.jsx");
   const tokens = read("fabbro-design/fabbro-tokens.css");
 
-  assert.match(nav, /\/brand\/fabbro-mark\.svg/);
-  assert.match(nav, /alt="Fabbro Systems"/);
-  assert.doesNotMatch(nav, />Fabbro Systems</);
-  assert.doesNotMatch(nav, /Fabbro Systems Logo With Text/);
-  assert.match(navCss, /var\(--fs-family-mark-size\)/);
+  assert.match(shell, /supabase\.auth\.signOut\(\)/);
+  assert.match(shell, /"Sign Out"/);
+  assert.match(shell, /\/brand\/fabbro-mark\.svg/);
+  assert.match(shell, /alt="Fabbro Systems"/);
+  assert.doesNotMatch(shell, />Fabbro Systems</);
+  assert.match(shellCss, /var\(--fs-family-mark-size\)/);
   assert.match(tokens, /--fs-family-mark-size:\s*24px/);
+
+  assert.doesNotMatch(physical, /onClick=\{signOut\}/);
+  assert.doesNotMatch(workspace, /onClick=\{signOut\}/);
 });

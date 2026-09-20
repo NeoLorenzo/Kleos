@@ -25,18 +25,18 @@ function collectTextFiles(relativeDir, extensions) {
   return files;
 }
 
-test("Kleos adopts Fabbro Design System 0.1.4", () => {
-  assert.equal(read("fabbro-design/VERSION").trim(), "0.1.4");
+test("Kleos adopts Fabbro Design System 0.2.0", () => {
+  assert.equal(read("fabbro-design/VERSION").trim(), "0.2.0");
 
   const product = JSON.parse(read("fabbro-design/product.json"));
-  assert.equal(product.version, "0.1.4");
+  assert.equal(product.version, "0.2.0");
   assert.equal(product.product, "Kleos");
   assert.equal(product.symbol, "Radiance");
   assert.equal(product.coreIdea, "Recognition");
   assert.equal(product.accent.toUpperCase(), "#CB30E0");
 
   const core = JSON.parse(read("fabbro-design/core.json"));
-  assert.equal(core.version, "0.1.4");
+  assert.equal(core.version, "0.2.0");
   assert.equal(core.color.background.toUpperCase(), "#000000");
   assert.match(core.typography.familyPrimary, /Inter/);
 
@@ -51,8 +51,25 @@ test("Kleos adopts Fabbro Design System 0.1.4", () => {
   assert.equal(shell.desktop.primaryNavigationPlacement, "left");
   assert.equal(shell.desktop.primaryNavigationBehavior, "persistent");
   assert.equal(shell.desktop.primaryNavigationCollapsible, true);
+  assert.equal(shell.desktop.primaryNavigationComponent, "Fabbro Application Sidebar");
+  assert.equal(shell.desktop.primaryNavigationComponentVersion, "1.0.0");
+  assert.equal(shell.desktop.primaryNavigationDefaultState, "expanded");
+  assert.equal(shell.desktop.primaryNavigationExpandedWidth, "15.5rem");
+  assert.equal(shell.desktop.primaryNavigationCollapsedWidth, "4.5rem");
+  assert.equal(shell.mobile.breakpoint, "900px");
+  assert.equal(shell.mobile.navigationBehavior, "offcanvas-drawer");
   assert.equal(shell.desktop.topUtilityRegionMayReplacePrimaryNavigation, false);
   assert.equal(shell.desktop.duplicateGlobalPrimaryNavigationInPageContent, false);
+
+  assert.equal(
+    read("fabbro-design/components/application-sidebar/VERSION").trim(),
+    "1.0.0"
+  );
+  const sidebarContract = JSON.parse(
+    read("fabbro-design/components/application-sidebar/contract.json")
+  );
+  assert.equal(sidebarContract.version, "1.0.0");
+  assert.equal(sidebarContract.designSystemVersion, "0.2.0");
 });
 
 test("Kleos application is wired to the canonical Fabbro snapshot", () => {
@@ -115,7 +132,7 @@ test("legacy Kleos brand violet and boxed-K identity do not return", () => {
 });
 
 test("Kleos uses the shadcn Sidebar composition for desktop primary navigation", () => {
-  const primitive = read("components/ui/sidebar.jsx");
+  const primitive = read("fabbro-design/components/application-sidebar/react/sidebar.jsx");
   const sidebar = read("components/KleosSidebar.jsx");
   const shell = read("components/KleosAppShell.jsx");
   const packageJson = JSON.parse(read("package.json"));
@@ -134,9 +151,11 @@ test("Kleos uses the shadcn Sidebar composition for desktop primary navigation",
     assert.match(primitive, new RegExp(exportName));
   }
 
+  assert.match(sidebar, /fabbro-design\/components\/application-sidebar\/react\/sidebar/);
   assert.match(sidebar, /<Sidebar collapsible="icon"/);
   assert.match(sidebar, /<SidebarRail \/>/);
   assert.match(sidebar, /KLEOS_PAGES\.map/);
+  assert.match(shell, /fabbro-design\/components\/application-sidebar\/react\/sidebar/);
   assert.match(shell, /<SidebarProvider defaultOpen>/);
   assert.match(shell, /<KleosSidebar basePath=\{basePath\} \/>/);
   assert.match(shell, /<SidebarInset/);
@@ -147,7 +166,7 @@ test("primary navigation is left-side only and page content does not duplicate i
   const shell = read("components/KleosAppShell.jsx");
   const physical = read("components/PhysicalWorkspace.jsx");
   const workspace = read("components/KleosWorkspace.jsx");
-  const sidebarCss = read("components/ui/sidebar.module.css");
+  const sidebarCss = read("fabbro-design/components/application-sidebar/react/sidebar.module.css");
 
   assert.match(sidebarCss, /border-right:/);
   assert.match(sidebarCss, /position:\s*sticky/);
@@ -173,4 +192,13 @@ test("shared application shell owns sign-out and mark-only Fabbro endorsement", 
 
   assert.doesNotMatch(physical, /onClick=\{signOut\}/);
   assert.doesNotMatch(workspace, /onClick=\{signOut\}/);
+});
+
+
+test("Kleos does not maintain a fork of the canonical sidebar primitive", () => {
+  assert.equal(fs.existsSync(path.join(root, "components", "ui", "sidebar.jsx")), false);
+  assert.equal(fs.existsSync(path.join(root, "components", "ui", "sidebar.module.css")), false);
+
+  const primitive = read("fabbro-design/components/application-sidebar/react/sidebar.jsx");
+  assert.match(primitive, /fabbro:application-sidebar-expanded/);
 });

@@ -6,7 +6,7 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export const metadata = {
   title: "Kleos",
-  description: "Private character-state, personal measurement, benchmarking, and self-knowledge workspace",
+  description: "Evidence-based current-state modeling and self-knowledge workspace",
   manifest: `${basePath}/manifest.webmanifest`,
   icons: {
     icon: `${basePath}/icon.svg`
@@ -16,7 +16,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body data-fabbro-product="kleos">
         <KleosNav basePath={basePath} />
         {children}
         <MeasurementCorrections />

@@ -18,7 +18,7 @@
   padding: 0.85rem;
   border: 1px solid var(--border-soft);
   border-radius: 0.75rem;
-  background: linear-gradient(180deg, rgba(21, 26, 38, 0.92), rgba(11, 15, 23, 0.92));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fs-color-text) 7%, var(--fs-color-bg)), color-mix(in srgb, var(--fs-color-text) 5%, var(--fs-color-bg)));
 }
 
 .statCard > span {
@@ -52,7 +52,7 @@
   padding: 1rem;
   border: 1px solid var(--border-soft);
   border-radius: 0.75rem;
-  background: rgba(11, 15, 23, 0.72);
+  background: color-mix(in srgb, var(--fs-color-text) 4%, transparent);
 }
 
 .sleepBlock h3 {
@@ -80,10 +80,10 @@
   height: 1.1rem;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.12);
+  background: color-mix(in srgb, var(--fs-color-text-muted) 12%, transparent);
 }
 
-.stageCore { background: #7c3aed; }
+.stageCore { background: var(--accent); }
 .stageREM { background: #38bdf8; }
 .stageDeep { background: #4338ca; }
 .stageAwake { background: #f59e0b; }
@@ -92,7 +92,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 0.85rem;
-  color: #cbd5e1;
+  color: var(--fs-color-text-secondary);
   font-size: 0.7rem;
 }
 
@@ -108,7 +108,7 @@
   border-radius: 999px;
 }
 
-.legendCore { background: #7c3aed; }
+.legendCore { background: var(--accent); }
 .legendREM { background: #38bdf8; }
 .legendDeep { background: #4338ca; }
 .legendAwake { background: #f59e0b; }
@@ -126,7 +126,7 @@
   padding: 0.8rem;
   border: 1px solid var(--border-soft);
   border-radius: 0.75rem;
-  background: rgba(11, 15, 23, 0.62);
+  background: color-mix(in srgb, var(--fs-color-text) 3%, transparent);
 }
 
 .chartHeader,
@@ -153,7 +153,7 @@
 
 .gridLine {
   fill: none;
-  stroke: rgba(148, 163, 184, 0.13);
+  stroke: color-mix(in srgb, var(--fs-color-text-muted) 13%, transparent);
   stroke-width: 1;
 }
 
@@ -197,7 +197,7 @@
   width: 100%;
   min-width: 2px;
   border-radius: 3px 3px 1px 1px;
-  background: linear-gradient(180deg, #a78bfa, #7c3aed);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 62%, white), var(--accent));
 }
 
 .emptyChart {
@@ -205,7 +205,7 @@
   display: grid;
   place-items: center;
   margin-top: 0.85rem;
-  border: 1px dashed rgba(148, 163, 184, 0.2);
+  border: 1px dashed color-mix(in srgb, var(--fs-color-text-muted) 20%, transparent);
   border-radius: 0.7rem;
   color: var(--muted);
   font-size: 0.72rem;

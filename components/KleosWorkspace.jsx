@@ -41,8 +41,6 @@ function createDefaultCognitiveForm() {
 export default function KleosWorkspace({ activePage = "character-sheet" }) {
   const page = getKleosPage(activePage);
   const isDashboard = page.id === "character-sheet";
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-
   const [accessState, setAccessState] = useState("loading");
   const [user, setUser] = useState(null);
   const [kleosData, setKleosData] = useState(createEmptyKleosData);
@@ -208,7 +206,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
     setStatusMessage("");
     const redirectTo =
       typeof window !== "undefined"
-        ? `${window.location.origin}${basePath}${page.path}`
+        ? `${window.location.origin}${page.path}`
         : undefined;
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -462,7 +460,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
     if (isDashboard) {
       return (
         <>
-          <CharacterSheet userId={user.id} kleosData={kleosData} basePath={basePath} />
+          <CharacterSheet userId={user.id} kleosData={kleosData} />
           <details className="kleos-card wide-card">
             <summary>Shared profile context</summary>
             <p className="kleos-subtitle">
@@ -853,8 +851,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
           accessState,
           user,
           statusMessage,
-          onSignIn: signInWithGoogle,
-          basePath
+          onSignIn: signInWithGoogle
         }) || (
           <div className="kleos-scroll">
             {renderPageContent()}
@@ -875,7 +872,7 @@ function SectionHeader({ title, note }) {
   );
 }
 
-function renderAccessGate({ accessState, user, statusMessage, onSignIn, basePath }) {
+function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
   if (accessState === "authorized") return null;
 
   const titleByState = {
@@ -895,7 +892,7 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn, basePath
   return (
     <section className="access-panel">
       <div className="access-mark">
-        <img src={`${basePath}/brand/kleos-mark.svg`} alt="" aria-hidden="true" />
+        <img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" />
       </div>
       <h2>{titleByState[accessState] || "Private Kleos Workspace"}</h2>
       <p>{statusMessage || bodyByState[accessState]}</p>

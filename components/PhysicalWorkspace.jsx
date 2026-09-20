@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { AUTHORIZED_KLEOS_EMAIL, createEmptyKleosData, loadKleosData } from "@/lib/kleos/data";
-import KleosNav from "@/components/KleosNav";
 import DimensionState from "@/components/DimensionState";
 import styles from "./PhysicalWorkspace.module.css";
 
@@ -355,12 +354,6 @@ export default function PhysicalWorkspace() {
     if (error) setStatusMessage(error.message || "Google sign-in failed.");
   };
 
-  const signOut = async () => {
-    if (!supabase) return;
-    const { error } = await supabase.auth.signOut();
-    if (error) setStatusMessage(error.message || "Sign-out failed.");
-  };
-
   const syncStrength = async () => {
     if (!user?.id || !supabase || isSyncingStrength) return;
     setIsSyncingStrength(true);
@@ -438,10 +431,8 @@ export default function PhysicalWorkspace() {
           </div>
           <div className="kleos-header-actions">
             <button className="secondary-btn" type="button" onClick={() => void loadPhysicalData(user.id)}>Refresh</button>
-            <button className="secondary-btn" type="button" onClick={signOut}>Sign out</button>
           </div>
         </header>
-        <KleosNav basePath={basePath} />
         <main className="kleos-scroll">
           <DimensionState userId={user.id} vectorId="physical" kleosData={kleosData} />
 

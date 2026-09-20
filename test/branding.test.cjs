@@ -97,3 +97,20 @@ test("legacy Kleos brand violet and boxed-K identity do not return", () => {
   const workspace = read("components/KleosWorkspace.jsx");
   assert.doesNotMatch(workspace, /className="access-mark">K</);
 });
+
+
+test("shared navigation owns sign-out and Physical does not duplicate the app nav", () => {
+  const layout = read("app/layout.js");
+  const nav = read("components/KleosNav.jsx");
+  const physical = read("components/PhysicalWorkspace.jsx");
+  const workspace = read("components/KleosWorkspace.jsx");
+
+  assert.match(layout, /<KleosNav basePath=\{basePath\} \/>/);
+  assert.match(nav, /supabase\.auth\.signOut\(\)/);
+  assert.match(nav, /"Sign Out"/);
+
+  assert.doesNotMatch(physical, /import KleosNav/);
+  assert.doesNotMatch(physical, /<KleosNav/);
+  assert.doesNotMatch(physical, /onClick=\{signOut\}/);
+  assert.doesNotMatch(workspace, /onClick=\{signOut\}/);
+});

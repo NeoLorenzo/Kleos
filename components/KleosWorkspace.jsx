@@ -224,15 +224,6 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
     }
   };
 
-  const signOut = async () => {
-    if (!supabase) return;
-    setStatusMessage("");
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      setStatusMessage(error.message || "Sign-out failed.");
-    }
-  };
-
   const saveCognitiveTest = async (event) => {
     event.preventDefault();
     if (!user?.id || isSaving) return;
@@ -856,13 +847,6 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 : "Assessment, evidence, measurements, and history for this dimension."}
             </p>
           </div>
-          {accessState === "authorized" ? (
-            <div className="kleos-header-actions">
-              <button type="button" className="secondary-btn" onClick={signOut}>
-                Sign Out
-              </button>
-            </div>
-          ) : null}
         </header>
 
         {renderAccessGate({

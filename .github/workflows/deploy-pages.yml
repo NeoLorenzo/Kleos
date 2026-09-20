@@ -44,6 +44,19 @@ jobs:
       - name: Check exported site privacy
         run: npm run check:privacy -- out
 
+      - name: Smoke test production artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f out/index.html
+          test -f out/manifest.webmanifest
+          test -f out/physical/index.html
+          grep -q "Kleos" out/index.html
+          if grep -R -n -E --include='*.html' --include='*.js' --include='*.css' --include='*.json' --include='*.webmanifest' '(/Kleos/|neolorenzo\.github\.io/Kleos)' out; then
+            echo "Legacy Kleos GitHub Pages path found in production artifact."
+            exit 1
+          fi
+
       - name: Upload static artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -65,9 +78,17 @@ jobs:
         uses: actions/deploy-pages@v4
 
       - name: Smoke test live Kleos
+        shell: bash
         run: |
-          curl --fail --silent --show-error --location \
-            --retry 5 --retry-all-errors --retry-delay 2 \
-            "${{ steps.deployment.outputs.page_url }}" \
-            --output /tmp/kleos.html
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 8 --retry-all-errors --retry-delay 3 \
+            https://kleos.fabbrosystems.com/ --output /tmp/kleos.html
+          curl --fail --silent --show-error --location --retry 8 --retry-all-errors --retry-delay 3 \
+            https://kleos.fabbrosystems.com/manifest.webmanifest --output /tmp/kleos-manifest.webmanifest
+          curl --fail --silent --show-error --location --retry 8 --retry-all-errors --retry-delay 3 \
+            https://kleos.fabbrosystems.com/physical/ --output /tmp/kleos-physical.html
           grep -q "Kleos" /tmp/kleos.html
+          if grep -E -q '(/Kleos/|neolorenzo\.github\.io/Kleos)' /tmp/kleos.html /tmp/kleos-physical.html; then
+            echo "Legacy Kleos deployment path found on the live domain."
+            exit 1
+          fi

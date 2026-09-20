@@ -12,23 +12,20 @@ import {
 } from "@/fabbro-design/components/application-sidebar/react/sidebar";
 import styles from "./KleosAppShell.module.css";
 
-function normalizeRelativePath(pathname, basePath) {
+function normalizeRelativePath(pathname) {
   let value = pathname || "/";
-  if (basePath && value.startsWith(basePath)) {
-    value = value.slice(basePath.length) || "/";
-  }
   if (!value.startsWith("/")) value = `/${value}`;
   if (value !== "/" && !value.endsWith("/")) value += "/";
   return value;
 }
 
-export default function KleosAppShell({ basePath = "", children }) {
+export default function KleosAppShell({ children }) {
   const pathname = usePathname();
   const [hasSession, setHasSession] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const currentPage = useMemo(() => {
-    const relativePath = normalizeRelativePath(pathname, basePath);
+    const relativePath = normalizeRelativePath(pathname);
     return (
       KLEOS_PAGES.find((page) =>
         page.path === "/"
@@ -36,7 +33,7 @@ export default function KleosAppShell({ basePath = "", children }) {
           : relativePath === page.path || relativePath.startsWith(page.path)
       ) || KLEOS_PAGES[0]
     );
-  }, [basePath, pathname]);
+  }, [pathname]);
 
   useEffect(() => {
     if (!supabase) return undefined;
@@ -71,7 +68,7 @@ export default function KleosAppShell({ basePath = "", children }) {
 
   return (
     <SidebarProvider defaultOpen>
-      <KleosSidebar basePath={basePath} />
+      <KleosSidebar />
 
       <SidebarInset className={styles.inset}>
         <header className={styles.utilityBar}>
@@ -83,7 +80,7 @@ export default function KleosAppShell({ basePath = "", children }) {
           <div className={styles.utilities}>
             <img
               className={styles.familyMark}
-              src={`${basePath}/brand/fabbro-mark.svg`}
+              src="/brand/fabbro-mark.svg"
               alt="Fabbro Systems"
             />
             {hasSession ? (

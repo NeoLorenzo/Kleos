@@ -78,7 +78,7 @@ test("character sheet links every canonical vector to its dimension page", () =>
     "utf8"
   );
 
-  assert.match(characterSheetSource, /href=\{`\$\{basePath\}\/\$\{vector\.id\}\/`\}/);
+  assert.match(characterSheetSource, /href=\{`\/\$\{vector\.id\}\/`\}/);
   assert.match(characterSheetSource, /aria-label=\{`Open \$\{vector\.label\} dimension`\}/);
 });
 

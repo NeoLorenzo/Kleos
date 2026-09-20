@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "status": "implementation-baseline",
   "referenceFrame": {
     "desktopWidth": "1440px",
@@ -149,16 +149,31 @@
       "topUtilityRegionAllowed": true,
       "topUtilityRegionRole": "context-session-family-utilities",
       "topUtilityRegionMayReplacePrimaryNavigation": false,
-      "duplicateGlobalPrimaryNavigationInPageContent": false
+      "duplicateGlobalPrimaryNavigationInPageContent": false,
+      "primaryNavigationComponent": "Fabbro Application Sidebar",
+      "primaryNavigationComponentVersion": "1.0.0",
+      "primaryNavigationDefaultState": "expanded",
+      "primaryNavigationExpandedWidth": "15.5rem",
+      "primaryNavigationCollapsedWidth": "4.5rem",
+      "primaryNavigationCollapseMode": "icon",
+      "primaryNavigationRailToggle": true
     },
     "mobile": {
       "desktopSidebarRequired": false,
-      "navigationBehavior": "adaptive",
+      "navigationBehavior": "offcanvas-drawer",
       "allowedPatterns": [
         "drawer",
         "bottom-navigation",
         "compact-menu"
-      ]
+      ],
+      "breakpoint": "900px",
+      "drawerWidth": "min(19rem, calc(100vw - 3rem))"
+    },
+    "navigationItem": {
+      "minHeight": "2.55rem",
+      "iconSize": "1.15rem",
+      "activeIndicatorWidth": "2px",
+      "iconGrammar": "Lucide"
     }
   }
 }

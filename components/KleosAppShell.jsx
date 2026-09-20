@@ -9,7 +9,7 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger
-} from "@/components/ui/sidebar";
+} from "@/fabbro-design/components/application-sidebar/react/sidebar";
 import styles from "./KleosAppShell.module.css";
 
 function normalizeRelativePath(pathname, basePath) {

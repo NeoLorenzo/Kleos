@@ -1,5 +1,5 @@
 /*
- * Fabbro Systems Design System v0.1.4
+ * Fabbro Systems Design System v0.2.0
  * Canonical framework-agnostic implementation tokens.
  *
  * Explicit Figma typography is preserved directly.
@@ -76,6 +76,14 @@
   --fs-control-padding-inline: 24px;
   --fs-control-gap: 16px;
   --fs-family-mark-size: 24px;
+
+  --fs-app-sidebar-width: 15.5rem;
+  --fs-app-sidebar-collapsed-width: 4.5rem;
+  --fs-app-sidebar-mobile-width: min(19rem, calc(100vw - 3rem));
+  --fs-app-sidebar-breakpoint: 900px;
+  --fs-app-nav-item-min-height: 2.55rem;
+  --fs-app-nav-icon-size: 1.15rem;
+  --fs-app-nav-active-indicator-width: 2px;
 
   --fs-motion-fast: 120ms;
   --fs-motion-normal: 180ms;

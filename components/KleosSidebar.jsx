@@ -25,7 +25,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   useSidebar
-} from "@/components/ui/sidebar";
+} from "@/fabbro-design/components/application-sidebar/react/sidebar";
 import styles from "./KleosSidebar.module.css";
 
 const PAGE_ICONS = {

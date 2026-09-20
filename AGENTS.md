@@ -6,7 +6,7 @@ Kleos is a Fabbro Systems product. It owns evidence-based current-state modeling
 
 ## Fabbro Design System adoption
 
-Kleos currently adopts **Fabbro Design System 0.1.4**.
+Kleos currently adopts **Fabbro Design System 0.2.0**.
 
 The local upstream snapshot lives in `fabbro-design/`.
 
@@ -39,7 +39,7 @@ Kleos must consume the Fabbro source for:
 - Kleos product mark and lockup
 - Fabbro Systems mark and its canonical mark-only application-nav treatment
 - shared motion primitives
-- canonical authenticated desktop shell placement: left-side primary navigation with a separate top/right utility region
+- canonical Fabbro Application Sidebar 1.0.0, including its desktop geometry, collapse behavior, active-state grammar, and mobile drawer
 
 Kleos may define locally:
 
@@ -53,7 +53,7 @@ Do not force the Fabbro public marketing shell onto the authenticated Kleos appl
 
 In authenticated navigation, the family endorsement must use the standalone Fabbro Systems mark only. Do not render visible `Fabbro Systems` text or a Fabbro wordmark lockup in that slot.
 
-On desktop, global primary navigation must live in the left application rail. Top bars may contain page context and utilities but must not become a competing horizontal primary navigation.
+On desktop, global primary navigation must use the vendored canonical Fabbro Application Sidebar 1.0.0 under `fabbro-design/components/application-sidebar/`. Do not fork the primitive locally. Top bars may contain page context and utilities but must not become a competing horizontal primary navigation.
 
 ## Change workflow
 

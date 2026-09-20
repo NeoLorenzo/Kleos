@@ -13,7 +13,7 @@ import styles from "./sidebar.module.css";
 
 const SidebarContext = createContext(null);
 const MOBILE_BREAKPOINT = 900;
-const STORAGE_KEY = "kleos:sidebar-expanded";
+const STORAGE_KEY = "fabbro:application-sidebar-expanded";
 
 export function SidebarProvider({ defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);

@@ -869,7 +869,8 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
           accessState,
           user,
           statusMessage,
-          onSignIn: signInWithGoogle
+          onSignIn: signInWithGoogle,
+          basePath
         }) || (
           <div className="kleos-scroll">
             {renderPageContent()}
@@ -890,7 +891,7 @@ function SectionHeader({ title, note }) {
   );
 }
 
-function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
+function renderAccessGate({ accessState, user, statusMessage, onSignIn, basePath }) {
   if (accessState === "authorized") return null;
 
   const titleByState = {
@@ -909,7 +910,9 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
 
   return (
     <section className="access-panel">
-      <div className="access-mark">K</div>
+      <div className="access-mark">
+        <img src={`${basePath}/brand/kleos-mark.svg`} alt="" aria-hidden="true" />
+      </div>
       <h2>{titleByState[accessState] || "Private Kleos Workspace"}</h2>
       <p>{statusMessage || bodyByState[accessState]}</p>
       {accessState === "signed-out" ? (

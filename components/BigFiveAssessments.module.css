@@ -140,7 +140,7 @@
 .assessment {
   border: 1px solid var(--border-soft);
   border-radius: 0.75rem;
-  background: rgba(7, 9, 15, 0.3);
+  background: color-mix(in srgb, var(--fs-color-bg) 30%, transparent);
 }
 
 .assessment + .assessment {

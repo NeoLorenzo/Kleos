@@ -6,6 +6,14 @@ Personal evidence is fragmented across health data, training, academic and cogni
 
 Kleos is currently a private, owner-focused application. The repository is public because the architecture, methodology, and implementation are intended to be inspectable.
 
+## Design system
+
+Kleos adopts **Fabbro Design System 0.1.2** as its shared visual foundation.
+
+The versioned upstream snapshot lives in [`fabbro-design/`](fabbro-design/README.md). Shared family-level decisions such as the Kleos Radiance mark, `#CB30E0` accent, Inter typography, neutral palette, and common design primitives originate in the Fabbro Systems repository and are synced here explicitly. Kleos retains ownership of its domain-specific application workflows, evidence interfaces, tables, vector visualizations, and semantic data colors.
+
+The authenticated application consumes the shared brand foundations without adopting the Fabbro public marketing shell.
+
 ## What Kleos does
 
 Kleos separates **evidence** from **interpretation**.

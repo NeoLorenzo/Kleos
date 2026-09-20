@@ -82,7 +82,7 @@
   height: 0.45rem;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.15);
+  background: color-mix(in srgb, var(--fs-color-text-muted) 15%, transparent);
 }
 
 .progressTrack span {
@@ -111,8 +111,8 @@
   border: 1px solid var(--border-soft);
   border-radius: 0.6rem;
   padding: 0.55rem 0.65rem;
-  color: #cbd5e1;
-  background: #0b0f17;
+  color: var(--fs-color-text-secondary);
+  background: var(--panel);
   font-size: 0.72rem;
   font-weight: 750;
 }
@@ -125,14 +125,14 @@
   place-items: center;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.14);
+  background: color-mix(in srgb, var(--fs-color-text-muted) 14%, transparent);
   font-size: 0.65rem;
 }
 
 .activeStep {
-  border-color: rgba(167, 139, 250, 0.65);
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
   background: var(--accent-soft);
-  color: #ede9fe;
+  color: var(--fs-color-text);
 }
 
 .stepPanel {
@@ -160,7 +160,7 @@
 
 .instrumentHeader a {
   flex: 0 0 auto;
-  color: #c4b5fd;
+  color: var(--accent);
   font-size: 0.75rem;
   font-weight: 750;
 }
@@ -185,7 +185,7 @@
   align-items: flex-start;
   gap: 0.65rem;
   padding: 0 0.2rem;
-  color: #e2e8f0;
+  color: var(--fs-color-text-secondary);
   font-size: 0.82rem;
   font-weight: 750;
   line-height: 1.45;
@@ -207,8 +207,8 @@
   place-items: center;
   flex: 0 0 auto;
   border-radius: 0.45rem;
-  background: rgba(124, 58, 237, 0.2);
-  color: #ddd6fe;
+  background: var(--accent-soft);
+  color: var(--fs-color-text-secondary);
   font-size: 0.68rem;
 }
 
@@ -224,11 +224,11 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  border: 1px solid #334155;
+  border: 1px solid var(--fs-color-border);
   border-radius: 999px;
   padding: 0.42rem 0.58rem;
-  background: #0b0f17;
-  color: #cbd5e1;
+  background: var(--panel);
+  color: var(--fs-color-text-secondary);
   font-size: 0.69rem;
   font-weight: 650;
   cursor: pointer;
@@ -237,7 +237,7 @@
 .option:has(input:checked) {
   border-color: var(--accent);
   background: var(--accent-soft);
-  color: #ede9fe;
+  color: var(--fs-color-text);
 }
 
 .option input {
@@ -245,7 +245,7 @@
   min-height: auto;
   height: 0.9rem;
   margin: 0;
-  accent-color: var(--accent-strong);
+  accent-color: var(--accent);
 }
 
 .licenseNotice,
@@ -294,8 +294,8 @@
   border: 1px solid var(--border-soft);
   border-radius: 0.7rem;
   padding: 0.7rem 0.85rem;
-  background: rgba(124, 58, 237, 0.11);
-  color: #ddd6fe;
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
+  color: var(--fs-color-text-secondary);
   font-size: 0.78rem;
 }
 
@@ -372,7 +372,7 @@
   border: 1px solid var(--border-soft);
   border-radius: 999px;
   padding: 0.25rem 0.42rem;
-  color: #cbd5e1;
+  color: var(--fs-color-text-secondary);
   font-size: 0.65rem;
 }
 
@@ -418,7 +418,7 @@
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--fs-color-text-muted) 10%, transparent);
   padding: 0.35rem 0;
   font-size: 0.7rem;
 }

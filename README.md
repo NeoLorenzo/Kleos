@@ -204,11 +204,10 @@ The publishable key is safe for client-side use; authorization is enforced by Su
 
 Kleos uses the same Supabase Auth project and Google provider as Ariadne.
 
-For the deployed GitHub Pages application, these URLs must be included in **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**:
+For the production application, the canonical Kleos domain must be included in **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**:
 
 ```text
-https://neolorenzo.github.io/Kleos/
-https://neolorenzo.github.io/Kleos/vector-state/
+https://kleos.fabbrosystems.com/**
 ```
 
 For local development, add the appropriate localhost URL as well, for example:
@@ -223,8 +222,8 @@ http://localhost:3000/**
 
 The workflow uses the shared Supabase project's public URL and publishable client key. No service-role or secret database credentials belong in this repository.
 
-Expected production URL:
+Canonical production URL:
 
 ```text
-https://neolorenzo.github.io/Kleos/
+https://kleos.fabbrosystems.com/
 ```

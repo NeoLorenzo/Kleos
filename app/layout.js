@@ -1,6 +1,6 @@
 import "./globals.css";
+import KleosAppShell from "@/components/KleosAppShell";
 import MeasurementCorrections from "@/components/MeasurementCorrections";
-import KleosNav from "@/components/KleosNav";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -17,8 +17,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body data-fabbro-product="kleos">
-        <KleosNav basePath={basePath} />
-        {children}
+        <KleosAppShell basePath={basePath}>{children}</KleosAppShell>
         <MeasurementCorrections />
       </body>
     </html>

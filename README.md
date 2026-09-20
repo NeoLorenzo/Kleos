@@ -8,11 +8,11 @@ Kleos is currently a private, owner-focused application. The repository is publi
 
 ## Design system
 
-Kleos adopts **Fabbro Design System 0.1.3** as its shared visual foundation.
+Kleos adopts **Fabbro Design System 0.1.4** as its shared visual foundation.
 
 The versioned upstream snapshot lives in [`fabbro-design/`](fabbro-design/README.md). Shared family-level decisions such as the Kleos Radiance mark, `#CB30E0` accent, Inter typography, neutral palette, and common design primitives originate in the Fabbro Systems repository and are synced here explicitly. Kleos retains ownership of its domain-specific application workflows, evidence interfaces, tables, vector visualizations, and semantic data colors.
 
-The authenticated application consumes the shared brand foundations without adopting the Fabbro public marketing shell. Its top-right family endorsement follows the canonical mark-only Fabbro Systems treatment.
+The authenticated application consumes the shared brand foundations without adopting the Fabbro public marketing shell. Its desktop application shell uses the canonical left-side primary-navigation pattern, implemented with a source-owned shadcn/ui Sidebar adaptation themed through Fabbro tokens. Its top-right family endorsement follows the canonical mark-only Fabbro Systems treatment.
 
 ## What Kleos does
 

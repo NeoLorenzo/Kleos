@@ -48,7 +48,7 @@ test("Physical route owns its health time-series loader without changing the can
 
 test("navigation is driven by the canonical nine-page route registry", () => {
   const routeSource = fs.readFileSync(path.join(ROOT, "lib", "kleos", "routes.js"), "utf8");
-  const navSource = fs.readFileSync(path.join(ROOT, "components", "KleosNav.jsx"), "utf8");
+  const navSource = fs.readFileSync(path.join(ROOT, "components", "KleosSidebar.jsx"), "utf8");
 
   assert.match(routeSource, /character-sheet/);
   assert.match(routeSource, /VECTOR_DEFINITIONS\.map/);

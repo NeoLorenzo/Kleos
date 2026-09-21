@@ -1,6 +1,5 @@
 import "./globals.css";
 import KleosAppShell from "@/components/KleosAppShell";
-import MeasurementCorrections from "@/components/MeasurementCorrections";
 
 export const metadata = {
   metadataBase: new URL("https://kleos.fabbrosystems.com"),
@@ -36,7 +35,6 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body data-fabbro-product="kleos">
         <KleosAppShell>{children}</KleosAppShell>
-        <MeasurementCorrections />
       </body>
     </html>
   );

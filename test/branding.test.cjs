@@ -202,3 +202,31 @@ test("Kleos does not maintain a fork of the canonical sidebar primitive", () => 
   const primitive = read("fabbro-design/components/application-sidebar/react/sidebar.jsx");
   assert.match(primitive, /fabbro:application-sidebar-expanded/);
 });
+
+
+test("signed-out Kleos uses the canonical public surface before private workspace mounts", () => {
+  const shell = read("components/KleosAppShell.jsx");
+  const publicSite = read("components/KleosPublicSite.jsx");
+  const publicCss = read("components/KleosPublicSite.module.css");
+  const layout = read("app/layout.js");
+  const page = read("app/page.js");
+
+  assert.match(shell, /authState === "loading"/);
+  assert.match(shell, /if \(!hasSession\)/);
+  assert.match(shell, /<KleosPublicSite/);
+  assert.match(shell, /<MeasurementCorrections \/>/);
+  assert.doesNotMatch(layout, /MeasurementCorrections/);
+
+  assert.match(publicSite, /See your current state clearly\./);
+  assert.match(publicSite, /id="how-it-works"/);
+  assert.match(publicSite, /id="vectors"/);
+  assert.match(publicSite, /id="methodology"/);
+  assert.match(publicSite, /Evidence → state → action\./);
+  assert.match(publicSite, /Synthetic example only/);
+
+  assert.match(publicCss, /max-width:\s*var\(--fs-page-max\)/);
+  assert.match(publicCss, /padding:\s*0 var\(--fs-page-gutter\)/);
+  assert.match(publicCss, /var\(--fs-accent\)/);
+  assert.match(page, /index:\s*true/);
+  assert.match(page, /follow:\s*true/);
+});

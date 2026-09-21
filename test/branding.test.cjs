@@ -254,6 +254,7 @@ test("Kleos public shell conforms to Fabbro Public Shell 1.0.0", () => {
   assert.match(publicCss, /var\(--fs-public-header-lockup-max\)/);
   assert.match(publicCss, /var\(--fs-public-header-lockup-compact\)/);
   assert.match(publicCss, /var\(--fs-public-header-lockup-mobile\)/);
+  assert.match(publicCss, /\.signIn\s*\{[\s\S]*?justify-self:\s*end;/);
   assert.match(publicCss, /font-size:\s*var\(--fs-type-hero-sub-size\)/);
   assert.match(publicCss, /font-weight:\s*var\(--fs-type-kicker-weight\)/);
   assert.match(publicCss, /var\(--fs-focus-outline-width\)/);

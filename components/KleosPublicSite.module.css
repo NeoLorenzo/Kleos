@@ -75,6 +75,10 @@
     filter var(--fs-motion-fast) var(--fs-motion-ease);
 }
 
+.signIn {
+  justify-self: end;
+}
+
 .signIn,
 .secondaryButton {
   border: var(--fs-border-width) solid var(--fs-color-border-strong);

@@ -2,7 +2,7 @@
 
 Kleos consumes a local snapshot of the canonical Fabbro Design System.
 
-**Adopted version:** 0.2.0  
+**Adopted version:** 0.3.0  
 **Upstream:** `NeoLorenzo/Fabbro-Systems/design-system`
 
 ## Rules
@@ -24,3 +24,4 @@ Kleos consumes a local snapshot of the canonical Fabbro Design System.
 - `fabbro-tokens.css` — framework-agnostic CSS variables
 - `assets/` — approved production SVGs used by Kleos
 - `components/application-sidebar/` — canonical Application Sidebar 1.0.0 contract and React source
+- `components/public-shell/` — canonical Public Shell 1.0.0 framework-agnostic contract

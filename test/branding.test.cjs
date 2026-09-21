@@ -25,18 +25,18 @@ function collectTextFiles(relativeDir, extensions) {
   return files;
 }
 
-test("Kleos adopts Fabbro Design System 0.2.0", () => {
-  assert.equal(read("fabbro-design/VERSION").trim(), "0.2.0");
+test("Kleos adopts Fabbro Design System 0.3.0", () => {
+  assert.equal(read("fabbro-design/VERSION").trim(), "0.3.0");
 
   const product = JSON.parse(read("fabbro-design/product.json"));
-  assert.equal(product.version, "0.2.0");
+  assert.equal(product.version, "0.3.0");
   assert.equal(product.product, "Kleos");
   assert.equal(product.symbol, "Radiance");
   assert.equal(product.coreIdea, "Recognition");
   assert.equal(product.accent.toUpperCase(), "#CB30E0");
 
   const core = JSON.parse(read("fabbro-design/core.json"));
-  assert.equal(core.version, "0.2.0");
+  assert.equal(core.version, "0.3.0");
   assert.equal(core.color.background.toUpperCase(), "#000000");
   assert.match(core.typography.familyPrimary, /Inter/);
 
@@ -229,4 +229,40 @@ test("signed-out Kleos uses the canonical public surface before private workspac
   assert.match(publicCss, /var\(--fs-accent\)/);
   assert.match(page, /index:\s*true/);
   assert.match(page, /follow:\s*true/);
+});
+
+
+test("Kleos public shell conforms to Fabbro Public Shell 1.0.0", () => {
+  const contract = JSON.parse(
+    read("fabbro-design/components/public-shell/contract.json")
+  );
+  const publicSite = read("components/KleosPublicSite.jsx");
+  const publicCss = read("components/KleosPublicSite.module.css");
+
+  assert.equal(contract.version, "1.0.0");
+  assert.equal(contract.designSystemVersion, "0.3.0");
+  assert.equal(
+    contract.header.desktop.gridTemplateColumns,
+    "minmax(220px, 1fr) auto minmax(120px, 1fr)"
+  );
+  assert.equal(contract.header.navigation.labels, "product-owned");
+  assert.equal(contract.header.navigation.familyLinkInPrimaryNavigation, false);
+  assert.equal(contract.footer.productLockupWidth, "150px");
+  assert.equal(contract.footer.familyMarkSize, "22px");
+
+  assert.match(publicCss, /grid-template-columns:\s*var\(--fs-public-header-grid\)/);
+  assert.match(publicCss, /var\(--fs-public-header-lockup-max\)/);
+  assert.match(publicCss, /var\(--fs-public-header-lockup-compact\)/);
+  assert.match(publicCss, /var\(--fs-public-header-lockup-mobile\)/);
+  assert.match(publicCss, /font-size:\s*var\(--fs-type-hero-sub-size\)/);
+  assert.match(publicCss, /font-weight:\s*var\(--fs-type-kicker-weight\)/);
+  assert.match(publicCss, /var\(--fs-focus-outline-width\)/);
+  assert.match(publicCss, /var\(--fs-focus-outline-offset\)/);
+  assert.match(publicCss, /var\(--fs-public-footer-product-lockup\)/);
+  assert.match(publicCss, /var\(--fs-public-footer-family-mark\)/);
+
+  assert.doesNotMatch(publicSite, /<a href="https:\/\/fabbrosystems\.com\/">Fabbro Systems<\/a>\s*<\/nav>/);
+  assert.match(publicSite, /How It Works/);
+  assert.match(publicSite, /Vectors/);
+  assert.match(publicSite, /Methodology/);
 });

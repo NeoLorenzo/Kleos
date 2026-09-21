@@ -11,7 +11,7 @@
 .header {
   min-height: var(--fs-header-height);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: var(--fs-public-header-grid);
   align-items: center;
   gap: var(--fs-space-7);
   padding: 0 var(--fs-page-gutter);
@@ -26,14 +26,14 @@
 
 .productBrand img {
   display: block;
-  width: 176px;
+  width: min(var(--fs-public-header-lockup-max), 100%);
   height: auto;
 }
 
 .nav {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--fs-space-5);
 }
 
@@ -42,6 +42,7 @@
   color: var(--fs-color-text);
   font-size: var(--fs-type-nav-size);
   font-weight: var(--fs-type-nav-weight);
+  line-height: 1;
   text-decoration: none;
   transition: color var(--fs-motion-fast) var(--fs-motion-ease);
 }
@@ -65,7 +66,7 @@
   border-radius: var(--fs-radius-control);
   font: inherit;
   font-size: var(--fs-type-nav-size);
-  font-weight: 700;
+  font-weight: var(--fs-type-nav-weight);
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -113,9 +114,9 @@
 .sectionKicker {
   margin: 0;
   color: var(--fs-color-text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-size: var(--fs-type-kicker-size);
+  font-weight: var(--fs-type-kicker-weight);
+  letter-spacing: var(--fs-type-kicker-tracking);
   line-height: 1;
   text-transform: uppercase;
 }
@@ -134,7 +135,7 @@
   max-width: 900px;
   margin: var(--fs-space-5) 0 0;
   color: var(--fs-color-text-secondary);
-  font-size: clamp(22px, 2.2vw, var(--fs-type-hero-sub-size));
+  font-size: var(--fs-type-hero-sub-size);
   line-height: var(--fs-type-hero-sub-line-height);
 }
 
@@ -626,7 +627,7 @@
 
 .footerProduct {
   display: block;
-  width: 124px;
+  width: var(--fs-public-footer-product-lockup);
   height: auto;
 }
 
@@ -639,8 +640,8 @@
 }
 
 .fabbroEndorsement img {
-  width: 20px;
-  height: 20px;
+  width: var(--fs-public-footer-family-mark);
+  height: var(--fs-public-footer-family-mark);
 }
 
 .footerNav {
@@ -652,22 +653,13 @@
   font-weight: var(--fs-type-footer-weight);
 }
 
+@media (max-width: 1200px) {
+  .productBrand img {
+    width: var(--fs-public-header-lockup-compact);
+  }
+}
+
 @media (max-width: 1120px) {
-  .header {
-    grid-template-columns: auto 1fr;
-  }
-
-  .nav {
-    order: 3;
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    padding-bottom: var(--fs-space-5);
-  }
-
-  .signIn {
-    justify-self: end;
-  }
-
   .hero {
     grid-template-columns: 1fr;
   }
@@ -694,14 +686,25 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .header {
+    gap: var(--fs-space-4);
+  }
+
+  .nav {
+    gap: var(--fs-space-4);
+  }
+}
+
 @media (max-width: 720px) {
   .header {
+    grid-template-columns: 1fr auto;
     min-height: var(--fs-header-height);
     gap: var(--fs-space-4);
   }
 
   .productBrand img {
-    width: 138px;
+    width: var(--fs-public-header-lockup-mobile);
   }
 
   .nav {
@@ -811,4 +814,18 @@
   .familyFlow > a {
     transition-duration: 0.01ms;
   }
+}
+
+
+/* Fabbro Public Shell 1.0.0 keyboard-focus contract. */
+.productBrand:focus-visible,
+.nav a:focus-visible,
+.signIn:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.fabbroEndorsement:focus-visible,
+.footerNav a:focus-visible,
+.familyFlow > a:focus-visible {
+  outline: var(--fs-focus-outline-width) solid var(--fs-color-text);
+  outline-offset: var(--fs-focus-outline-offset);
 }

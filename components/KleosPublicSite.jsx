@@ -91,7 +91,6 @@ export default function KleosPublicSite({
           <a href="#how-it-works">How It Works</a>
           <a href="#vectors">Vectors</a>
           <a href="#methodology">Methodology</a>
-          <a href="https://fabbrosystems.com/">Fabbro Systems</a>
         </nav>
 
         <button

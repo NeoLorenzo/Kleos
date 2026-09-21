@@ -261,8 +261,11 @@ test("Kleos public shell conforms to Fabbro Public Shell 1.0.0", () => {
   assert.match(publicCss, /var\(--fs-public-footer-product-lockup\)/);
   assert.match(publicCss, /var\(--fs-public-footer-family-mark\)/);
 
-  assert.doesNotMatch(publicSite, /<a href="https:\/\/fabbrosystems\.com\/">Fabbro Systems<\/a>\s*<\/nav>/);
-  assert.match(publicSite, /How It Works/);
-  assert.match(publicSite, /Vectors/);
-  assert.match(publicSite, /Methodology/);
+  const publicNav = publicSite.match(
+    /<nav className=\{styles\.nav\}[\s\S]*?<\/nav>/
+  )?.[0] || "";
+  assert.doesNotMatch(publicNav, /Fabbro Systems/);
+  assert.match(publicNav, /How It Works/);
+  assert.match(publicNav, /Vectors/);
+  assert.match(publicNav, /Methodology/);
 });

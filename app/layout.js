@@ -4,25 +4,11 @@ import KleosAppShell from "@/components/KleosAppShell";
 export const metadata = {
   metadataBase: new URL("https://kleos.fabbrosystems.com"),
   title: "Kleos",
-  description: "Evidence-based current-state modeling and self-knowledge workspace",
-  alternates: {
-    canonical: "/"
-  },
+  description:
+    "Kleos is an evidence-based personal state modelling and self-knowledge system with explicit methodology, coverage and confidence.",
   robots: {
     index: false,
     follow: false
-  },
-  openGraph: {
-    type: "website",
-    siteName: "Kleos",
-    title: "Kleos",
-    description: "Evidence-based current-state modeling and self-knowledge workspace",
-    url: "/"
-  },
-  twitter: {
-    card: "summary",
-    title: "Kleos",
-    description: "Evidence-based current-state modeling and self-knowledge workspace"
   },
   manifest: "/manifest.webmanifest",
   icons: {

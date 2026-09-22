@@ -131,10 +131,12 @@ export default function KleosAppShell({ children }) {
 
   if (authState === "loading") {
     return (
-      <main className={styles.loadingShell} aria-label="Checking Kleos session">
-        <img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" />
-        <span>Checking session</span>
-      </main>
+      <KleosPublicSite
+        onSignIn={signIn}
+        isSigningIn={false}
+        signInAvailable={false}
+        authMessage=""
+      />
     );
   }
 

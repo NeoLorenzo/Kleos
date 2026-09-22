@@ -25,22 +25,13 @@ export const metadata = {
     siteName: "Kleos",
     title: "Kleos | See your current state clearly",
     description,
-    url: "/",
-    images: [
-      {
-        url: "https://fabbrosystems.com/og/kleos.png",
-        width: 1200,
-        height: 627,
-        alt: "Kleos — See your current state clearly"
-      }
-    ]
+    url: "/"
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Kleos | See your current state clearly",
     description:
-      "Evidence-based current-state modelling with explicit assessments, visible coverage and confidence, and longitudinal snapshots.",
-    images: ["https://fabbrosystems.com/og/kleos.png"]
+      "Evidence-based current-state modelling with explicit assessments, visible coverage and confidence, and longitudinal snapshots."
   }
 };
 

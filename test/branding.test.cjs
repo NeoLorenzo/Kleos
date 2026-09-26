@@ -223,6 +223,7 @@ test("shared application shell owns sign-out and mark-only Fabbro endorsement", 
   const shellCss = read("components/KleosAppShell.module.css");
   const physical = read("components/PhysicalWorkspace.jsx");
   const financial = read("components/FinancialWorkspace.jsx");
+  const vectorState = read("app/vector-state/page.js");
   const workspace = read("components/KleosWorkspace.jsx");
   const tokens = read("fabbro-design/fabbro-tokens.css");
 
@@ -236,6 +237,7 @@ test("shared application shell owns sign-out and mark-only Fabbro endorsement", 
 
   assert.doesNotMatch(physical, /onClick=\{signOut\}/);
   assert.doesNotMatch(financial, /onClick=\{signOut\}/);
+  assert.doesNotMatch(vectorState, /onClick=\{signOut\}/);
   assert.doesNotMatch(workspace, /onClick=\{signOut\}/);
 });
 

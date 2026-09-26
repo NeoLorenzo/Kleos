@@ -48,9 +48,9 @@ export default function DimensionState({ userId, vectorId }) {
 
   return (
     <>
-      <section className="kleos-card wide-card" aria-labelledby={`${vectorId}-state-title`}>
+      <section className="fs-app-card kleos-card wide-card" aria-labelledby={`${vectorId}-state-title`}>
         <div className="section-header">
-          <p className="kleos-kicker">Current Dimension State</p>
+          <p className="fs-app-kicker">Current Dimension State</p>
           <h2 id={`${vectorId}-state-title`}>{vector.label}</h2>
           <p>{vector.description}</p>
         </div>

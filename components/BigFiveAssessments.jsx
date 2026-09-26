@@ -117,7 +117,7 @@ export default function BigFiveAssessments({ userId, assessments = [] }) {
         </div>
 
         <div className={styles.actions}>
-          <button type="submit" className="primary-btn" disabled={isSaving}>
+          <button type="submit" className="fs-app-button is-primary" disabled={isSaving}>
             {isSaving ? "Saving…" : "Save Big Five Assessment"}
           </button>
           <p className={styles.formHint}>All 5 domain scores and all 30 facet scores are required.</p>

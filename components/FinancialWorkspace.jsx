@@ -298,11 +298,6 @@ export default function FinancialWorkspace() {
     if (error) setStatusMessage(error.message || "Google sign-in failed.");
   };
 
-  const signOut = async () => {
-    if (!supabase) return;
-    const { error } = await supabase.auth.signOut();
-    if (error) setStatusMessage(error.message || "Sign-out failed.");
-  };
 
   const connectRevolut = async () => {
     if (!supabase || !user?.id || isConnecting) return;
@@ -345,34 +340,29 @@ export default function FinancialWorkspace() {
       <section className="kleos-board">
         <header className="kleos-header">
           <div>
-            <p className="kleos-kicker">Kleos Dimension</p>
+            <p className="fs-app-kicker">Kleos Dimension</p>
             <h1>Financial</h1>
             <p className="kleos-subtitle">Current financial state, cash-flow intelligence, Open Banking evidence, and assessment history.</p>
           </div>
-          {accessState === "authorized" ? (
-            <div className="kleos-header-actions">
-              <button type="button" className="secondary-btn" onClick={signOut}>Sign Out</button>
-            </div>
-          ) : null}
         </header>
 
         {renderAccessGate({ accessState, user, statusMessage, onSignIn: signIn }) || (
           <div className="kleos-scroll">
             <DimensionState userId={user.id} vectorId="financial" />
 
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <div className={styles.sectionHeaderRow}>
                 <div className="section-header">
-                  <p className="kleos-kicker">Bank Connectivity</p>
+                  <p className="fs-app-kicker">Bank Connectivity</p>
                   <h2>Revolut via Enable Banking</h2>
                   <p>Read-only Open Banking synchronization. Kleos never stores your Revolut password or a full account identifier.</p>
                 </div>
                 <div className={styles.actions}>
-                  <button type="button" className="primary-btn" onClick={connectRevolut} disabled={isConnecting || isSyncing}>
+                  <button type="button" className="fs-app-button is-primary" onClick={connectRevolut} disabled={isConnecting || isSyncing}>
                     {isConnecting ? "Opening…" : currentConnection ? "Reconnect Revolut" : "Connect Revolut"}
                   </button>
                   {currentConnection?.provider_session_id ? (
-                    <button type="button" className="secondary-btn" onClick={() => void syncConnection(currentConnection.id)} disabled={isSyncing}>
+                    <button type="button" className="fs-app-button is-secondary" onClick={() => void syncConnection(currentConnection.id)} disabled={isSyncing}>
                       {isSyncing ? "Syncing…" : "Sync Revolut"}
                     </button>
                   ) : null}
@@ -393,9 +383,9 @@ export default function FinancialWorkspace() {
               ) : null}
             </section>
 
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <div className="section-header">
-                <p className="kleos-kicker">Current Evidence</p>
+                <p className="fs-app-kicker">Current Evidence</p>
                 <h2>Accounts & Balances</h2>
                 <p>Balances remain separated by currency; Kleos does not perform implicit FX conversion.</p>
               </div>
@@ -423,10 +413,10 @@ export default function FinancialWorkspace() {
             </section>
 
             {currentAccounts.length ? (
-              <section className="kleos-card wide-card">
+              <section className="fs-app-card kleos-card wide-card">
                 <div className={styles.sectionHeaderRow}>
                   <div className="section-header">
-                    <p className="kleos-kicker">Transaction Intelligence</p>
+                    <p className="fs-app-kicker">Transaction Intelligence</p>
                     <h2>Cash Flow</h2>
                     <p>Economic cash flow excludes transfers, internal FX conversions, ATM cash movements, and zero-value authorization records.</p>
                   </div>
@@ -470,9 +460,9 @@ export default function FinancialWorkspace() {
             ) : null}
 
             {currentAccounts.length ? (
-              <section className="kleos-card wide-card">
+              <section className="fs-app-card kleos-card wide-card">
                 <div className="section-header">
-                  <p className="kleos-kicker">Spending Intelligence</p>
+                  <p className="fs-app-kicker">Spending Intelligence</p>
                   <h2>{formatMonthLabel(currentMonth)} · {selectedCurrency}</h2>
                   <p>Gross booked spending by deterministic transaction category. Refunds are tracked separately rather than counted as income.</p>
                 </div>
@@ -523,11 +513,11 @@ export default function FinancialWorkspace() {
             ) : null}
 
             {currentAccounts.length ? (
-              <section className="kleos-card wide-card">
+              <section className="fs-app-card kleos-card wide-card">
                 <div className={styles.analyticsColumns}>
                   <div>
                     <div className="section-header">
-                      <p className="kleos-kicker">Recurring Commitments</p>
+                      <p className="fs-app-kicker">Recurring Commitments</p>
                       <h2>Likely Recurring</h2>
                       <p>Detected from repeated merchant, amount, and cadence evidence. This is derived classification, not a bank-provided fact.</p>
                     </div>
@@ -548,7 +538,7 @@ export default function FinancialWorkspace() {
                   </div>
                   <div>
                     <div className="section-header">
-                      <p className="kleos-kicker">365-Day Spend</p>
+                      <p className="fs-app-kicker">365-Day Spend</p>
                       <h2>Top Merchants</h2>
                       <p>Largest classified merchant spending over the last 365 days in the selected currency.</p>
                     </div>
@@ -571,9 +561,9 @@ export default function FinancialWorkspace() {
               </section>
             ) : null}
 
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <div className="section-header">
-                <p className="kleos-kicker">Cash Flow Evidence</p>
+                <p className="fs-app-kicker">Cash Flow Evidence</p>
                 <h2>Recent Transactions</h2>
                 <p>Raw bank rows remain canonical evidence; flow/category are derived, while remittance notes and transaction codes remain bank-provided context.</p>
               </div>
@@ -654,12 +644,12 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
     unauthorized: `${user?.email || "This account"} is not authorized for Kleos.`
   }[accessState];
   return (
-    <section className="access-panel">
-      <div className="access-mark">K</div>
+    <section className="fs-app-card access-panel">
+      <div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div>
       <h2>{title}</h2>
       <p>{statusMessage || body}</p>
       {accessState === "signed-out" ? (
-        <button type="button" className="primary-btn" onClick={onSignIn}>Sign In With Google</button>
+        <button type="button" className="fs-app-button is-primary" onClick={onSignIn}>Sign In With Google</button>
       ) : null}
     </section>
   );

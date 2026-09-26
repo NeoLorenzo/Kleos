@@ -169,7 +169,7 @@ export default function KleosAppShell({ children }) {
               alt="Fabbro Systems"
             />
             <button
-              className={styles.signOut}
+              className={`fs-app-button is-secondary ${styles.signOut}`}
               type="button"
               onClick={signOut}
               disabled={isSigningOut}

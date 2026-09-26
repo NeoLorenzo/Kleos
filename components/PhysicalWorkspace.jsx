@@ -383,16 +383,16 @@ export default function PhysicalWorkspace() {
   };
 
   if (accessState === "loading") {
-    return <div className="access-panel"><div className="access-mark">K</div><h2>Loading Kleos</h2><p>Checking private access.</p></div>;
+    return <div className="fs-app-card access-panel"><div className="access-mark">K</div><h2>Loading Kleos</h2><p>Checking private access.</p></div>;
   }
 
   if (accessState !== "authorized") {
     return (
-      <div className="access-panel">
+      <div className="fs-app-card access-panel">
         <div className="access-mark">K</div>
         <h2>{accessState === "unconfigured" ? "Kleos is not configured" : accessState === "unauthorized" ? "Access restricted" : "Sign in to Kleos"}</h2>
         <p>{accessState === "unauthorized" ? "This private workspace is locked to the authorized account." : "Use the authorized Google account to open the private Physical workspace."}</p>
-        {accessState === "signed-out" ? <button className="primary-btn" type="button" onClick={signIn}>Continue with Google</button> : null}
+        {accessState === "signed-out" ? <button className="fs-app-button is-primary" type="button" onClick={signIn}>Continue with Google</button> : null}
       </div>
     );
   }
@@ -425,24 +425,24 @@ export default function PhysicalWorkspace() {
       <div className="kleos-board">
         <header className="kleos-header">
           <div>
-            <p className="kleos-kicker">Kleos · Physical</p>
+            <p className="fs-app-kicker">Kleos · Physical</p>
             <h1>Physical</h1>
             <p className="kleos-subtitle">Live physiology, body, activity, nutrition and strength evidence.</p>
           </div>
           <div className="kleos-header-actions">
-            <button className="secondary-btn" type="button" onClick={() => void loadPhysicalData(user.id)}>Refresh</button>
+            <button className="fs-app-button is-secondary" type="button" onClick={() => void loadPhysicalData(user.id)}>Refresh</button>
           </div>
         </header>
         <main className="kleos-scroll">
           <DimensionState userId={user.id} vectorId="physical" kleosData={kleosData} />
 
-          <section className="kleos-card wide-card">
+          <section className="fs-app-card kleos-card wide-card">
             <SectionHeader title="Current State" note="Headline physical measurements. Height is deterministic; live measurements come from Apple Health and connected sources." />
             <div className={styles.statGrid}>{summaryStats.map((stat) => <StatCard key={stat.label} {...stat} />)}</div>
           </section>
 
           <div className="kleos-grid">
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <SectionHeader title="Sleep & Recovery" note="Raw measurements and personal trends only; Kleos does not manufacture a generic recovery score." />
               <div className={styles.statGrid}>
                 <StatCard label="Respiratory rate" value={latestRespiratory ? `${formatNumber(latestRespiratory.qty)} /min` : "—"} note={latestRespiratory ? formatDate(latestRespiratory.metric_date) : "No recent value"} />
@@ -463,7 +463,7 @@ export default function PhysicalWorkspace() {
               </div>
             </section>
 
-            <section className="kleos-card">
+            <section className="fs-app-card kleos-card">
               <SectionHeader title="Body" note="Body weight is a general Physical metric, independent of the Heracles strength UI." />
               <div className={styles.statGridSingle}>
                 <StatCard label="Height" value={`${STATIC_HEIGHT_CM} cm`} note="Static" />
@@ -472,7 +472,7 @@ export default function PhysicalWorkspace() {
               <LineChart rows={rowsFor(healthMetrics, "weight_body_mass")} label="Weight · 90 days" unit="kg" />
             </section>
 
-            <section className="kleos-card">
+            <section className="fs-app-card kleos-card">
               <SectionHeader title="Activity" note="Daily movement and general activity from Apple Health." />
               <div className={styles.statGridSingle}>
                 <StatCard label="Steps" value={latestSteps ? formatNumber(latestSteps.qty, 0) : "—"} note={`7-day avg ${formatNumber(averageRecent(healthMetrics, "step_count", 7), 0)}`} />
@@ -484,7 +484,7 @@ export default function PhysicalWorkspace() {
               <BarChart rows={rowsFor(healthMetrics, "step_count")} label="Steps · recent days" unit="steps" />
             </section>
 
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <SectionHeader title="Nutrition" note="High-value MacroFactor/Apple Health nutrition signals. Micronutrients stay out of the main dashboard." />
               <div className={styles.statGrid}>
                 {nutrition.map(([label, name, unit]) => {
@@ -495,15 +495,15 @@ export default function PhysicalWorkspace() {
               </div>
             </section>
 
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <div className={styles.sectionActions}>
                 <SectionHeader title="Strength Performance" note="Heracles remains the authority for resistance-training performance. Body weight is no longer presented as Heracles-owned." />
-                <button className="secondary-btn" type="button" onClick={syncStrength} disabled={isSyncingStrength}>{isSyncingStrength ? "Syncing…" : "Sync Heracles"}</button>
+                <button className="fs-app-button is-secondary" type="button" onClick={syncStrength} disabled={isSyncingStrength}>{isSyncingStrength ? "Syncing…" : "Sync Heracles"}</button>
               </div>
               <StrengthTable metrics={kleosData.strengthMetrics || []} />
             </section>
 
-            <details className="kleos-card wide-card">
+            <details className="fs-app-card kleos-card wide-card">
               <summary>Mobility details</summary>
               <p className="kleos-subtitle">Secondary gait and stair metrics kept available without occupying headline dashboard space.</p>
               <div className={styles.statGrid}>
@@ -514,7 +514,7 @@ export default function PhysicalWorkspace() {
               </div>
             </details>
 
-            <details className="kleos-card wide-card">
+            <details className="fs-app-card kleos-card wide-card">
               <summary>Clinical & Manual Records</summary>
               <p className="kleos-subtitle">Manual context remains available as evidence but is secondary to structured live measurements.</p>
               <div className="stacked-form">
@@ -527,7 +527,7 @@ export default function PhysicalWorkspace() {
                   <textarea className="large-textarea" value={healthForm.miscText} onChange={(event) => setHealthForm((current) => ({ ...current, miscText: event.target.value }))} placeholder="Plain-text health details that are not represented by structured metrics." />
                 </label>
               </div>
-              <button className="primary-btn" type="button" onClick={saveHealth} disabled={isSaving}>{isSaving ? "Saving…" : "Save Health Records"}</button>
+              <button className="fs-app-button is-primary" type="button" onClick={saveHealth} disabled={isSaving}>{isSaving ? "Saving…" : "Save Health Records"}</button>
             </details>
           </div>
         </main>

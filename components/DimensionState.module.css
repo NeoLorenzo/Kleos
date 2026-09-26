@@ -8,9 +8,9 @@
 .copy {
   min-width: 0;
   padding: 0.9rem;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--fs-app-border);
   border-radius: 0.75rem;
-  background: var(--panel-2);
+  background: var(--fs-app-surface-raised);
 }
 
 .scoreCard {
@@ -21,7 +21,7 @@
 
 .scoreCard span,
 .scoreCard em {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.74rem;
   font-style: normal;
 }
@@ -38,7 +38,7 @@
 
 .copy p,
 .muted {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.8rem;
   line-height: 1.5;
 }

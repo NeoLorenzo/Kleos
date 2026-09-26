@@ -216,7 +216,7 @@ export default function PsychologicalAssessment({ userId }) {
           </p>
         </div>
         {!isActive ? (
-          <button type="button" className="primary-btn" onClick={beginNewAssessment}>
+          <button type="button" className="fs-app-button is-primary" onClick={beginNewAssessment}>
             Take assessment
           </button>
         ) : null}
@@ -262,13 +262,13 @@ export default function PsychologicalAssessment({ userId }) {
           )}
 
           <div className={styles.flowActions}>
-            <button type="button" className="secondary-btn" onClick={cancelAssessment} disabled={isSaving}>
+            <button type="button" className="fs-app-button is-secondary" onClick={cancelAssessment} disabled={isSaving}>
               Cancel
             </button>
             {stepIndex > 0 ? (
               <button
                 type="button"
-                className="secondary-btn"
+                className="fs-app-button is-secondary"
                 onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
                 disabled={isSaving}
               >
@@ -278,7 +278,7 @@ export default function PsychologicalAssessment({ userId }) {
             {stepIndex < STEPS.length - 1 ? (
               <button
                 type="button"
-                className="primary-btn"
+                className="fs-app-button is-primary"
                 disabled={!currentStepComplete || isSaving}
                 onClick={() => setStepIndex((index) => Math.min(STEPS.length - 1, index + 1))}
               >
@@ -287,7 +287,7 @@ export default function PsychologicalAssessment({ userId }) {
             ) : (
               <button
                 type="button"
-                className="primary-btn"
+                className="fs-app-button is-primary"
                 disabled={!currentStepComplete || answered !== TOTAL_QUESTIONS || isSaving}
                 onClick={() => void saveAssessment()}
               >
@@ -483,7 +483,7 @@ function AssessmentHistoryCard({ assessment, latest, onEdit, onDelete, disabled 
         </div>
 
         <div className={styles.historyActions}>
-          <button type="button" className="secondary-btn" onClick={onEdit} disabled={disabled}>
+          <button type="button" className="fs-app-button is-secondary" onClick={onEdit} disabled={disabled}>
             Correct responses
           </button>
           <button type="button" className={styles.deleteButton} onClick={onDelete} disabled={disabled}>

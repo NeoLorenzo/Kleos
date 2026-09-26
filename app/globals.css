@@ -1,4 +1,5 @@
 @import "../fabbro-design/fabbro-tokens.css";
+@import "../fabbro-design/components/application-ui/application-ui.css";
 
 *,
 *::before,
@@ -12,28 +13,18 @@
 
 html {
   min-height: 100%;
-  background: var(--fs-color-bg);
+  background: var(--fs-app-bg);
 }
 
 body {
-  --bg: var(--fs-color-bg);
-  --panel: color-mix(in srgb, var(--fs-color-text) 4%, var(--fs-color-bg));
-  --panel-2: color-mix(in srgb, var(--fs-color-text) 7%, var(--fs-color-bg));
-  --border: var(--fs-color-border-strong);
-  --border-soft: var(--fs-color-border);
-  --text: var(--fs-color-text);
-  --muted: var(--fs-color-text-muted);
-  --accent: var(--fs-accent);
-  --accent-strong: var(--fs-accent);
-  --accent-soft: color-mix(in srgb, var(--fs-accent) 18%, transparent);
-  --success: #86efac;
-  --danger: #fca5a5;
-
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--fs-app-bg);
+  color: var(--fs-app-text);
   font-family: var(--fs-font-primary);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
@@ -41,6 +32,7 @@ input,
 select,
 textarea {
   font: inherit;
+  color: inherit;
 }
 
 button {
@@ -48,123 +40,128 @@ button {
 }
 
 button:disabled {
-  cursor: wait;
-  opacity: 0.58;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+:focus-visible {
+  outline: var(--fs-focus-outline-width) solid var(--fs-app-accent);
+  outline-offset: var(--fs-focus-outline-offset);
+}
+
+::selection {
+  background: var(--fs-app-accent-soft);
+  color: var(--fs-app-text);
 }
 
 .kleos-shell {
-  min-height: calc(100dvh - 3.55rem);
-  padding: 1.5rem;
-  background:
-    radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 30rem),
-    var(--bg);
+  min-height: calc(100dvh - var(--fs-app-utility-height));
+  padding:
+    var(--fs-app-workspace-padding-block-start)
+    var(--fs-app-workspace-padding-inline)
+    var(--fs-app-workspace-padding-block-end);
+  background: var(--fs-app-bg);
 }
 
 .kleos-board {
-  width: min(100%, 1500px);
+  width: min(100%, var(--fs-app-content-max));
   margin: 0 auto;
-  border: 1px solid var(--border-soft);
-  border-radius: 1rem;
-  background: var(--panel);
-  box-shadow: 0 2rem 6rem rgba(0, 0, 0, 0.26);
-  overflow: hidden;
 }
 
 .kleos-header {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.35rem 1.5rem;
-  border-bottom: 1px solid var(--border-soft);
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
-}
-
-.kleos-kicker {
-  margin: 0 0 0.35rem;
-  color: var(--accent);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  gap: var(--fs-space-4);
+  padding: 0 0 var(--fs-space-5);
+  border-bottom: var(--fs-border-width) solid var(--fs-app-border);
 }
 
 .kleos-header h1 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 0.95;
+  color: var(--fs-app-text);
+  font-size: var(--fs-app-type-page-title-size);
+  font-weight: var(--fs-app-type-page-title-weight);
+  line-height: var(--fs-app-type-page-title-line-height);
+  letter-spacing: var(--fs-app-type-page-title-tracking);
 }
 
 .kleos-subtitle {
-  margin: 0.6rem 0 0;
-  color: var(--muted);
-  font-size: 0.92rem;
+  margin: 0.45rem 0 0;
+  max-width: 60ch;
+  color: var(--fs-app-text-muted);
+  font-size: var(--fs-app-type-supporting-size);
+  line-height: var(--fs-app-type-supporting-line-height);
 }
 
 .kleos-header-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.65rem;
+  gap: var(--fs-space-2);
 }
 
 .kleos-scroll {
   display: grid;
-  gap: 1rem;
-  padding: 1rem;
+  gap: var(--fs-space-4);
+  padding-top: var(--fs-space-5);
 }
 
-.kleos-card,
-.access-panel {
-  border: 1px solid var(--border-soft);
-  border-radius: 0.9rem;
-  background: var(--panel);
+.kleos-card {
+  min-width: 0;
+  padding: var(--fs-space-4);
 }
 
 .compact-form,
 .inline-form,
 .stacked-form {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--fs-space-3);
 }
 
 .compact-form {
   grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-  margin-bottom: 0.85rem;
+  margin-bottom: var(--fs-space-3);
 }
 
 .inline-form {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  margin-bottom: 0.9rem;
+  margin-bottom: var(--fs-space-4);
 }
 
 .stacked-form {
-  margin-bottom: 0.8rem;
+  margin-bottom: var(--fs-space-3);
 }
 
 label {
   display: grid;
   gap: 0.32rem;
-  color: var(--fs-color-text-secondary);
-  font-size: 0.74rem;
-  font-weight: 700;
+  color: var(--fs-app-text-secondary);
+  font-size: var(--fs-app-type-metadata-size);
+  font-weight: var(--fs-app-type-metadata-weight);
 }
 
 input,
 select,
 textarea {
   width: 100%;
-  border: var(--fs-border-width) solid var(--fs-color-border-strong);
+  min-height: var(--fs-app-field-min-height);
+  border: var(--fs-border-width) solid var(--fs-app-border-raised);
   border-radius: var(--fs-radius-control);
-  background: var(--panel);
-  color: var(--text);
   outline: none;
-  transition: border-color var(--fs-motion-normal) var(--fs-motion-ease), box-shadow var(--fs-motion-normal) var(--fs-motion-ease);
+  background: var(--fs-app-surface-raised);
+  color: var(--fs-app-text);
+  font-size: var(--fs-app-type-body-size);
+  line-height: var(--fs-app-type-body-line-height);
+  color-scheme: dark;
+  transition:
+    border-color var(--fs-motion-fast) var(--fs-motion-ease),
+    box-shadow var(--fs-motion-fast) var(--fs-motion-ease),
+    background var(--fs-motion-fast) var(--fs-motion-ease);
 }
 
 input,
 select {
-  min-height: 2.45rem;
   padding: 0.5rem 0.62rem;
 }
 
@@ -172,59 +169,35 @@ textarea {
   min-height: 6rem;
   padding: 0.65rem;
   resize: vertical;
-  line-height: 1.45;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--fs-app-text-quiet);
+}
+
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--fs-app-border-strong);
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--fs-app-accent-line);
+  box-shadow: 0 0 0 3px var(--fs-app-accent-soft);
 }
 
 .large-textarea {
   min-height: 9rem;
-  margin-bottom: 0.75rem;
-}
-
-.primary-btn,
-.secondary-btn {
-  min-height: 2.45rem;
-  border-radius: var(--fs-radius-control);
-  padding: 0.5rem 0.78rem;
-  color: #fff;
-  font-weight: 800;
-  border: 1px solid transparent;
-}
-
-.primary-btn {
-  align-self: end;
-  background: var(--accent-strong);
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--fs-color-border-strong));
-}
-
-.primary-btn:hover:not(:disabled) {
-  filter: brightness(0.9);
-}
-
-.secondary-btn {
-  background: var(--panel-2);
-  border-color: var(--fs-color-border-strong);
-}
-
-.secondary-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--fs-color-text) 10%, var(--bg));
+  margin-bottom: var(--fs-space-3);
 }
 
 .kleos-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.kleos-card {
-  min-width: 0;
-  padding: 1rem;
+  gap: var(--fs-space-4);
 }
 
 .wide-card {
@@ -232,27 +205,31 @@ textarea:focus {
 }
 
 .section-header {
-  margin-bottom: 0.85rem;
+  margin-bottom: var(--fs-space-3);
 }
 
 .section-header h2 {
   margin: 0;
-  font-size: 1rem;
+  color: var(--fs-app-text);
+  font-size: var(--fs-app-type-section-title-size);
+  font-weight: var(--fs-app-type-section-title-weight);
+  line-height: var(--fs-app-type-section-title-line-height);
+  letter-spacing: var(--fs-app-type-section-title-tracking);
 }
 
-.section-header p {
+.section-header p:not(.fs-app-kicker) {
   margin: 0.35rem 0 0;
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.76rem;
   line-height: 1.45;
 }
 
 .table-wrap {
   width: 100%;
-  margin-top: 0.65rem;
+  margin-top: var(--fs-space-3);
   overflow-x: auto;
-  border: 1px solid var(--border-soft);
-  border-radius: 0.65rem;
+  border: var(--fs-border-width) solid var(--fs-app-border);
+  border-radius: var(--fs-radius-control);
 }
 
 table {
@@ -265,21 +242,26 @@ table {
 th,
 td {
   padding: 0.58rem 0.64rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  border-bottom: var(--fs-border-width) solid var(--fs-app-border);
   text-align: left;
   vertical-align: top;
 }
 
 th {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+  background: var(--fs-app-surface-raised);
+  color: var(--fs-app-text-muted);
+  font-size: var(--fs-app-type-metadata-size);
+  font-weight: var(--fs-app-type-metadata-weight);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 td {
-  color: var(--fs-color-text-secondary);
+  color: var(--fs-app-text-secondary);
+}
+
+tbody tr:hover td {
+  background: var(--fs-app-hover);
 }
 
 tbody tr:last-child td {
@@ -292,7 +274,7 @@ tbody tr:last-child td {
   padding: 2rem;
   display: grid;
   justify-items: center;
-  gap: 0.85rem;
+  gap: var(--fs-space-3);
   text-align: center;
 }
 
@@ -311,13 +293,14 @@ tbody tr:last-child td {
 
 .access-panel h2 {
   margin: 0;
+  color: var(--fs-app-text);
   font-size: 1.35rem;
 }
 
 .access-panel p {
   max-width: 28rem;
   margin: 0;
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   line-height: 1.55;
 }
 
@@ -328,27 +311,22 @@ tbody tr:last-child td {
   width: fit-content;
   max-width: 100%;
   margin: 0 auto;
-  padding: 0.6rem 0.9rem;
-  border: 1px solid var(--border-soft);
+  padding: 0.55rem 0.8rem;
+  border: var(--fs-border-width) solid var(--fs-app-border-raised);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--panel) 96%, transparent);
-  color: var(--accent);
+  background: var(--fs-app-surface-strong);
+  color: var(--fs-app-text-secondary);
   font-size: 0.75rem;
   box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.25);
 }
 
 @media (max-width: 900px) {
   .kleos-shell {
-    padding: 0;
-  }
-
-  .kleos-board {
-    min-height: calc(100dvh - 3.55rem);
-    border: 0;
-    border-radius: 0;
+    min-height: calc(100dvh - var(--fs-app-utility-height));
   }
 
   .kleos-header {
+    align-items: flex-start;
     flex-direction: column;
   }
 
@@ -366,12 +344,6 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 560px) {
-  .kleos-header,
-  .kleos-scroll,
-  .kleos-card {
-    padding: 0.85rem;
-  }
-
   .kleos-header-actions,
   .kleos-header-actions button {
     width: 100%;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import styles from "./CharacterSheet.module.css";
 import { supabase } from "@/lib/supabase/client";
 import { loadVectorSnapshotHistory } from "@/lib/kleos/vectorSnapshotRepository";
@@ -153,7 +154,7 @@ export default function CharacterSheet({ userId, kleosData }) {
                     {trajectory.length ? formatTrajectorySummary(trajectory) : "No history"}
                   </span>
                   <span className={styles.dimensionAssessment}>{assessmentSummary(result)}</span>
-                  <span className={styles.dimensionArrow} aria-hidden="true">→</span>
+                  <ArrowRight className={styles.dimensionArrow} aria-hidden="true" />
                 </a>
               );
             })}

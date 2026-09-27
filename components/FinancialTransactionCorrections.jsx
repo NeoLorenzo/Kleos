@@ -162,11 +162,11 @@ export default function FinancialTransactionCorrections({ userId }) {
   const exactAmountLabel = editing ? formatMoney(Math.abs(Number(editing.amount)), editing.currency) : "";
 
   return (
-    <section className="kleos-card wide-card">
+    <section className="fs-app-card kleos-card wide-card">
       <div className={styles.headerRow}>
-        <div className="section-header">
+        <div className="fs-app-heading kleos-section-heading">
           <p className="fs-app-kicker">User-confirmed interpretation</p>
-          <h2>Review Transactions</h2>
+          <h2 className="fs-app-card-title">Review Transactions</h2>
           <p>Correct derived meaning without changing the canonical Revolut transaction. Reusable rules can match the same label, currency and direction, with an optional exact-amount constraint.</p>
         </div>
         <select className={`fs-app-control ${styles.filter}`} value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Transaction review filter">
@@ -177,8 +177,8 @@ export default function FinancialTransactionCorrections({ userId }) {
         </select>
       </div>
 
-      {isLoading ? <p className="kleos-subtitle">Loading transaction interpretations…</p> : null}
-      {!isLoading && !visibleRows.length ? <p className="kleos-subtitle">No transactions match this filter.</p> : null}
+      {isLoading ? <p className="fs-app-subtitle">Loading transaction interpretations…</p> : null}
+      {!isLoading && !visibleRows.length ? <p className="fs-app-subtitle">No transactions match this filter.</p> : null}
 
       {visibleRows.length ? (
         <div className={styles.list}>
@@ -202,7 +202,7 @@ export default function FinancialTransactionCorrections({ userId }) {
       ) : null}
 
       {editing && form ? (
-        <form className={styles.editor} onSubmit={saveCorrection}>
+        <form className={`fs-app-card ${styles.editor}`} onSubmit={saveCorrection}>
           <div className={styles.editorHeader}>
             <div>
               <p className="fs-app-kicker">Correction</p>

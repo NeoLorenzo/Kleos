@@ -167,7 +167,7 @@ export default function FinancialTransactionCorrections({ userId }) {
         <div className="fs-app-heading kleos-section-heading">
           <p className="fs-app-kicker">User-confirmed interpretation</p>
           <h2 className="fs-app-card-title">Review Transactions</h2>
-          <p>Correct derived meaning without changing the canonical Revolut transaction. Reusable rules can match the same label, currency and direction, with an optional exact-amount constraint.</p>
+          <p className="fs-app-subtitle">Correct derived meaning without changing the canonical Revolut transaction. Reusable rules can match the same label, currency and direction, with an optional exact-amount constraint.</p>
         </div>
         <select className={`fs-app-control ${styles.filter}`} value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Transaction review filter">
           <option value="all">Recent</option>

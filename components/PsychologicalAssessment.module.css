@@ -5,13 +5,7 @@
   margin: 0 auto;
 }
 
-.header,
-.assessmentFlow,
-.history {
-  border: 1px solid var(--fs-app-border);
-  border-radius: 0.95rem;
-  background: var(--fs-app-surface);
-}
+
 
 .header {
   display: flex;
@@ -33,11 +27,6 @@
 
 .eyebrow {
   margin: 0 0 0.35rem;
-  color: var(--fs-app-text-muted);
-  font-size: 0.7rem;
-  font-weight: 850;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .intro,
@@ -76,21 +65,6 @@
 
 .progressHeader span {
   color: var(--fs-app-text-muted);
-}
-
-.progressTrack {
-  height: 0.45rem;
-  overflow: hidden;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--fs-color-text-muted) 15%, transparent);
-}
-
-.progressTrack span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--fs-app-accent);
-  transition: width 0.2s ease;
 }
 
 .stepNav {

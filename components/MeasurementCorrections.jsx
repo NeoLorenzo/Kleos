@@ -234,7 +234,7 @@ export default function MeasurementCorrections() {
           align-items: center;
           justify-content: center;
           padding: 16px;
-          background: rgba(0, 0, 0, 0.62);
+          background: color-mix(in srgb, var(--fs-app-bg) 62%, transparent);
         }
         .correction-modal {
           width: min(var(--fs-app-modal-max-width), calc(100vw - 32px));
@@ -255,9 +255,6 @@ export default function MeasurementCorrections() {
         }
         .correction-group h3 {
           margin: 0 0 var(--fs-space-3);
-          color: var(--fs-app-text);
-          font-size: var(--fs-app-type-section-title-size);
-          font-weight: var(--fs-app-type-section-title-weight);
         }
         .correction-list {
           display: grid;

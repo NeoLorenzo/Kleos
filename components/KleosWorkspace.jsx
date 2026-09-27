@@ -469,8 +469,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
             <div className="kleos-grid">
               <section className="fs-app-card kleos-card">
                 <SectionHeader title="Immutable Characteristics" />
-                <textarea
-                  className="large-textarea"
+                <textarea className="fs-app-control fs-app-textarea large-textarea"
                   value={immutableDraft}
                   onChange={(event) => setImmutableDraft(event.target.value)}
                   placeholder="Plain-text immutable characteristics for the LLM context prompt."
@@ -486,8 +485,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               </section>
               <section className="fs-app-card kleos-card">
                 <SectionHeader title="Miscellaneous Characteristics" />
-                <textarea
-                  className="large-textarea"
+                <textarea className="fs-app-control fs-app-textarea large-textarea"
                   value={miscDraft}
                   onChange={(event) => setMiscDraft(event.target.value)}
                   placeholder="Plain-text cross-dimensional appendix for the LLM context prompt."
@@ -528,7 +526,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               <div className="inline-form">
                 <label>
                   Body Weight KG (Heracles)
-                  <input
+                  <input className="fs-app-control"
                     type="text"
                     value={
                       kleosData.strengthProfile.bodyWeightMeasuredOn
@@ -547,7 +545,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 </label>
                 <label>
                   Height CM
-                  <input
+                  <input className="fs-app-control"
                     type="number"
                     min="0"
                     step="0.1"
@@ -610,8 +608,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               <div className="stacked-form">
                 <label>
                   Latest Blood Test
-                  <textarea
-                    className="large-textarea"
+                  <textarea className="fs-app-control fs-app-textarea large-textarea"
                     value={healthForm.bloodTestText}
                     onChange={(event) =>
                       setHealthForm((current) => ({
@@ -624,8 +621,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 </label>
                 <label>
                   Miscellaneous Health
-                  <textarea
-                    className="large-textarea"
+                  <textarea className="fs-app-control fs-app-textarea large-textarea"
                     value={healthForm.miscText}
                     onChange={(event) =>
                       setHealthForm((current) => ({
@@ -671,7 +667,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               <form className="compact-form" onSubmit={saveCognitiveTest}>
                 <label>
                   Test
-                  <select
+                  <select className="fs-app-control"
                     value={cognitiveForm.testName}
                     onChange={(event) =>
                       setCognitiveForm((current) => ({
@@ -689,7 +685,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 </label>
                 <label>
                   Score
-                  <input
+                  <input className="fs-app-control"
                     value={cognitiveForm.score}
                     onChange={(event) =>
                       setCognitiveForm((current) => ({ ...current, score: event.target.value }))
@@ -698,7 +694,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 </label>
                 <label>
                   Date/time
-                  <input
+                  <input className="fs-app-control"
                     type="datetime-local"
                     value={cognitiveForm.takenAt}
                     onChange={(event) =>
@@ -712,7 +708,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 {["hunger", "distractions", "wakefulness", "mood"].map((fieldName) => (
                   <label key={fieldName}>
                     {capitalize(fieldName)} /10
-                    <input
+                    <input className="fs-app-control"
                       type="number"
                       min="0"
                       max="10"
@@ -770,8 +766,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 ])}
                 emptyText="Academic module data is not available."
               />
-              <textarea
-                className="large-textarea"
+              <textarea className="fs-app-control fs-app-textarea large-textarea"
                 value={academicNotesDraft}
                 onChange={(event) => setAcademicNotesDraft(event.target.value)}
                 placeholder="Academic-specific notes for the Kleos evidence context."
@@ -795,8 +790,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               title="Professional Record"
               note="CV and career evidence live with the Professional dimension."
             />
-            <textarea
-              className="large-textarea"
+            <textarea className="fs-app-control fs-app-textarea large-textarea"
               value={cvDraft}
               onChange={(event) => setCvDraft(event.target.value)}
               placeholder="Paste plain-text CV for the Kleos evidence context."

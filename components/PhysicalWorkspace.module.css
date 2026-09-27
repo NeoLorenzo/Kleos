@@ -18,7 +18,7 @@
   padding: 0.85rem;
   border: 1px solid var(--fs-app-border);
   border-radius: 0.75rem;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--fs-color-text) 7%, var(--fs-color-bg)), color-mix(in srgb, var(--fs-color-text) 5%, var(--fs-color-bg)));
+  background: var(--fs-app-surface-raised);
 }
 
 .statCard > span {
@@ -52,7 +52,7 @@
   padding: 1rem;
   border: 1px solid var(--fs-app-border);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--fs-color-text) 4%, transparent);
+  background: var(--fs-app-surface-raised);
 }
 
 .sleepBlock h3 {
@@ -80,7 +80,7 @@
   height: 1.1rem;
   overflow: hidden;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--fs-color-text-muted) 12%, transparent);
+  background: color-mix(in srgb, var(--fs-app-text-muted) 12%, transparent);
 }
 
 .stageCore { background: var(--fs-app-accent); }
@@ -92,7 +92,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 0.85rem;
-  color: var(--fs-color-text-secondary);
+  color: var(--fs-app-text-secondary);
   font-size: 0.7rem;
 }
 
@@ -126,7 +126,7 @@
   padding: 0.8rem;
   border: 1px solid var(--fs-app-border);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--fs-color-text) 3%, transparent);
+  background: var(--fs-app-surface-raised);
 }
 
 .chartHeader,
@@ -153,7 +153,7 @@
 
 .gridLine {
   fill: none;
-  stroke: color-mix(in srgb, var(--fs-color-text-muted) 13%, transparent);
+  stroke: color-mix(in srgb, var(--fs-app-text-muted) 13%, transparent);
   stroke-width: 1;
 }
 
@@ -205,7 +205,7 @@
   display: grid;
   place-items: center;
   margin-top: 0.85rem;
-  border: 1px dashed color-mix(in srgb, var(--fs-color-text-muted) 20%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--fs-app-text-muted) 20%, transparent);
   border-radius: 0.7rem;
   color: var(--fs-app-text-muted);
   font-size: 0.72rem;

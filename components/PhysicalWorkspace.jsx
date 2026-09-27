@@ -120,7 +120,7 @@ function SectionHeader({ title, note }) {
   return (
     <div className="fs-app-heading kleos-section-heading">
       <h2 className="fs-app-card-title">{title}</h2>
-      {note ? <p>{note}</p> : null}
+      {note ? <p className="fs-app-subtitle">{note}</p> : null}
     </div>
   );
 }
@@ -383,7 +383,7 @@ export default function PhysicalWorkspace() {
   };
 
   if (accessState === "loading") {
-    return <div className="fs-app-card access-panel"><div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div><h2 className="fs-app-card-title">Loading Kleos</h2><p>Checking private access.</p></div>;
+    return <div className="fs-app-card access-panel"><div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div><h2 className="fs-app-card-title">Loading Kleos</h2><p className="fs-app-subtitle">Checking private access.</p></div>;
   }
 
   if (accessState !== "authorized") {
@@ -391,7 +391,7 @@ export default function PhysicalWorkspace() {
       <div className="fs-app-card access-panel">
         <div className="access-mark">K</div>
         <h2 className="fs-app-card-title">{accessState === "unconfigured" ? "Kleos is not configured" : accessState === "unauthorized" ? "Access restricted" : "Sign in to Kleos"}</h2>
-        <p>{accessState === "unauthorized" ? "This private workspace is locked to the authorized account." : "Use the authorized Google account to open the private Physical workspace."}</p>
+        <p className="fs-app-subtitle">{accessState === "unauthorized" ? "This private workspace is locked to the authorized account." : "Use the authorized Google account to open the private Physical workspace."}</p>
         {accessState === "signed-out" ? <button className="fs-app-button is-primary" type="button" onClick={signIn}>Continue with Google</button> : null}
       </div>
     );

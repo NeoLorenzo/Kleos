@@ -105,16 +105,7 @@
 .stepButton,
 .activeStep {
   min-width: 7rem;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 0.6rem;
-  padding: 0.55rem 0.65rem;
-  color: var(--fs-color-text-secondary);
-  background: var(--fs-app-surface);
-  font-size: 0.72rem;
-  font-weight: 750;
+  justify-content: flex-start;
 }
 
 .stepButton span,
@@ -333,7 +324,7 @@
 .historyCard {
   border: 1px solid var(--fs-app-border);
   border-radius: 0.75rem;
-  background: rgba(11, 15, 23, 0.72);
+  background: var(--fs-app-surface-raised);
   overflow: hidden;
 }
 
@@ -434,17 +425,12 @@
 }
 
 .deleteButton {
-  min-height: 2.45rem;
-  border: 1px solid rgba(252, 165, 165, 0.35);
-  border-radius: 0.58rem;
-  padding: 0.5rem 0.78rem;
-  background: rgba(127, 29, 29, 0.2);
-  color: #fecaca;
-  font-weight: 800;
+  color: var(--fs-app-danger);
 }
 
-.deleteButton:disabled {
-  opacity: 0.58;
+.deleteButton:hover:not(:disabled) {
+  background: var(--fs-app-danger-soft);
+  color: var(--fs-app-danger);
 }
 
 @media (max-width: 900px) {

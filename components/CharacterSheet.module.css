@@ -147,7 +147,7 @@
 .dimensionHeader {
   padding: 0.5rem 0.65rem;
   color: var(--fs-app-text-muted);
-  background: rgba(7, 9, 15, 0.25);
+  background: var(--fs-app-surface-raised);
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.07em;
@@ -224,10 +224,10 @@
 }
 
 .dimensionArrow {
+  width: 16px;
+  height: 16px;
   justify-self: end;
   color: var(--fs-app-text-muted);
-  font-size: 1rem;
-  font-weight: 800;
 }
 
 .factColumns {

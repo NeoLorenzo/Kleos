@@ -128,6 +128,119 @@ test("Kleos consumes Fabbro Application UI 1.0.0 without a parallel local UI sys
   assert.match(workspace, /fs-app-button is-primary/);
 });
 
+test("authenticated Kleos strictly consumes Fabbro Application UI primitives", () => {
+  const authenticatedSources = [
+    "app/vector-state/page.js",
+    "components/KleosWorkspace.jsx",
+    "components/FinancialWorkspace.jsx",
+    "components/PhysicalWorkspace.jsx",
+    "components/PsychologicalAssessment.jsx",
+    "components/BigFiveAssessments.jsx",
+    "components/FinancialPosition.jsx",
+    "components/FinancialTransactionCorrections.jsx",
+    "components/MeasurementCorrections.jsx",
+    "components/CharacterSheet.jsx",
+    "components/CurrentVectorState.jsx",
+    "components/DimensionState.jsx",
+    "components/VectorSnapshotHistory.jsx"
+  ];
+
+  const legacyPrimitivePattern =
+    /\b(?:kleos-shell|kleos-board|kleos-header(?!-actions)|kleos-subtitle|kleos-scroll|section-header|primary-btn|secondary-btn|kleos-kicker)\b/;
+
+  for (const relativePath of authenticatedSources) {
+    const content = read(relativePath);
+    assert.doesNotMatch(content, legacyPrimitivePattern, relativePath);
+
+    const controls = content.match(/<(?:input|select|textarea)\b[^>]*>/gs) || [];
+    for (const control of controls) {
+      if (/type="(?:checkbox|radio)"/.test(control)) continue;
+      assert.match(control, /fs-app-control/, `${relativePath} has a noncanonical field: ${control}`);
+    }
+
+    const buttons = content.match(/<button\b[^>]*>/gs) || [];
+    for (const button of buttons) {
+      assert.match(button, /fs-app-button/, `${relativePath} has a noncanonical button: ${button}`);
+    }
+  }
+
+  for (const relativePath of [
+    "app/vector-state/page.js",
+    "components/KleosWorkspace.jsx",
+    "components/FinancialWorkspace.jsx",
+    "components/PhysicalWorkspace.jsx"
+  ]) {
+    const content = read(relativePath);
+    assert.match(content, /fs-app-workspace/, relativePath);
+    assert.match(content, /fs-app-page/, relativePath);
+    assert.match(content, /fs-app-page-header/, relativePath);
+    assert.match(content, /fs-app-title/, relativePath);
+    assert.match(content, /fs-app-subtitle/, relativePath);
+  }
+
+  const globals = read("app/globals.css");
+  assert.doesNotMatch(
+    globals,
+    /\.(?:kleos-shell|kleos-board|kleos-header(?!-actions)|kleos-subtitle|kleos-scroll|section-header)\b/
+  );
+  const rawFieldReset =
+    globals.match(/input,\s*\nselect,\s*\ntextarea\s*\{([\s\S]*?)\}/)?.[1] || "";
+  assert.doesNotMatch(rawFieldReset, /(?:border|background|min-height|padding|box-shadow)\s*:/);
+
+  const corrections = read("components/MeasurementCorrections.jsx");
+  assert.match(corrections, /from "lucide-react"/);
+  assert.match(corrections, /<X aria-hidden="true" \/>/);
+  assert.match(corrections, /fs-app-modal correction-modal/);
+  assert.match(corrections, /fs-app-modal-header/);
+  assert.match(corrections, /fs-app-modal-body/);
+  assert.match(corrections, /fs-app-modal-footer/);
+  assert.doesNotMatch(corrections, />\s*×\s*</);
+  assert.doesNotMatch(corrections, /#[0-9a-f]{3,8}\b/i);
+  assert.doesNotMatch(corrections, /rgba?\(/i);
+
+  const characterSheet = read("components/CharacterSheet.jsx");
+  assert.match(characterSheet, /import \{ ArrowRight \} from "lucide-react"/);
+  assert.match(characterSheet, /<ArrowRight className=\{styles\.dimensionArrow\}/);
+  assert.doesNotMatch(characterSheet, /className=\{styles\.dimensionArrow\}[^>]*>→</);
+
+  const authenticatedCss = [
+    "app/globals.css",
+    "components/BigFiveAssessments.module.css",
+    "components/CharacterSheet.module.css",
+    "components/DimensionState.module.css",
+    "components/FinancialPosition.module.css",
+    "components/FinancialTransactionCorrections.module.css",
+    "components/FinancialWorkspace.module.css",
+    "components/KleosAppShell.module.css",
+    "components/PhysicalWorkspace.module.css",
+    "components/PsychologicalAssessment.module.css"
+  ];
+
+  const allowedDomainColors = new Set(["#38bdf8", "#4338ca", "#f59e0b"]);
+  for (const relativePath of authenticatedCss) {
+    const content = read(relativePath);
+    assert.doesNotMatch(content, /--fs-color-[a-z0-9-]+/);
+
+    const literals = content.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/gi) || [];
+    if (relativePath === "components/PhysicalWorkspace.module.css") {
+      for (const literal of literals) {
+        assert.equal(
+          allowedDomainColors.has(literal.toLowerCase()),
+          true,
+          `${relativePath} has a non-domain hard-coded color: ${literal}`
+        );
+      }
+    } else {
+      assert.deepEqual(literals, [], `${relativePath} has hard-coded shared colors`);
+    }
+  }
+
+  assert.match(read("components/BigFiveAssessments.jsx"), /fs-app-card.*styles\.panel/);
+  assert.match(read("components/PsychologicalAssessment.jsx"), /fs-app-progress/);
+  assert.match(read("components/FinancialPosition.jsx"), /fs-app-card.*styles\.formPanel/);
+  assert.match(read("components/FinancialTransactionCorrections.jsx"), /fs-app-card.*styles\.editor/);
+});
+
 test("deployed Kleos brand assets match the approved snapshot", () => {
   assert.equal(
     read("public/brand/kleos-mark.svg"),

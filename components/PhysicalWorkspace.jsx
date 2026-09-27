@@ -383,7 +383,7 @@ export default function PhysicalWorkspace() {
   };
 
   if (accessState === "loading") {
-    return <div className="fs-app-card access-panel"><div className="access-mark">K</div><h2 className="fs-app-card-title">Loading Kleos</h2><p>Checking private access.</p></div>;
+    return <div className="fs-app-card access-panel"><div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div><h2 className="fs-app-card-title">Loading Kleos</h2><p>Checking private access.</p></div>;
   }
 
   if (accessState !== "authorized") {

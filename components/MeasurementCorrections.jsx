@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { X } from "lucide-react";
 import { AUTHORIZED_KLEOS_EMAIL } from "@/lib/kleos/data";
 import {
   cognitiveRowToDraft,
@@ -158,7 +159,7 @@ export default function MeasurementCorrections() {
 
   return (
     <>
-      <button className="correction-launcher" type="button" onClick={() => setOpen(true)}>
+      <button className="fs-app-button is-secondary correction-launcher" type="button" onClick={() => setOpen(true)}>
         Correct measurements
       </button>
 
@@ -171,28 +172,25 @@ export default function MeasurementCorrections() {
           }}
         >
           <section
-            className="correction-panel"
+            className="fs-app-modal correction-modal"
             role="dialog"
             aria-modal="true"
             aria-label="Correct recorded measurements"
           >
-            <header className="correction-header">
-              <div>
+            <header className="fs-app-modal-header">
+              <div className="correction-heading">
                 <h2>Correct recorded measurements</h2>
                 <p>Edit or delete canonical cognitive history. Strength evidence is read-only from Heracles.</p>
               </div>
               <button
                 type="button"
-                className="correction-close"
+                className="fs-app-button is-icon"
                 onClick={() => setOpen(false)}
                 aria-label="Close"
               >
-                ×
+                <X aria-hidden="true" />
               </button>
             </header>
-
-            {status ? <p className="correction-status">{status}</p> : null}
-            {loading && !editingId ? <p className="correction-status">Loading…</p> : null}
 
             {editingId && draft ? (
               <EditForm
@@ -201,15 +199,20 @@ export default function MeasurementCorrections() {
                 onSubmit={saveEdit}
                 onCancel={cancelEdit}
                 disabled={loading}
+                status={status}
               />
             ) : (
-              <div className="correction-groups">
-                <RecordGroup
-                  rows={sortedRecords}
-                  onEdit={beginEdit}
-                  onDelete={deleteRecord}
-                  disabled={loading}
-                />
+              <div className="fs-app-modal-body">
+                {status ? <p className="correction-status">{status}</p> : null}
+                {loading ? <p className="correction-status">Loading…</p> : null}
+                <div className="correction-groups">
+                  <RecordGroup
+                    rows={sortedRecords}
+                    onEdit={beginEdit}
+                    onDelete={deleteRecord}
+                    disabled={loading}
+                  />
+                </div>
               </div>
             )}
           </section>
@@ -222,55 +225,106 @@ export default function MeasurementCorrections() {
           right: 18px;
           bottom: 18px;
           z-index: 30;
-          border: 1px solid rgba(255,255,255,.2);
-          border-radius: 999px;
-          padding: 10px 15px;
-          background: #111820;
-          color: #f7f7f5;
-          font: inherit;
-          cursor: pointer;
-          box-shadow: 0 10px 30px rgba(0,0,0,.28);
         }
         .correction-backdrop {
           position: fixed;
           inset: 0;
           z-index: 40;
           display: flex;
-          justify-content: flex-end;
-          background: rgba(0,0,0,.55);
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+          background: rgba(0, 0, 0, 0.62);
         }
-        .correction-panel {
-          width: min(620px, 100%);
-          height: 100%;
-          overflow-y: auto;
-          background: #10161d;
-          color: #f4f4f0;
-          padding: 24px;
-          box-shadow: -12px 0 40px rgba(0,0,0,.35);
+        .correction-modal {
+          width: min(var(--fs-app-modal-max-width), calc(100vw - 32px));
         }
-        .correction-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
-        .correction-header h2 { margin: 0 0 6px; font-size: 22px; }
-        .correction-header p, .correction-status { color: #aeb7c1; margin: 0; }
-        .correction-close { border: 0; background: transparent; color: inherit; font-size: 30px; cursor: pointer; }
-        .correction-status { margin-top: 14px; }
-        .correction-groups { display: grid; gap: 24px; margin-top: 24px; }
-        .correction-group h3 { margin: 0 0 10px; font-size: 16px; }
-        .correction-list { display: grid; gap: 8px; }
-        .correction-row { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 11px 12px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; }
-        .correction-row-text { min-width: 0; font-size: 13px; color: #d9dee3; overflow-wrap: anywhere; }
-        .correction-actions { display: flex; gap: 7px; flex: 0 0 auto; }
-        .correction-actions button, .correction-form button { border: 1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 7px 10px; background: #19222c; color: inherit; cursor: pointer; }
-        .correction-actions button:last-child { color: #ffb3b3; }
-        .correction-actions button:disabled, .correction-form button:disabled { opacity: .5; cursor: default; }
-        .correction-empty { color: #87929d; font-size: 13px; }
-        .correction-form { display: grid; gap: 13px; margin-top: 24px; }
-        .correction-form label { display: grid; gap: 6px; color: #c7ced5; font-size: 13px; }
-        .correction-form input, .correction-form select, .correction-form textarea { width: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 9px 10px; background: #0b1016; color: #f4f4f0; font: inherit; }
-        .correction-form-actions { display: flex; gap: 9px; }
+        .correction-heading {
+          min-width: 0;
+        }
+        .correction-heading p,
+        .correction-status {
+          margin: 4px 0 0;
+          color: var(--fs-app-text-muted);
+          font-size: var(--fs-app-type-body-size);
+          line-height: var(--fs-app-type-body-line-height);
+        }
+        .correction-groups {
+          display: grid;
+          gap: var(--fs-space-4);
+        }
+        .correction-group h3 {
+          margin: 0 0 var(--fs-space-3);
+          color: var(--fs-app-text);
+          font-size: var(--fs-app-type-section-title-size);
+          font-weight: var(--fs-app-type-section-title-weight);
+        }
+        .correction-list {
+          display: grid;
+          gap: var(--fs-space-2);
+        }
+        .correction-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--fs-space-3);
+          padding: 11px 12px;
+          border: var(--fs-border-width) solid var(--fs-app-border);
+          border-radius: var(--fs-radius-control);
+          background: var(--fs-app-surface-raised);
+        }
+        .correction-row-text {
+          min-width: 0;
+          overflow-wrap: anywhere;
+          color: var(--fs-app-text-secondary);
+          font-size: var(--fs-app-type-body-size);
+        }
+        .correction-actions {
+          display: flex;
+          flex: 0 0 auto;
+          gap: var(--fs-space-2);
+        }
+        .correction-delete {
+          color: var(--fs-app-danger);
+        }
+        .correction-empty {
+          color: var(--fs-app-text-muted);
+          font-size: var(--fs-app-type-body-size);
+        }
+        .correction-form {
+          min-height: 0;
+          display: contents;
+        }
+        .correction-form-body {
+          display: grid;
+          gap: var(--fs-space-3);
+        }
+        .correction-form-body label {
+          display: grid;
+          gap: 6px;
+          color: var(--fs-app-text-secondary);
+          font-size: var(--fs-app-type-metadata-size);
+          font-weight: var(--fs-app-type-metadata-weight);
+        }
         @media (max-width: 640px) {
-          .correction-panel { padding: 18px; }
-          .correction-launcher { right: 12px; bottom: 12px; }
-          .correction-row { align-items: flex-start; flex-direction: column; }
+          .correction-backdrop {
+            align-items: flex-end;
+            padding: 0;
+          }
+          .correction-modal {
+            width: 100%;
+            max-height: 92vh;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+          }
+          .correction-launcher {
+            right: 12px;
+            bottom: 12px;
+          }
+          .correction-row {
+            align-items: flex-start;
+            flex-direction: column;
+          }
         }
       `}</style>
     </>
@@ -287,10 +341,10 @@ function RecordGroup({ rows, onEdit, onDelete, disabled }) {
             <div className="correction-row" key={row.id}>
               <div className="correction-row-text">{describeRecord(row)}</div>
               <div className="correction-actions">
-                <button type="button" onClick={() => onEdit(row)} disabled={disabled}>
+                <button type="button" className="fs-app-button is-secondary" onClick={() => onEdit(row)} disabled={disabled}>
                   Edit
                 </button>
-                <button type="button" onClick={() => onDelete(row)} disabled={disabled}>
+                <button type="button" className="fs-app-button is-ghost correction-delete" onClick={() => onDelete(row)} disabled={disabled}>
                   Delete
                 </button>
               </div>
@@ -304,37 +358,41 @@ function RecordGroup({ rows, onEdit, onDelete, disabled }) {
   );
 }
 
-function EditForm({ draft, setDraft, onSubmit, onCancel, disabled }) {
+function EditForm({ draft, setDraft, onSubmit, onCancel, disabled, status }) {
   const setField = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
 
   return (
     <form className="correction-form" onSubmit={onSubmit}>
-      <h3>Edit cognitive test</h3>
-      <Field label="Test">
-        <input value={draft.testName} onChange={(event) => setField("testName", event.target.value)} />
-      </Field>
-      <Field label="Score">
-        <input value={draft.score} onChange={(event) => setField("score", event.target.value)} />
-      </Field>
-      <Field label="Date/time">
-        <input type="datetime-local" value={draft.takenAt} onChange={(event) => setField("takenAt", event.target.value)} />
-      </Field>
-      {["hunger", "distractions", "wakefulness", "mood"].map((field) => (
-        <Field key={field} label={`${field[0].toUpperCase()}${field.slice(1)} /10`}>
-          <input
-            type="number"
-            min="0"
-            max="10"
-            step="1"
-            value={draft[field]}
-            onChange={(event) => setField(field, event.target.value)}
-          />
+      <div className="fs-app-modal-body correction-form-body">
+        {status ? <p className="correction-status">{status}</p> : null}
+        <h3 className="fs-app-card-title">Edit cognitive test</h3>
+        <Field label="Test">
+          <input className="fs-app-control" value={draft.testName} onChange={(event) => setField("testName", event.target.value)} />
         </Field>
-      ))}
-      <div className="correction-form-actions">
-        <button type="submit" disabled={disabled}>Save correction</button>
-        <button type="button" onClick={onCancel} disabled={disabled}>Cancel</button>
+        <Field label="Score">
+          <input className="fs-app-control" value={draft.score} onChange={(event) => setField("score", event.target.value)} />
+        </Field>
+        <Field label="Date/time">
+          <input className="fs-app-control" type="datetime-local" value={draft.takenAt} onChange={(event) => setField("takenAt", event.target.value)} />
+        </Field>
+        {["hunger", "distractions", "wakefulness", "mood"].map((field) => (
+          <Field key={field} label={`${field[0].toUpperCase()}${field.slice(1)} /10`}>
+            <input
+              className="fs-app-control"
+              type="number"
+              min="0"
+              max="10"
+              step="1"
+              value={draft[field]}
+              onChange={(event) => setField(field, event.target.value)}
+            />
+          </Field>
+        ))}
       </div>
+      <footer className="fs-app-modal-footer">
+        <button type="button" className="fs-app-button is-secondary" onClick={onCancel} disabled={disabled}>Cancel</button>
+        <button type="submit" className="fs-app-button is-primary" disabled={disabled}>Save correction</button>
+      </footer>
     </form>
   );
 }

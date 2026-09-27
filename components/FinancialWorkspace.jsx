@@ -468,7 +468,7 @@ export default function FinancialWorkspace() {
                 </div>
                 <div className={styles.analyticsColumns}>
                   <div>
-                    <h3 className={styles.subheading}>Categories</h3>
+                    <h3 className={`fs-app-card-title ${styles.subheading}`}>Categories</h3>
                     {categoryRows.length ? (
                       <div className={styles.categoryList}>
                         {categoryRows.slice(0, 10).map((row) => {

@@ -7,7 +7,7 @@
 
 .filter {
   min-width: 10rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--fs-app-border);
   border-radius: 8px;
   background: transparent;
   color: inherit;
@@ -29,9 +29,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.8rem 0.9rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--fs-app-border);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--fs-app-hover);
 }
 
 .identity,
@@ -51,7 +51,7 @@
 .field small,
 .ruleNote,
 .status {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
 }
 
 .titleLine {
@@ -64,17 +64,17 @@
 .sourceBadge {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--fs-app-border);
   border-radius: 999px;
   padding: 0.1rem 0.45rem;
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.68rem;
   font-weight: 500;
 }
 
 .confirmedBadge {
   color: inherit;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--fs-app-surface-strong);
 }
 
 .amountBlock {
@@ -87,9 +87,9 @@
   gap: 1rem;
   margin-top: 1rem;
   padding: 1rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--fs-app-border);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--fs-app-surface-raised);
 }
 
 .editorHeader {
@@ -115,14 +115,14 @@
 }
 
 .field > span {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.78rem;
 }
 
 .field input,
 .field select {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--fs-app-border);
   border-radius: 8px;
   background: transparent;
   color: inherit;

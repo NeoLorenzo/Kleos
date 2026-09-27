@@ -1,9 +1,10 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "product": "Kleos",
   "symbol": "Radiance",
   "coreIdea": "Recognition",
   "accent": "#CB30E0",
   "asset": "Kleos Logo.svg",
-  "headerLockupAsset": "Kleos Logo Colored With Text Beside.svg"
+  "headerLockupAsset": "Kleos Logo Colored With Text Beside.svg",
+  "accentContrast": "#000000"
 }

@@ -372,13 +372,13 @@ export default function FinancialPosition({ userId }) {
     <section className="kleos-card wide-card">
       <div className={styles.headerRow}>
         <div className="section-header">
-          <p className="kleos-kicker">Balance Sheet</p>
+          <p className="fs-app-kicker">Balance Sheet</p>
           <h2>Financial Position</h2>
           <p>Manual assets and liabilities combine with synchronized bank cash. Every total remains currency-native; currencies are never silently converted.</p>
         </div>
         <div className={styles.actions}>
-          <button type="button" className="secondary-btn" onClick={() => { setShowAssetForm(true); setEditingAssetId(null); setAssetForm(newAssetForm()); }}>Add Asset</button>
-          <button type="button" className="secondary-btn" onClick={() => { setShowLiabilityForm(true); setEditingLiabilityId(null); setLiabilityForm(newLiabilityForm()); }}>Add Liability</button>
+          <button type="button" className="fs-app-button is-secondary" onClick={() => { setShowAssetForm(true); setEditingAssetId(null); setAssetForm(newAssetForm()); }}>Add Asset</button>
+          <button type="button" className="fs-app-button is-secondary" onClick={() => { setShowLiabilityForm(true); setEditingLiabilityId(null); setLiabilityForm(newLiabilityForm()); }}>Add Liability</button>
         </div>
       </div>
 
@@ -425,8 +425,8 @@ export default function FinancialPosition({ userId }) {
                   <div className={styles.recordValue}>
                     <strong>{asset.ownership_adjusted_value == null ? "Unvalued" : formatMoney(asset.ownership_adjusted_value, asset.currency || asset.asset_currency)}</strong>
                     <div className={styles.recordActions}>
-                      <button type="button" className="secondary-btn" onClick={() => editAsset(asset)}>Edit</button>
-                      <button type="button" className="secondary-btn" onClick={() => void archiveRecord("financial_assets", "id", asset.asset_id, "Asset")}>Archive</button>
+                      <button type="button" className="fs-app-button is-secondary" onClick={() => editAsset(asset)}>Edit</button>
+                      <button type="button" className="fs-app-button is-secondary" onClick={() => void archiveRecord("financial_assets", "id", asset.asset_id, "Asset")}>Archive</button>
                     </div>
                   </div>
                 </article>
@@ -454,8 +454,8 @@ export default function FinancialPosition({ userId }) {
                   <div className={styles.recordValue}>
                     <strong>{liability.amount == null ? "Unvalued" : formatMoney(liability.amount, liability.currency || liability.liability_currency)}</strong>
                     <div className={styles.recordActions}>
-                      <button type="button" className="secondary-btn" onClick={() => editLiability(liability)}>Edit</button>
-                      <button type="button" className="secondary-btn" onClick={() => void archiveRecord("financial_liabilities", "id", liability.liability_id, "Liability")}>Archive</button>
+                      <button type="button" className="fs-app-button is-secondary" onClick={() => editLiability(liability)}>Edit</button>
+                      <button type="button" className="fs-app-button is-secondary" onClick={() => void archiveRecord("financial_liabilities", "id", liability.liability_id, "Liability")}>Archive</button>
                     </div>
                   </div>
                 </article>
@@ -469,7 +469,7 @@ export default function FinancialPosition({ userId }) {
                   ? `Affirmatively confirmed as of ${formatDate(position.liabilityStatus.latest_no_known_liabilities_as_of)}.`
                   : "This is currently missing evidence, not evidence of zero debt."}
               </p>
-              <button type="button" className="secondary-btn" onClick={() => void confirmNoKnownLiabilities()} disabled={savingKey === "attestation" || attestedToday}>
+              <button type="button" className="fs-app-button is-secondary" onClick={() => void confirmNoKnownLiabilities()} disabled={savingKey === "attestation" || attestedToday}>
                 {attestedToday ? "Confirmed today" : savingKey === "attestation" ? "Recording…" : "Confirm no known liabilities today"}
               </button>
             </div>
@@ -515,11 +515,11 @@ function PositionForm({ title, onSubmit, onCancel, saving, children }) {
     <form className={styles.formPanel} onSubmit={onSubmit}>
       <div className={styles.formHeader}>
         <h3>{title}</h3>
-        <button type="button" className="secondary-btn" onClick={onCancel}>Cancel</button>
+        <button type="button" className="fs-app-button is-secondary" onClick={onCancel}>Cancel</button>
       </div>
       <div className={styles.formGrid}>{children}</div>
       <div className={styles.formActions}>
-        <button type="submit" className="primary-btn" disabled={saving}>{saving ? "Saving…" : "Save"}</button>
+        <button type="submit" className="fs-app-button is-primary" disabled={saving}>{saving ? "Saving…" : "Save"}</button>
       </div>
     </form>
   );

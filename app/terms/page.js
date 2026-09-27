@@ -13,7 +13,7 @@ export default function TermsPage() {
     <main className={styles.legalShell}>
       <article className={styles.legalCard}>
         <header>
-          <p className="kleos-kicker">Kleos</p>
+          <p className="fs-app-kicker">Kleos</p>
           <h1>Terms of Use</h1>
           <p className={styles.meta}>Effective 12 September 2026</p>
         </header>

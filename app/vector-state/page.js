@@ -59,26 +59,19 @@ export default function VectorStatePage() {
     if (error) setMessage(error.message || "Google sign-in failed.");
   };
 
-  const signOut = async () => {
-    if (!supabase) return;
-    setMessage("");
-    const { error } = await supabase.auth.signOut();
-    if (error) setMessage(error.message || "Sign-out failed.");
-  };
 
   return (
     <main className="kleos-shell">
       <section className="kleos-board">
         <header className="kleos-header">
           <div>
-            <p className="kleos-kicker">Shared 8D Character State</p>
+            <p className="fs-app-kicker">Shared 8D Character State</p>
             <h1>Kleos</h1>
             <p className="kleos-subtitle">Dated current-state assessments across the eight canonical vectors.</p>
           </div>
           {accessState === "authorized" ? (
             <div className="kleos-header-actions">
-              <a className="secondary-btn" href={homeHref()}>Measurements</a>
-              <button type="button" className="secondary-btn" onClick={signOut}>Sign Out</button>
+              <a className="fs-app-button is-secondary" href={homeHref()}>Measurements</a>
             </div>
           ) : null}
         </header>
@@ -106,13 +99,13 @@ function AccessState({ state, user, message, onSignIn }) {
   }[state] || ["Kleos unavailable", "The vector-state surface could not be opened."];
 
   return (
-    <section className="access-panel">
-      <div className="access-mark">K</div>
+    <section className="fs-app-card access-panel">
+      <div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div>
       <h2>{content[0]}</h2>
       <p>{content[1]}</p>
       {message ? <p>{message}</p> : null}
       {state === "signed-out" || state === "unauthorized" ? (
-        <button type="button" className="primary-btn" onClick={onSignIn}>Sign in with Google</button>
+        <button type="button" className="fs-app-button is-primary" onClick={onSignIn}>Sign in with Google</button>
       ) : null}
     </section>
   );

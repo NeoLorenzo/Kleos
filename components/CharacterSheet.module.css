@@ -1,8 +1,8 @@
 .sheet {
   overflow: hidden;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--fs-app-border);
   border-radius: 1rem;
-  background: var(--panel);
+  background: var(--fs-app-surface);
 }
 
 .identity,
@@ -15,7 +15,7 @@
 .summarySection,
 .dimensionsSection,
 .factsSection {
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid var(--fs-app-border);
 }
 
 .identity {
@@ -23,7 +23,7 @@
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
   gap: 1.5rem;
   align-items: end;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent), color-mix(in srgb, var(--fs-color-text) 4%, transparent) 58%);
+  background: var(--fs-app-surface-raised);
 }
 
 .identityPrimary {
@@ -32,7 +32,7 @@
 
 .eyebrow {
   margin: 0 0 0.32rem;
-  color: var(--accent);
+  color: var(--fs-app-text-muted);
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -49,14 +49,14 @@
 .identitySubtitle {
   max-width: 50rem;
   margin: 0.65rem 0 0;
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
 .metadata {
   margin: 0;
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid var(--fs-app-border);
 }
 
 .metaRow {
@@ -64,12 +64,12 @@
   grid-template-columns: minmax(95px, 0.8fr) minmax(0, 1.2fr);
   gap: 0.75rem;
   padding: 0.45rem 0;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--fs-app-border);
 }
 
 .metaRow dt,
 .factRow dt {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -80,7 +80,7 @@
 .factRow dd {
   min-width: 0;
   margin: 0;
-  color: var(--text);
+  color: var(--fs-app-text);
   font-size: 0.8rem;
   font-weight: 650;
   overflow-wrap: anywhere;
@@ -89,9 +89,9 @@
 .alert {
   margin: 0;
   padding: 0.7rem 1.25rem;
-  border-top: 1px solid var(--border-soft);
-  color: var(--muted);
-  background: var(--panel-2);
+  border-top: 1px solid var(--fs-app-border);
+  color: var(--fs-app-text-muted);
+  background: var(--fs-app-surface-raised);
   font-size: 0.8rem;
 }
 
@@ -111,7 +111,7 @@
 .sectionNote {
   max-width: 38rem;
   margin: 0;
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.76rem;
   line-height: 1.45;
   text-align: right;
@@ -120,14 +120,14 @@
 .characterSummary {
   max-width: 80rem;
   margin: 0;
-  color: var(--text);
+  color: var(--fs-app-text);
   font-size: 0.95rem;
   line-height: 1.65;
 }
 
 .dimensionTable {
-  border-top: 1px solid var(--border-soft);
-  border-bottom: 1px solid var(--border-soft);
+  border-top: 1px solid var(--fs-app-border);
+  border-bottom: 1px solid var(--fs-app-border);
 }
 
 .dimensionHeader,
@@ -146,7 +146,7 @@
 
 .dimensionHeader {
   padding: 0.5rem 0.65rem;
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   background: rgba(7, 9, 15, 0.25);
   font-size: 0.66rem;
   font-weight: 800;
@@ -163,12 +163,12 @@
 }
 
 .dimensionRow + .dimensionRow {
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid var(--fs-app-border);
 }
 
 .dimensionRow:hover,
 .dimensionRow:focus-visible {
-  background: var(--panel-2);
+  background: var(--fs-app-surface-raised);
   outline: none;
 }
 
@@ -185,7 +185,7 @@
 
 .dimensionIdentity small,
 .dimensionScore small {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.67rem;
   line-height: 1.35;
 }
@@ -207,7 +207,7 @@
 
 .dimensionConfidence,
 .dimensionTrajectory {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
 }
 
 .dimensionTrajectory {
@@ -218,14 +218,14 @@
 .dimensionAssessment {
   display: -webkit-box;
   overflow: hidden;
-  color: var(--text);
+  color: var(--fs-app-text);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
 
 .dimensionArrow {
   justify-self: end;
-  color: var(--accent);
+  color: var(--fs-app-text-muted);
   font-size: 1rem;
   font-weight: 800;
 }
@@ -233,8 +233,8 @@
 .factColumns {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid var(--border-soft);
-  border-bottom: 1px solid var(--border-soft);
+  border-top: 1px solid var(--fs-app-border);
+  border-bottom: 1px solid var(--fs-app-border);
 }
 
 .factGroup {
@@ -243,7 +243,7 @@
 }
 
 .factGroup + .factGroup {
-  border-left: 1px solid var(--border-soft);
+  border-left: 1px solid var(--fs-app-border);
 }
 
 .factGroup h4 {
@@ -263,7 +263,7 @@
 }
 
 .factRow + .factRow {
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid var(--fs-app-border);
 }
 
 @media (max-width: 1050px) {
@@ -283,7 +283,7 @@
 
   .factGroup:nth-child(3) {
     grid-column: 1 / -1;
-    border-top: 1px solid var(--border-soft);
+    border-top: 1px solid var(--fs-app-border);
     border-left: 0;
   }
 }
@@ -373,7 +373,7 @@
   .factGroup + .factGroup,
   .factGroup:nth-child(3) {
     grid-column: auto;
-    border-top: 1px solid var(--border-soft);
+    border-top: 1px solid var(--fs-app-border);
     border-left: 0;
   }
 

@@ -461,13 +461,13 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
       return (
         <>
           <CharacterSheet userId={user.id} kleosData={kleosData} />
-          <details className="kleos-card wide-card">
+          <details className="fs-app-card kleos-card wide-card">
             <summary>Shared profile context</summary>
             <p className="kleos-subtitle">
               Cross-dimensional context that does not belong to a single Kleos dimension.
             </p>
             <div className="kleos-grid">
-              <section className="kleos-card">
+              <section className="fs-app-card kleos-card">
                 <SectionHeader title="Immutable Characteristics" />
                 <textarea
                   className="large-textarea"
@@ -477,14 +477,14 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 />
                 <button
                   type="button"
-                  className="primary-btn"
+                  className="fs-app-button is-primary"
                   onClick={saveImmutableText}
                   disabled={isSaving}
                 >
                   Save Immutable
                 </button>
               </section>
-              <section className="kleos-card">
+              <section className="fs-app-card kleos-card">
                 <SectionHeader title="Miscellaneous Characteristics" />
                 <textarea
                   className="large-textarea"
@@ -494,7 +494,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 />
                 <button
                   type="button"
-                  className="primary-btn"
+                  className="fs-app-button is-primary"
                   onClick={saveMiscText}
                   disabled={isSaving}
                 >
@@ -520,7 +520,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
       case "physical":
         return (
           <div className="kleos-grid">
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <SectionHeader
                 title="Strength & Body Metrics"
                 note="Heracles strength and body weight are read-only in Kleos. Height remains user-managed."
@@ -562,7 +562,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 </label>
                 <button
                   type="button"
-                  className="primary-btn"
+                  className="fs-app-button is-primary"
                   onClick={saveStrengthProfile}
                   disabled={isSaving}
                 >
@@ -570,7 +570,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                 </button>
                 <button
                   type="button"
-                  className="secondary-btn"
+                  className="fs-app-button is-secondary"
                   onClick={() => void syncHeraclesStrength(user.id)}
                   disabled={isSyncingStrength}
                 >
@@ -605,7 +605,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               />
             </section>
 
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <SectionHeader title="Health Characteristics" />
               <div className="stacked-form">
                 <label>
@@ -639,7 +639,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               </div>
               <button
                 type="button"
-                className="primary-btn"
+                className="fs-app-button is-primary"
                 onClick={saveHealthForm}
                 disabled={isSaving}
               >
@@ -663,7 +663,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
       case "intellectual":
         return (
           <div className="kleos-grid">
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <SectionHeader
                 title="Cognitive Tests"
                 note="Cognitive measurements are evidence for the Intellectual dimension."
@@ -727,7 +727,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
                     />
                   </label>
                 ))}
-                <button type="submit" className="primary-btn" disabled={isSaving}>
+                <button type="submit" className="fs-app-button is-primary" disabled={isSaving}>
                   Save Test
                 </button>
               </form>
@@ -743,7 +743,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               />
             </section>
 
-            <section className="kleos-card wide-card">
+            <section className="fs-app-card kleos-card wide-card">
               <SectionHeader
                 title="Academic Qualifications"
                 note="Academic records and context contribute to the Intellectual dimension; professional implications remain visible through the Professional assessment."
@@ -778,7 +778,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
               />
               <button
                 type="button"
-                className="primary-btn"
+                className="fs-app-button is-primary"
                 onClick={saveAcademicNotes}
                 disabled={isSaving}
               >
@@ -790,7 +790,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
 
       case "professional":
         return (
-          <section className="kleos-card wide-card">
+          <section className="fs-app-card kleos-card wide-card">
             <SectionHeader
               title="Professional Record"
               note="CV and career evidence live with the Professional dimension."
@@ -803,7 +803,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
             />
             <button
               type="button"
-              className="primary-btn"
+              className="fs-app-button is-primary"
               onClick={saveCvText}
               disabled={isSaving}
             >
@@ -817,7 +817,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
       case "creative":
       case "experiential":
         return (
-          <section className="kleos-card wide-card">
+          <section className="fs-app-card kleos-card wide-card">
             <SectionHeader title={`${page.label} Measurements`} />
             <p className="kleos-subtitle">
               No dedicated structured measurement source is currently modeled for this dimension.
@@ -837,7 +837,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
       <section className="kleos-board">
         <header className="kleos-header">
           <div>
-            <p className="kleos-kicker">{isDashboard ? "Character Dashboard" : "Kleos Dimension"}</p>
+            <p className="fs-app-kicker">{isDashboard ? "Character Dashboard" : "Kleos Dimension"}</p>
             <h1>{isDashboard ? "Character Sheet" : page.label}</h1>
             <p className="kleos-subtitle">
               {isDashboard
@@ -890,14 +890,14 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
   };
 
   return (
-    <section className="access-panel">
+    <section className="fs-app-card access-panel">
       <div className="access-mark">
         <img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" />
       </div>
       <h2>{titleByState[accessState] || "Private Kleos Workspace"}</h2>
       <p>{statusMessage || bodyByState[accessState]}</p>
       {accessState === "signed-out" ? (
-        <button type="button" className="primary-btn" onClick={onSignIn}>
+        <button type="button" className="fs-app-button is-primary" onClick={onSignIn}>
           Sign In With Google
         </button>
       ) : null}

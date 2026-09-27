@@ -6,7 +6,7 @@ Kleos is a Fabbro Systems product. It owns evidence-based current-state modeling
 
 ## Fabbro Design System adoption
 
-Kleos currently adopts **Fabbro Design System 0.2.0**.
+Kleos adopts **Fabbro Design System 0.4.0**, **Fabbro Application Sidebar 1.0.0**, **Fabbro Public Shell 1.0.0**, and **Fabbro Application UI 1.0.0**.
 
 The local upstream snapshot lives in `fabbro-design/`.
 
@@ -14,8 +14,9 @@ For shared visual decisions, precedence is:
 
 1. approved assets in `fabbro-design/assets/`
 2. machine-readable values in `fabbro-design/core.json` and `fabbro-design/product.json`
-3. `fabbro-design/fabbro-tokens.css`
-4. Kleos application implementation
+3. canonical component source in `fabbro-design/components/`
+4. `fabbro-design/fabbro-tokens.css`
+5. Kleos application implementation
 
 Do not independently redefine family-level branding in Kleos.
 
@@ -46,10 +47,12 @@ Kleos may define locally:
 - evidence and assessment workflows
 - vector/state visualizations
 - tables and dense information layouts
-- domain semantic colors such as success, warning, error, and chart-series colors
+- genuinely domain-specific chart-series or evidence-state colors when the canonical semantic palette does not apply
 - product-specific information architecture and interaction patterns
 
 Do not force the Fabbro public marketing shell onto the authenticated Kleos application.
+
+Authenticated Kleos UI must consume the canonical `--fs-app-*` semantic tokens and Fabbro Application UI primitives rather than defining parallel local panel, border, text, accent, control, button, or status systems.
 
 In authenticated navigation, the family endorsement must use the standalone Fabbro Systems mark only. Do not render visible `Fabbro Systems` text or a Fabbro wordmark lockup in that slot.
 

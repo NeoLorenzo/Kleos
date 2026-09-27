@@ -1,8 +1,8 @@
 .panel {
   padding: 1rem;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--fs-app-border);
   border-radius: 0.9rem;
-  background: var(--panel);
+  background: var(--fs-app-surface);
 }
 
 .header {
@@ -19,7 +19,7 @@
 
 .eyebrow {
   margin: 0 0 0.35rem;
-  color: var(--accent);
+  color: var(--fs-app-text-muted);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -30,7 +30,7 @@
 .formHint,
 .empty,
 .message {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.8rem;
   line-height: 1.45;
 }
@@ -43,9 +43,9 @@
 .count {
   flex: 0 0 auto;
   padding: 0.3rem 0.55rem;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--fs-app-border);
   border-radius: 999px;
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -55,7 +55,7 @@
   gap: 1rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid var(--fs-app-border);
 }
 
 .dateField,
@@ -63,7 +63,7 @@
 .domainScoreInput {
   display: grid;
   gap: 0.35rem;
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.76rem;
   font-weight: 700;
 }
@@ -90,9 +90,9 @@
 .domainResult {
   min-width: 0;
   padding: 0.75rem;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--fs-app-border);
   border-radius: 0.75rem;
-  background: var(--panel-2);
+  background: var(--fs-app-surface-raised);
 }
 
 .domainFieldset legend {
@@ -103,7 +103,7 @@
 
 .domainScoreInput {
   padding-bottom: 0.65rem;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--fs-app-border);
 }
 
 .facetInputs {
@@ -130,7 +130,7 @@
 .history {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid var(--fs-app-border);
 }
 
 .history h4 {
@@ -138,7 +138,7 @@
 }
 
 .assessment {
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--fs-app-border);
   border-radius: 0.75rem;
   background: color-mix(in srgb, var(--fs-color-bg) 30%, transparent);
 }
@@ -157,7 +157,7 @@
 }
 
 .assessment > summary span {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -172,11 +172,11 @@
   gap: 0.5rem;
   align-items: baseline;
   padding-bottom: 0.55rem;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--fs-app-border);
 }
 
 .domainResult header span {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -204,7 +204,7 @@
 }
 
 .domainResult dt {
-  color: var(--muted);
+  color: var(--fs-app-text-muted);
 }
 
 .domainResult dd {

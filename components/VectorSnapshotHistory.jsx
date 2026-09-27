@@ -29,12 +29,12 @@ export default function VectorSnapshotHistory({ userId }) {
   }, [userId]);
 
   if (state.status === "loading") {
-    return <section className="kleos-card wide-card">Loading snapshot history...</section>;
+    return <section className="fs-app-card kleos-card wide-card">Loading snapshot history...</section>;
   }
 
   if (state.status === "error") {
     return (
-      <section className="kleos-card wide-card">
+      <section className="fs-app-card kleos-card wide-card">
         <div className="section-header">
           <h2>Snapshot History</h2>
           <p>{state.message}</p>
@@ -46,7 +46,7 @@ export default function VectorSnapshotHistory({ userId }) {
   if (!state.snapshots.length) return null;
 
   return (
-    <section className="kleos-card wide-card" aria-labelledby="snapshot-history-title">
+    <section className="fs-app-card kleos-card wide-card" aria-labelledby="snapshot-history-title">
       <div className="section-header">
         <h2 id="snapshot-history-title">Snapshot History</h2>
         <p>

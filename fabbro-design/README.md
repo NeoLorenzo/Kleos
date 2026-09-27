@@ -2,7 +2,7 @@
 
 Kleos consumes a local snapshot of the canonical Fabbro Design System.
 
-**Adopted version:** 0.3.0  
+**Adopted version:** 0.4.0  
 **Upstream:** `NeoLorenzo/Fabbro-Systems/design-system`
 
 ## Rules
@@ -15,6 +15,7 @@ Kleos consumes a local snapshot of the canonical Fabbro Design System.
 - Authenticated product navigation uses the standalone Fabbro Systems mark only for family endorsement; visible family text and wordmark lockups are not allowed in that slot.
 - Authenticated desktop primary navigation uses canonical Fabbro Application Sidebar 1.0.0; top/right regions remain secondary utility surfaces.
 - React consumers must use the vendored canonical source under `components/application-sidebar/react/` unchanged.
+- Authenticated application surfaces must consume `--fs-app-*` semantic tokens and Application UI 1.0.0 primitives rather than maintaining local equivalents.
 
 ## Snapshot contents
 
@@ -25,3 +26,4 @@ Kleos consumes a local snapshot of the canonical Fabbro Design System.
 - `assets/` — approved production SVGs used by Kleos
 - `components/application-sidebar/` — canonical Application Sidebar 1.0.0 contract and React source
 - `components/public-shell/` — canonical Public Shell 1.0.0 framework-agnostic contract
+- `components/application-ui/` — canonical Application UI 1.0.0 contract and framework-agnostic CSS

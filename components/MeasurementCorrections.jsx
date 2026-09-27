@@ -334,7 +334,7 @@ export default function MeasurementCorrections() {
 function RecordGroup({ rows, onEdit, onDelete, disabled }) {
   return (
     <section className="correction-group">
-      <h3>Cognitive History</h3>
+      <h3 className="fs-app-card-title">Cognitive History</h3>
       <div className="correction-list">
         {rows.length ? (
           rows.map((row) => (

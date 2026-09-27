@@ -49,9 +49,9 @@ export default function DimensionState({ userId, vectorId }) {
   return (
     <>
       <section className="fs-app-card kleos-card wide-card" aria-labelledby={`${vectorId}-state-title`}>
-        <div className="section-header">
+        <div className="fs-app-heading kleos-section-heading">
           <p className="fs-app-kicker">Current Dimension State</p>
-          <h2 id={`${vectorId}-state-title`}>{vector.label}</h2>
+          <h2 className="fs-app-card-title" id={`${vectorId}-state-title`}>{vector.label}</h2>
           <p>{vector.description}</p>
         </div>
 
@@ -67,7 +67,7 @@ export default function DimensionState({ userId, vectorId }) {
             </div>
 
             <div className={styles.copy}>
-              <h3>Assessment</h3>
+              <h3 className="fs-app-card-title">Assessment</h3>
               <p>
                 {result?.commentary ||
                   "No derived assessment commentary is available for this dimension yet."}

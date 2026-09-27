@@ -101,7 +101,7 @@ function AccessState({ state, user, message, onSignIn }) {
   return (
     <section className="fs-app-card access-panel">
       <div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div>
-      <h2>{content[0]}</h2>
+      <h2 className="fs-app-card-title">{content[0]}</h2>
       <p>{content[1]}</p>
       {message ? <p>{message}</p> : null}
       {state === "signed-out" || state === "unauthorized" ? (

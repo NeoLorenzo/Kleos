@@ -206,9 +206,9 @@ export default function PsychologicalAssessment({ userId }) {
 
   return (
     <section className={styles.panel} aria-labelledby="psychological-assessment-title">
-      <header className={styles.header}>
+      <header className={`fs-app-card ${styles.header}`}>
         <div>
-          <p className={styles.eyebrow}>Canonical Psychological Evidence</p>
+          <p className={`fs-app-kicker ${styles.eyebrow}`}>Canonical Psychological Evidence</p>
           <h1 id="psychological-assessment-title">Psychological Battery</h1>
           <p className={styles.intro}>
             A repeatable set of independently scored measures plus Kleos-specific tracking facets.
@@ -223,7 +223,7 @@ export default function PsychologicalAssessment({ userId }) {
       </header>
 
       {isActive ? (
-        <div className={styles.assessmentFlow}>
+        <div className={`fs-app-card ${styles.assessmentFlow}`}>
           <div className={styles.progressHeader}>
             <div>
               <strong>{editingId ? "Correct assessment" : "New assessment"}</strong>
@@ -231,7 +231,7 @@ export default function PsychologicalAssessment({ userId }) {
                 {answered} / {TOTAL_QUESTIONS} answered
               </span>
             </div>
-            <div className={styles.progressTrack} aria-label={`${progress}% complete`}>
+            <div className="fs-app-progress" aria-label={`${progress}% complete`}>
               <span style={{ width: `${progress}%` }} />
             </div>
           </div>
@@ -300,10 +300,10 @@ export default function PsychologicalAssessment({ userId }) {
 
       {message ? <p className={styles.message} aria-live="polite">{message}</p> : null}
 
-      <section className={styles.history} aria-labelledby="psychological-history-title">
+      <section className={`fs-app-card ${styles.history}`} aria-labelledby="psychological-history-title">
         <div className={styles.historyHeader}>
           <div>
-            <p className={styles.eyebrow}>Longitudinal History</p>
+            <p className={`fs-app-kicker ${styles.eyebrow}`}>Longitudinal History</p>
             <h2 id="psychological-history-title">Assessment history</h2>
           </div>
           <span>{isLoading ? "Loading…" : `${history.length} recorded`}</span>
@@ -335,7 +335,7 @@ function InstrumentStep({ instrument, values, onChange, phqItem9Value }) {
     <section className={styles.stepPanel}>
       <header className={styles.instrumentHeader}>
         <div>
-          <p className={styles.eyebrow}>{instrument.shortLabel}</p>
+          <p className={`fs-app-kicker ${styles.eyebrow}`}>{instrument.shortLabel}</p>
           <h2>{instrument.title}</h2>
           <p>{instrument.timeframe}</p>
         </div>
@@ -379,7 +379,7 @@ function KleosFacetStep({ values, onChange }) {
     <section className={styles.stepPanel}>
       <header className={styles.instrumentHeader}>
         <div>
-          <p className={styles.eyebrow}>Kleos-specific</p>
+          <p className={`fs-app-kicker ${styles.eyebrow}`}>Kleos-specific</p>
           <h2>Supplementary psychological facets</h2>
           <p>
             These are stable Kleos tracking items, not validated subscales of WHO-5, SWLS, GAD-7 or PHQ-9.

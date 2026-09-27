@@ -110,10 +110,6 @@
   text-align: right;
 }
 
-.recordActions button {
-  padding: 0.35rem 0.55rem;
-}
-
 .attestationBox {
   display: grid;
   gap: 0.55rem;
@@ -147,20 +143,9 @@
   gap: 0.3rem;
 }
 
-.field input,
-.field select {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 8px;
-  background: var(--fs-app-surface-raised);
-  color: inherit;
-  padding: 0.62rem 0.7rem;
-  font: inherit;
-}
-
 .field option {
-  color: #111;
+  color: var(--fs-app-text);
+  background: var(--fs-app-surface-raised);
 }
 
 .formActions {

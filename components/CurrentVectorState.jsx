@@ -34,12 +34,12 @@ export default function CurrentVectorState({ userId }) {
   }, [userId]);
 
   if (state.status === "loading") {
-    return <section className="kleos-card wide-card">Loading current vector state...</section>;
+    return <section className="fs-app-card kleos-card wide-card">Loading current vector state...</section>;
   }
 
   if (state.status === "error") {
     return (
-      <section className="kleos-card wide-card">
+      <section className="fs-app-card kleos-card wide-card">
         <div className="section-header">
           <h2>Current Vector State</h2>
           <p>{state.message}</p>
@@ -50,7 +50,7 @@ export default function CurrentVectorState({ userId }) {
 
   if (!state.snapshot) {
     return (
-      <section className="kleos-card wide-card">
+      <section className="fs-app-card kleos-card wide-card">
         <div className="section-header">
           <h2>Current Vector State</h2>
           <p>No vector snapshot has been recorded yet. Missing state remains unknown until Kleos Bot writes an assessment.</p>
@@ -64,7 +64,7 @@ export default function CurrentVectorState({ userId }) {
   const deterministic = snapshot.methodologyVersion.startsWith("2.");
 
   return (
-    <section className="kleos-card wide-card" aria-labelledby="current-vector-state-title">
+    <section className="fs-app-card kleos-card wide-card" aria-labelledby="current-vector-state-title">
       <div className="section-header">
         <h2 id="current-vector-state-title">Current Vector State</h2>
         <p>
@@ -83,7 +83,7 @@ export default function CurrentVectorState({ userId }) {
           const result = resultsByVectorId.get(vector.id);
           const assessed = result?.status === "assessed";
           return (
-            <article className="kleos-card" key={vector.id}>
+            <article className="fs-app-card kleos-card" key={vector.id}>
               <div className="section-header">
                 <h2>{vector.label}</h2>
                 <p>{vector.description}</p>

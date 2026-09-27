@@ -165,7 +165,7 @@ export default function FinancialTransactionCorrections({ userId }) {
     <section className="kleos-card wide-card">
       <div className={styles.headerRow}>
         <div className="section-header">
-          <p className="kleos-kicker">User-confirmed interpretation</p>
+          <p className="fs-app-kicker">User-confirmed interpretation</p>
           <h2>Review Transactions</h2>
           <p>Correct derived meaning without changing the canonical Revolut transaction. Reusable rules can match the same label, currency and direction, with an optional exact-amount constraint.</p>
         </div>
@@ -194,7 +194,7 @@ export default function FinancialTransactionCorrections({ userId }) {
               </div>
               <div className={styles.amountBlock}>
                 <strong>{formatMoney(row.amount, row.currency)}</strong>
-                <button type="button" className="secondary-btn" onClick={() => openEditor(row)}>Correct</button>
+                <button type="button" className="fs-app-button is-secondary" onClick={() => openEditor(row)}>Correct</button>
               </div>
             </article>
           ))}
@@ -205,11 +205,11 @@ export default function FinancialTransactionCorrections({ userId }) {
         <form className={styles.editor} onSubmit={saveCorrection}>
           <div className={styles.editorHeader}>
             <div>
-              <p className="kleos-kicker">Correction</p>
+              <p className="fs-app-kicker">Correction</p>
               <h3>{editing.display_label || editing.counterparty_name || editing.description || "Transaction"}</h3>
               <span>{formatMoney(editing.amount, editing.currency)} · {formatDate(editing.transaction_date)}</span>
             </div>
-            <button type="button" className="secondary-btn" onClick={() => { setEditing(null); setForm(null); }}>Cancel</button>
+            <button type="button" className="fs-app-button is-secondary" onClick={() => { setEditing(null); setForm(null); }}>Cancel</button>
           </div>
 
           {Number(editing.amount) > 0 ? (
@@ -277,14 +277,14 @@ export default function FinancialTransactionCorrections({ userId }) {
           </p>
 
           <div className={styles.editorActions}>
-            <button type="submit" className="primary-btn" disabled={isSaving}>{isSaving ? "Saving…" : "Save correction"}</button>
+            <button type="submit" className="fs-app-button is-primary" disabled={isSaving}>{isSaving ? "Saving…" : "Save correction"}</button>
             {editing.interpretation_override_id ? (
-              <button type="button" className="secondary-btn" disabled={isSaving} onClick={() => void resetCorrection(false)}>
+              <button type="button" className="fs-app-button is-secondary" disabled={isSaving} onClick={() => void resetCorrection(false)}>
                 Reset transaction override
               </button>
             ) : null}
             {editing.interpretation_rule_id ? (
-              <button type="button" className="secondary-btn" disabled={isSaving} onClick={() => void resetCorrection(true)}>
+              <button type="button" className="fs-app-button is-secondary" disabled={isSaving} onClick={() => void resetCorrection(true)}>
                 {editing.interpretation_override_id ? "Remove override + matching rule" : "Remove matching rule"}
               </button>
             ) : null}

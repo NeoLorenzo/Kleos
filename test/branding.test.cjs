@@ -25,18 +25,19 @@ function collectTextFiles(relativeDir, extensions) {
   return files;
 }
 
-test("Kleos adopts Fabbro Design System 0.3.0", () => {
-  assert.equal(read("fabbro-design/VERSION").trim(), "0.3.0");
+test("Kleos adopts Fabbro Design System 0.4.0", () => {
+  assert.equal(read("fabbro-design/VERSION").trim(), "0.4.0");
 
   const product = JSON.parse(read("fabbro-design/product.json"));
-  assert.equal(product.version, "0.3.0");
+  assert.equal(product.version, "0.4.0");
   assert.equal(product.product, "Kleos");
   assert.equal(product.symbol, "Radiance");
   assert.equal(product.coreIdea, "Recognition");
   assert.equal(product.accent.toUpperCase(), "#CB30E0");
+  assert.equal(product.accentContrast.toUpperCase(), "#000000");
 
   const core = JSON.parse(read("fabbro-design/core.json"));
-  assert.equal(core.version, "0.3.0");
+  assert.equal(core.version, "0.4.0");
   assert.equal(core.color.background.toUpperCase(), "#000000");
   assert.match(core.typography.familyPrimary, /Inter/);
 
@@ -78,11 +79,53 @@ test("Kleos application is wired to the canonical Fabbro snapshot", () => {
   const manifest = JSON.parse(read("public/manifest.webmanifest"));
 
   assert.match(globals, /@import "\.\.\/fabbro-design\/fabbro-tokens\.css";/);
+  assert.match(globals, /@import "\.\.\/fabbro-design\/components\/application-ui\/application-ui\.css";/);
   assert.match(layout, /data-fabbro-product="kleos"/);
   assert.match(layout, /<KleosAppShell>/);
   assert.doesNotMatch(layout, /KleosNav/);
   assert.equal(manifest.background_color.toUpperCase(), "#000000");
   assert.equal(manifest.theme_color.toUpperCase(), "#000000");
+});
+
+test("Kleos consumes Fabbro Application UI 1.0.0 without a parallel local UI system", () => {
+  assert.equal(
+    read("fabbro-design/components/application-ui/VERSION").trim(),
+    "1.0.0"
+  );
+
+  const contract = JSON.parse(
+    read("fabbro-design/components/application-ui/contract.json")
+  );
+  assert.equal(contract.version, "1.0.0");
+  assert.equal(contract.designSystemVersion, "0.4.0");
+
+  const core = JSON.parse(read("fabbro-design/core.json"));
+  assert.equal(core.applicationUI.version, "1.0.0");
+
+  const globals = read("app/globals.css");
+  assert.match(globals, /--fs-app-bg/);
+  assert.match(globals, /--fs-app-surface/);
+  assert.match(globals, /--fs-app-text/);
+  assert.doesNotMatch(
+    globals,
+    /--(?:panel-2|panel|border-soft|accent-strong|accent-soft|accent|muted|text|line)\b/
+  );
+  assert.doesNotMatch(globals, /radial-gradient/);
+
+  const applicationFiles = [
+    ...collectTextFiles("app", [".css", ".js", ".jsx"]),
+    ...collectTextFiles("components", [".css", ".js", ".jsx"])
+  ];
+  for (const file of applicationFiles) {
+    const content = fs.readFileSync(file, "utf8");
+    assert.doesNotMatch(content, /\bprimary-btn\b/);
+    assert.doesNotMatch(content, /\bsecondary-btn\b/);
+    assert.doesNotMatch(content, /\bkleos-kicker\b/);
+  }
+
+  const workspace = read("components/KleosWorkspace.jsx");
+  assert.match(workspace, /fs-app-card kleos-card/);
+  assert.match(workspace, /fs-app-button is-primary/);
 });
 
 test("deployed Kleos brand assets match the approved snapshot", () => {
@@ -179,6 +222,8 @@ test("shared application shell owns sign-out and mark-only Fabbro endorsement", 
   const shell = read("components/KleosAppShell.jsx");
   const shellCss = read("components/KleosAppShell.module.css");
   const physical = read("components/PhysicalWorkspace.jsx");
+  const financial = read("components/FinancialWorkspace.jsx");
+  const vectorState = read("app/vector-state/page.js");
   const workspace = read("components/KleosWorkspace.jsx");
   const tokens = read("fabbro-design/fabbro-tokens.css");
 
@@ -191,6 +236,8 @@ test("shared application shell owns sign-out and mark-only Fabbro endorsement", 
   assert.match(tokens, /--fs-family-mark-size:\s*24px/);
 
   assert.doesNotMatch(physical, /onClick=\{signOut\}/);
+  assert.doesNotMatch(financial, /onClick=\{signOut\}/);
+  assert.doesNotMatch(vectorState, /onClick=\{signOut\}/);
   assert.doesNotMatch(workspace, /onClick=\{signOut\}/);
 });
 

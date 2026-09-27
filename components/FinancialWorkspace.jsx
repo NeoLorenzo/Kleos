@@ -336,18 +336,18 @@ export default function FinancialWorkspace() {
   const categoryTotal = categoryRows.reduce((sum, row) => sum + Number(row.spending_amount || 0), 0);
 
   return (
-    <main className="kleos-shell">
-      <section className="kleos-board">
-        <header className="kleos-header">
-          <div>
+    <main className="fs-app-workspace">
+      <section className="fs-app-page">
+        <header className="fs-app-page-header">
+          <div className="fs-app-heading">
             <p className="fs-app-kicker">Kleos Dimension</p>
-            <h1>Financial</h1>
-            <p className="kleos-subtitle">Current financial state, cash-flow intelligence, Open Banking evidence, and assessment history.</p>
+            <h1 className="fs-app-title">Financial</h1>
+            <p className="fs-app-subtitle">Current financial state, cash-flow intelligence, Open Banking evidence, and assessment history.</p>
           </div>
         </header>
 
         {renderAccessGate({ accessState, user, statusMessage, onSignIn: signIn }) || (
-          <div className="kleos-scroll">
+          <div className="kleos-content">
             <DimensionState userId={user.id} vectorId="financial" />
 
             <section className="fs-app-card kleos-card wide-card">
@@ -408,7 +408,7 @@ export default function FinancialWorkspace() {
                   })}
                 </div>
               ) : (
-                <p className="kleos-subtitle">{isLoading ? "Loading accounts…" : "No synchronized Revolut accounts yet."}</p>
+                <p className="fs-app-subtitle">{isLoading ? "Loading accounts…" : "No synchronized Revolut accounts yet."}</p>
               )}
             </section>
 
@@ -488,7 +488,7 @@ export default function FinancialWorkspace() {
                           );
                         })}
                       </div>
-                    ) : <p className="kleos-subtitle">No booked spending in this currency for the current month.</p>}
+                    ) : <p className="fs-app-subtitle">No booked spending in this currency for the current month.</p>}
                   </div>
                   <div>
                     <h3 className={styles.subheading}>Monthly trend</h3>

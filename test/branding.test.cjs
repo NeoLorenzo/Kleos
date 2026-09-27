@@ -151,6 +151,7 @@ test("authenticated Kleos strictly consumes Fabbro Application UI primitives", (
   for (const relativePath of authenticatedSources) {
     const content = read(relativePath);
     assert.doesNotMatch(content, legacyPrimitivePattern, relativePath);
+    assert.doesNotMatch(content, /className="access-mark">\s*K\s*</, relativePath);
 
     const controls = content.match(/<(?:input|select|textarea)\b[^>]*>/gs) || [];
     for (const control of controls) {

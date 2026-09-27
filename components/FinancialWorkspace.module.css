@@ -103,20 +103,13 @@
 }
 
 .currencyButton {
-  border: 1px solid var(--fs-app-border);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--fs-app-text-muted);
-  padding: 0.4rem 0.7rem;
-  font: inherit;
-  font-size: 0.78rem;
-  cursor: pointer;
+  min-width: 3.25rem;
 }
 
-.currencyButton:hover,
 .activeCurrency {
-  color: inherit;
-  background: var(--fs-app-surface-strong);
+  border-color: var(--fs-app-accent-line);
+  background: var(--fs-app-accent-soft);
+  color: var(--fs-app-text);
 }
 
 .analyticsColumns {

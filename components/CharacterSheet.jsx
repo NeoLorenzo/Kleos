@@ -255,7 +255,7 @@ function SectionHeading({ eyebrow, title, id, note = "" }) {
     <header className={styles.sectionHeading}>
       <div>
         <p className={`fs-app-kicker ${styles.eyebrow}`}>{eyebrow}</p>
-        <h3 id={id}>{title}</h3>
+        <h3 className="fs-app-card-title" id={id}>{title}</h3>
       </div>
       {note ? <p className={styles.sectionNote}>{note}</p> : null}
     </header>

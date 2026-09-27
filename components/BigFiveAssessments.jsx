@@ -64,17 +64,17 @@ export default function BigFiveAssessments({ userId, assessments = [] }) {
   };
 
   return (
-    <section className={styles.panel} aria-labelledby="big-five-title">
-      <header className={styles.header}>
+    <section className={`fs-app-card ${styles.panel}`} aria-labelledby="big-five-title">
+      <header className={`fs-app-card-header ${styles.header}`}>
         <div>
-          <p className={styles.eyebrow}>Canonical Evidence</p>
-          <h3 id="big-five-title">Big Five assessments</h3>
+          <p className={`fs-app-kicker ${styles.eyebrow}`}>Canonical Evidence</p>
+          <h3 className="fs-app-card-title" id="big-five-title">Big Five assessments</h3>
           <p className={styles.note}>
             Store raw BigFive-Test scores only. The test date must be the date printed in the report,
             never the PDF export, upload, download, or import date.
           </p>
         </div>
-        <span className={styles.count}>
+        <span className={`fs-app-count ${styles.count}`}>
           {history.length} assessment{history.length === 1 ? "" : "s"}
         </span>
       </header>

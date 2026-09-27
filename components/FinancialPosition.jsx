@@ -374,7 +374,7 @@ export default function FinancialPosition({ userId }) {
         <div className="fs-app-heading kleos-section-heading">
           <p className="fs-app-kicker">Balance Sheet</p>
           <h2 className="fs-app-card-title">Financial Position</h2>
-          <p>Manual assets and liabilities combine with synchronized bank cash. Every total remains currency-native; currencies are never silently converted.</p>
+          <p className="fs-app-subtitle">Manual assets and liabilities combine with synchronized bank cash. Every total remains currency-native; currencies are never silently converted.</p>
         </div>
         <div className={styles.actions}>
           <button type="button" className="fs-app-button is-secondary" onClick={() => { setShowAssetForm(true); setEditingAssetId(null); setAssetForm(newAssetForm()); }}>Add Asset</button>

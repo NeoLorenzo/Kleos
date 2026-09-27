@@ -40,8 +40,8 @@ export default function CurrentVectorState({ userId }) {
   if (state.status === "error") {
     return (
       <section className="fs-app-card kleos-card wide-card">
-        <div className="section-header">
-          <h2>Current Vector State</h2>
+        <div className="fs-app-heading kleos-section-heading">
+          <h2 className="fs-app-card-title">Current Vector State</h2>
           <p>{state.message}</p>
         </div>
       </section>
@@ -51,8 +51,8 @@ export default function CurrentVectorState({ userId }) {
   if (!state.snapshot) {
     return (
       <section className="fs-app-card kleos-card wide-card">
-        <div className="section-header">
-          <h2>Current Vector State</h2>
+        <div className="fs-app-heading kleos-section-heading">
+          <h2 className="fs-app-card-title">Current Vector State</h2>
           <p>No vector snapshot has been recorded yet. Missing state remains unknown until Kleos Bot writes an assessment.</p>
         </div>
       </section>
@@ -65,8 +65,8 @@ export default function CurrentVectorState({ userId }) {
 
   return (
     <section className="fs-app-card kleos-card wide-card" aria-labelledby="current-vector-state-title">
-      <div className="section-header">
-        <h2 id="current-vector-state-title">Current Vector State</h2>
+      <div className="fs-app-heading kleos-section-heading">
+        <h2 className="fs-app-card-title" id="current-vector-state-title">Current Vector State</h2>
         <p>
           Assessed {formatDateTime(snapshot.evaluatedAt)} by {snapshot.evaluator} · methodology {snapshot.methodologyVersion}
           {snapshot.overallScore === null ? "" : ` · overall ${formatNumber(snapshot.overallScore)} / 100`}
@@ -84,8 +84,8 @@ export default function CurrentVectorState({ userId }) {
           const assessed = result?.status === "assessed";
           return (
             <article className="fs-app-card kleos-card" key={vector.id}>
-              <div className="section-header">
-                <h2>{vector.label}</h2>
+              <div className="fs-app-heading kleos-section-heading">
+                <h2 className="fs-app-card-title">{vector.label}</h2>
                 <p>{vector.description}</p>
               </div>
               <div className="score-readout">

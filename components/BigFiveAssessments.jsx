@@ -82,7 +82,7 @@ export default function BigFiveAssessments({ userId, assessments = [] }) {
       <form className={styles.form} onSubmit={saveAssessment}>
         <label className={styles.dateField}>
           Actual test date
-          <input
+          <input className="fs-app-control"
             type="date"
             required
             value={draft.testDate}
@@ -172,7 +172,7 @@ function ScoreInput({ label, value, onChange, prominent = false }) {
   return (
     <label className={prominent ? styles.domainScoreInput : styles.scoreInput}>
       {label}
-      <input
+      <input className="fs-app-control"
         type="number"
         min="0"
         step="any"

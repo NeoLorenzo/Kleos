@@ -859,8 +859,8 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
 
 function SectionHeader({ title, note }) {
   return (
-    <div className="section-header">
-      <h2>{title}</h2>
+    <div className="fs-app-heading kleos-section-heading">
+      <h2 className="fs-app-card-title">{title}</h2>
       {note ? <p>{note}</p> : null}
     </div>
   );
@@ -888,7 +888,7 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
       <div className="access-mark">
         <img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" />
       </div>
-      <h2>{titleByState[accessState] || "Private Kleos Workspace"}</h2>
+      <h2 className="fs-app-card-title">{titleByState[accessState] || "Private Kleos Workspace"}</h2>
       <p>{statusMessage || bodyByState[accessState]}</p>
       {accessState === "signed-out" ? (
         <button type="button" className="fs-app-button is-primary" onClick={onSignIn}>

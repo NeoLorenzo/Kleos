@@ -369,11 +369,11 @@ export default function FinancialPosition({ userId }) {
   const attestedToday = position.liabilityStatus?.latest_no_known_liabilities_as_of === todayKey();
 
   return (
-    <section className="kleos-card wide-card">
+    <section className="fs-app-card kleos-card wide-card">
       <div className={styles.headerRow}>
-        <div className="section-header">
+        <div className="fs-app-heading kleos-section-heading">
           <p className="fs-app-kicker">Balance Sheet</p>
-          <h2>Financial Position</h2>
+          <h2 className="fs-app-card-title">Financial Position</h2>
           <p>Manual assets and liabilities combine with synchronized bank cash. Every total remains currency-native; currencies are never silently converted.</p>
         </div>
         <div className={styles.actions}>
@@ -382,7 +382,7 @@ export default function FinancialPosition({ userId }) {
         </div>
       </div>
 
-      {isLoading ? <p className="kleos-subtitle">Loading financial position…</p> : null}
+      {isLoading ? <p className="fs-app-subtitle">Loading financial position…</p> : null}
 
       {position.balanceSheet.length ? (
         <div className={styles.balanceGrid}>
@@ -402,7 +402,7 @@ export default function FinancialPosition({ userId }) {
           ))}
         </div>
       ) : (
-        <p className="kleos-subtitle">No balance-sheet observations yet. Add an asset or liability; synchronized bank cash will appear automatically when available.</p>
+        <p className="fs-app-subtitle">No balance-sheet observations yet. Add an asset or liability; synchronized bank cash will appear automatically when available.</p>
       )}
 
       <div className={styles.columns}>
@@ -432,7 +432,7 @@ export default function FinancialPosition({ userId }) {
                 </article>
               ))}
             </div>
-          ) : <p className="kleos-subtitle">No manual assets recorded.</p>}
+          ) : <p className="fs-app-subtitle">No manual assets recorded.</p>}
         </div>
 
         <div>
@@ -512,7 +512,7 @@ export default function FinancialPosition({ userId }) {
 
 function PositionForm({ title, onSubmit, onCancel, saving, children }) {
   return (
-    <form className={styles.formPanel} onSubmit={onSubmit}>
+    <form className={`fs-app-card ${styles.formPanel}`} onSubmit={onSubmit}>
       <div className={styles.formHeader}>
         <h3>{title}</h3>
         <button type="button" className="fs-app-button is-secondary" onClick={onCancel}>Cancel</button>

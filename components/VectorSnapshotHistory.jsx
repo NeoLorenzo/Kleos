@@ -35,8 +35,8 @@ export default function VectorSnapshotHistory({ userId }) {
   if (state.status === "error") {
     return (
       <section className="fs-app-card kleos-card wide-card">
-        <div className="section-header">
-          <h2>Snapshot History</h2>
+        <div className="fs-app-heading kleos-section-heading">
+          <h2 className="fs-app-card-title">Snapshot History</h2>
           <p>{state.message}</p>
         </div>
       </section>
@@ -47,8 +47,8 @@ export default function VectorSnapshotHistory({ userId }) {
 
   return (
     <section className="fs-app-card kleos-card wide-card" aria-labelledby="snapshot-history-title">
-      <div className="section-header">
-        <h2 id="snapshot-history-title">Snapshot History</h2>
+      <div className="fs-app-heading kleos-section-heading">
+        <h2 className="fs-app-card-title" id="snapshot-history-title">Snapshot History</h2>
         <p>
           Methodology versions are shown explicitly. Scores produced under different methodology versions are historical records,
           not directly comparable longitudinal measurements. Methodology 2.0.1 is the current like-for-like baseline.

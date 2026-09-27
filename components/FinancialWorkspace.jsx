@@ -425,7 +425,7 @@ export default function FinancialWorkspace() {
                       <button
                         type="button"
                         key={currency}
-                        className={`${styles.currencyButton} ${currency === selectedCurrency ? styles.activeCurrency : ""}`}
+                        className={`fs-app-button is-secondary ${styles.currencyButton} ${currency === selectedCurrency ? styles.activeCurrency : ""}`}
                         onClick={() => setSelectedCurrency(currency)}
                       >
                         {currency}

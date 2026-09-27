@@ -206,7 +206,7 @@ export default function FinancialTransactionCorrections({ userId }) {
           <div className={styles.editorHeader}>
             <div>
               <p className="fs-app-kicker">Correction</p>
-              <h3>{editing.display_label || editing.counterparty_name || editing.description || "Transaction"}</h3>
+              <h3 className="fs-app-card-title">{editing.display_label || editing.counterparty_name || editing.description || "Transaction"}</h3>
               <span>{formatMoney(editing.amount, editing.currency)} · {formatDate(editing.transaction_date)}</span>
             </div>
             <button type="button" className="fs-app-button is-secondary" onClick={() => { setEditing(null); setForm(null); }}>Cancel</button>

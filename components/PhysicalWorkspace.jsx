@@ -421,19 +421,19 @@ export default function PhysicalWorkspace() {
   ];
 
   return (
-    <div className="kleos-shell">
-      <div className="kleos-board">
-        <header className="kleos-header">
-          <div>
+    <div className="fs-app-workspace">
+      <div className="fs-app-page">
+        <header className="fs-app-page-header">
+          <div className="fs-app-heading">
             <p className="fs-app-kicker">Kleos · Physical</p>
-            <h1>Physical</h1>
-            <p className="kleos-subtitle">Live physiology, body, activity, nutrition and strength evidence.</p>
+            <h1 className="fs-app-title">Physical</h1>
+            <p className="fs-app-subtitle">Live physiology, body, activity, nutrition and strength evidence.</p>
           </div>
           <div className="kleos-header-actions">
             <button className="fs-app-button is-secondary" type="button" onClick={() => void loadPhysicalData(user.id)}>Refresh</button>
           </div>
         </header>
-        <main className="kleos-scroll">
+        <main className="kleos-content">
           <DimensionState userId={user.id} vectorId="physical" kleosData={kleosData} />
 
           <section className="fs-app-card kleos-card wide-card">
@@ -505,7 +505,7 @@ export default function PhysicalWorkspace() {
 
             <details className="fs-app-card kleos-card wide-card">
               <summary>Mobility details</summary>
-              <p className="kleos-subtitle">Secondary gait and stair metrics kept available without occupying headline dashboard space.</p>
+              <p className="fs-app-subtitle">Secondary gait and stair metrics kept available without occupying headline dashboard space.</p>
               <div className={styles.statGrid}>
                 {mobility.map(([label, name, unit]) => {
                   const row = latest(healthMetrics, name);
@@ -516,7 +516,7 @@ export default function PhysicalWorkspace() {
 
             <details className="fs-app-card kleos-card wide-card">
               <summary>Clinical & Manual Records</summary>
-              <p className="kleos-subtitle">Manual context remains available as evidence but is secondary to structured live measurements.</p>
+              <p className="fs-app-subtitle">Manual context remains available as evidence but is secondary to structured live measurements.</p>
               <div className="stacked-form">
                 <label>
                   Latest Blood Test

@@ -215,7 +215,7 @@
   align-items: flex-start;
 }
 
-.sectionActions :global(.section-header) {
+.sectionActions :global(.kleos-section-heading) {
   margin-bottom: 0;
 }
 

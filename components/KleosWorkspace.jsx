@@ -861,7 +861,7 @@ function SectionHeader({ title, note }) {
   return (
     <div className="fs-app-heading kleos-section-heading">
       <h2 className="fs-app-card-title">{title}</h2>
-      {note ? <p>{note}</p> : null}
+      {note ? <p className="fs-app-subtitle">{note}</p> : null}
     </div>
   );
 }
@@ -889,7 +889,7 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
         <img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" />
       </div>
       <h2 className="fs-app-card-title">{titleByState[accessState] || "Private Kleos Workspace"}</h2>
-      <p>{statusMessage || bodyByState[accessState]}</p>
+      <p className="fs-app-subtitle">{statusMessage || bodyByState[accessState]}</p>
       {accessState === "signed-out" ? (
         <button type="button" className="fs-app-button is-primary" onClick={onSignIn}>
           Sign In With Google

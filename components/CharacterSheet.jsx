@@ -79,10 +79,10 @@ export default function CharacterSheet({ userId, kleosData }) {
   const latestBigFive = kleosData?.bigFiveAssessments?.[0] || null;
 
   return (
-    <section className={styles.sheet} aria-labelledby="character-sheet-title">
+    <section className={`fs-app-card ${styles.sheet}`} aria-labelledby="character-sheet-title">
       <header className={styles.identity}>
         <div className={styles.identityPrimary}>
-          <p className={styles.eyebrow}>Character Sheet</p>
+          <p className={`fs-app-kicker ${styles.eyebrow}`}>Character Sheet</p>
           <h2 id="character-sheet-title">{subjectName}</h2>
           <p className={styles.identitySubtitle}>
             Evidence-backed current profile across eight canonical dimensions.
@@ -254,7 +254,7 @@ function SectionHeading({ eyebrow, title, id, note = "" }) {
   return (
     <header className={styles.sectionHeading}>
       <div>
-        <p className={styles.eyebrow}>{eyebrow}</p>
+        <p className={`fs-app-kicker ${styles.eyebrow}`}>{eyebrow}</p>
         <h3 id={id}>{title}</h3>
       </div>
       {note ? <p className={styles.sectionNote}>{note}</p> : null}

@@ -52,7 +52,7 @@ export default function DimensionState({ userId, vectorId }) {
         <div className="fs-app-heading kleos-section-heading">
           <p className="fs-app-kicker">Current Dimension State</p>
           <h2 className="fs-app-card-title" id={`${vectorId}-state-title`}>{vector.label}</h2>
-          <p>{vector.description}</p>
+          <p className="fs-app-subtitle">{vector.description}</p>
         </div>
 
         {state.status === "loading" ? <p className={styles.muted}>Loading current assessment…</p> : null}
@@ -68,7 +68,7 @@ export default function DimensionState({ userId, vectorId }) {
 
             <div className={styles.copy}>
               <h3 className="fs-app-card-title">Assessment</h3>
-              <p>
+              <p className="fs-app-subtitle">
                 {result?.commentary ||
                   "No derived assessment commentary is available for this dimension yet."}
               </p>

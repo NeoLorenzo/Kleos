@@ -118,8 +118,8 @@ function StatCard({ label, value, note }) {
 
 function SectionHeader({ title, note }) {
   return (
-    <div className="section-header">
-      <h2>{title}</h2>
+    <div className="fs-app-heading kleos-section-heading">
+      <h2 className="fs-app-card-title">{title}</h2>
       {note ? <p>{note}</p> : null}
     </div>
   );
@@ -383,14 +383,14 @@ export default function PhysicalWorkspace() {
   };
 
   if (accessState === "loading") {
-    return <div className="fs-app-card access-panel"><div className="access-mark">K</div><h2>Loading Kleos</h2><p>Checking private access.</p></div>;
+    return <div className="fs-app-card access-panel"><div className="access-mark">K</div><h2 className="fs-app-card-title">Loading Kleos</h2><p>Checking private access.</p></div>;
   }
 
   if (accessState !== "authorized") {
     return (
       <div className="fs-app-card access-panel">
         <div className="access-mark">K</div>
-        <h2>{accessState === "unconfigured" ? "Kleos is not configured" : accessState === "unauthorized" ? "Access restricted" : "Sign in to Kleos"}</h2>
+        <h2 className="fs-app-card-title">{accessState === "unconfigured" ? "Kleos is not configured" : accessState === "unauthorized" ? "Access restricted" : "Sign in to Kleos"}</h2>
         <p>{accessState === "unauthorized" ? "This private workspace is locked to the authorized account." : "Use the authorized Google account to open the private Physical workspace."}</p>
         {accessState === "signed-out" ? <button className="fs-app-button is-primary" type="button" onClick={signIn}>Continue with Google</button> : null}
       </div>
@@ -451,7 +451,7 @@ export default function PhysicalWorkspace() {
               </div>
               <div className={styles.sleepBlock}>
                 <div>
-                  <h3>Latest sleep</h3>
+                  <h3 className="fs-app-card-title">Latest sleep</h3>
                   <strong className={styles.bigValue}>{Number.isFinite(sleepHours) ? formatHours(sleepHours) : "—"}</strong>
                   <small>{latestSleep ? formatDate(latestSleep.metric_date) : "No staged Watch sleep record"}</small>
                 </div>

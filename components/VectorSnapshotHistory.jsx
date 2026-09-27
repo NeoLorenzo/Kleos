@@ -37,7 +37,7 @@ export default function VectorSnapshotHistory({ userId }) {
       <section className="fs-app-card kleos-card wide-card">
         <div className="fs-app-heading kleos-section-heading">
           <h2 className="fs-app-card-title">Snapshot History</h2>
-          <p>{state.message}</p>
+          <p className="fs-app-subtitle">{state.message}</p>
         </div>
       </section>
     );
@@ -49,7 +49,7 @@ export default function VectorSnapshotHistory({ userId }) {
     <section className="fs-app-card kleos-card wide-card" aria-labelledby="snapshot-history-title">
       <div className="fs-app-heading kleos-section-heading">
         <h2 className="fs-app-card-title" id="snapshot-history-title">Snapshot History</h2>
-        <p>
+        <p className="fs-app-subtitle">
           Methodology versions are shown explicitly. Scores produced under different methodology versions are historical records,
           not directly comparable longitudinal measurements. Methodology 2.0.1 is the current like-for-like baseline.
         </p>

@@ -209,7 +209,7 @@ export default function PsychologicalAssessment({ userId }) {
       <header className={`fs-app-card ${styles.header}`}>
         <div>
           <p className={`fs-app-kicker ${styles.eyebrow}`}>Canonical Psychological Evidence</p>
-          <h1 id="psychological-assessment-title">Psychological Battery</h1>
+          <h1 className="fs-app-title" id="psychological-assessment-title">Psychological Battery</h1>
           <p className={styles.intro}>
             A repeatable set of independently scored measures plus Kleos-specific tracking facets.
             Screening scores are evidence for Kleos Bot, not diagnoses and not a replacement for professional assessment.
@@ -304,7 +304,7 @@ export default function PsychologicalAssessment({ userId }) {
         <div className={styles.historyHeader}>
           <div>
             <p className={`fs-app-kicker ${styles.eyebrow}`}>Longitudinal History</p>
-            <h2 id="psychological-history-title">Assessment history</h2>
+            <h2 className="fs-app-card-title" id="psychological-history-title">Assessment history</h2>
           </div>
           <span>{isLoading ? "Loading…" : `${history.length} recorded`}</span>
         </div>
@@ -336,7 +336,7 @@ function InstrumentStep({ instrument, values, onChange, phqItem9Value }) {
       <header className={styles.instrumentHeader}>
         <div>
           <p className={`fs-app-kicker ${styles.eyebrow}`}>{instrument.shortLabel}</p>
-          <h2>{instrument.title}</h2>
+          <h2 className="fs-app-card-title">{instrument.title}</h2>
           <p>{instrument.timeframe}</p>
         </div>
         <a href={instrument.sourceUrl} target="_blank" rel="noreferrer">
@@ -380,7 +380,7 @@ function KleosFacetStep({ values, onChange }) {
       <header className={styles.instrumentHeader}>
         <div>
           <p className={`fs-app-kicker ${styles.eyebrow}`}>Kleos-specific</p>
-          <h2>Supplementary psychological facets</h2>
+          <h2 className="fs-app-card-title">Supplementary psychological facets</h2>
           <p>
             These are stable Kleos tracking items, not validated subscales of WHO-5, SWLS, GAD-7 or PHQ-9.
             They include stress-load, coping and perceived-control coverage and are stored individually rather

@@ -61,13 +61,13 @@ export default function VectorStatePage() {
 
 
   return (
-    <main className="kleos-shell">
-      <section className="kleos-board">
-        <header className="kleos-header">
-          <div>
+    <main className="fs-app-workspace">
+      <section className="fs-app-page">
+        <header className="fs-app-page-header">
+          <div className="fs-app-heading">
             <p className="fs-app-kicker">Shared 8D Character State</p>
-            <h1>Kleos</h1>
-            <p className="kleos-subtitle">Dated current-state assessments across the eight canonical vectors.</p>
+            <h1 className="fs-app-title">Kleos</h1>
+            <p className="fs-app-subtitle">Dated current-state assessments across the eight canonical vectors.</p>
           </div>
           {accessState === "authorized" ? (
             <div className="kleos-header-actions">
@@ -77,7 +77,7 @@ export default function VectorStatePage() {
         </header>
 
         {accessState === "authorized" ? (
-          <div className="kleos-scroll">
+          <div className="kleos-content">
             <CurrentVectorState userId={user?.id} />
             <VectorSnapshotHistory userId={user?.id} />
             {message ? <p className="status-line">{message}</p> : null}

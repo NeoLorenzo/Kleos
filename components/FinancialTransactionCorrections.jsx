@@ -169,7 +169,7 @@ export default function FinancialTransactionCorrections({ userId }) {
           <h2>Review Transactions</h2>
           <p>Correct derived meaning without changing the canonical Revolut transaction. Reusable rules can match the same label, currency and direction, with an optional exact-amount constraint.</p>
         </div>
-        <select className={styles.filter} value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Transaction review filter">
+        <select className={`fs-app-control ${styles.filter}`} value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Transaction review filter">
           <option value="all">Recent</option>
           <option value="credits">Credits / inflows</option>
           <option value="needs_category">Needs review</option>
@@ -215,7 +215,7 @@ export default function FinancialTransactionCorrections({ userId }) {
           {Number(editing.amount) > 0 ? (
             <label className={styles.field}>
               <span>Inflow meaning</span>
-              <select value={form.economic_inflow_type} onChange={(event) => changeSemantic(event.target.value)}>
+              <select className="fs-app-control" value={form.economic_inflow_type} onChange={(event) => changeSemantic(event.target.value)}>
                 {INFLOW_SEMANTICS.map(([value, label]) => <option value={value} key={value || "none"}>{label}</option>)}
               </select>
               <small>This determines whether the inflow counts as independent income, owned-capital draw, support, transfer, sale proceeds, or refund.</small>
@@ -225,7 +225,7 @@ export default function FinancialTransactionCorrections({ userId }) {
           <div className={styles.formGrid}>
             <label className={styles.field}>
               <span>Flow</span>
-              <select
+              <select className="fs-app-control"
                 value={form.flow_type}
                 disabled={Boolean(form.economic_inflow_type)}
                 onChange={(event) => setForm({ ...form, flow_type: event.target.value })}
@@ -236,22 +236,22 @@ export default function FinancialTransactionCorrections({ userId }) {
             </label>
             <label className={styles.field}>
               <span>Category</span>
-              <input list="financial-category-suggestions" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
+              <input className="fs-app-control" list="financial-category-suggestions" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
               <datalist id="financial-category-suggestions">
                 {CATEGORY_SUGGESTIONS.map((value) => <option value={value} key={value} />)}
               </datalist>
             </label>
             <label className={styles.field}>
               <span>Subcategory</span>
-              <input value={form.subcategory} onChange={(event) => setForm({ ...form, subcategory: event.target.value })} placeholder="Optional" />
+              <input className="fs-app-control" value={form.subcategory} onChange={(event) => setForm({ ...form, subcategory: event.target.value })} placeholder="Optional" />
             </label>
             <label className={styles.field}>
               <span>Display label</span>
-              <input value={form.display_label} onChange={(event) => setForm({ ...form, display_label: event.target.value })} />
+              <input className="fs-app-control" value={form.display_label} onChange={(event) => setForm({ ...form, display_label: event.target.value })} />
             </label>
             <label className={styles.field}>
               <span>Internal transfer</span>
-              <select value={form.internal_transfer} onChange={(event) => setForm({ ...form, internal_transfer: event.target.value })}>
+              <select className="fs-app-control" value={form.internal_transfer} onChange={(event) => setForm({ ...form, internal_transfer: event.target.value })}>
                 <option value="auto">Automatic</option>
                 <option value="yes">Yes</option>
                 <option value="no">No</option>

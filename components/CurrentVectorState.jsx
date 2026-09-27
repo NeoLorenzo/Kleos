@@ -100,7 +100,7 @@ export default function CurrentVectorState({ userId }) {
               {result?.commentary ? (
                 <details>
                   <summary>Assessment context</summary>
-                  <p className="kleos-subtitle">{result.commentary}</p>
+                  <p className="fs-app-subtitle">{result.commentary}</p>
                 </details>
               ) : null}
               {result?.subdomains?.length ? (

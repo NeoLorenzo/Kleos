@@ -409,7 +409,7 @@ export default function FinancialPosition({ userId }) {
         <div>
           <div className={styles.subheader}>
             <div>
-              <h3>Assets</h3>
+              <h3 className="fs-app-card-title">Assets</h3>
               <p>Manual assets only. Revolut balances above are bank-synced and should not be duplicated here.</p>
             </div>
           </div>
@@ -438,7 +438,7 @@ export default function FinancialPosition({ userId }) {
         <div>
           <div className={styles.subheader}>
             <div>
-              <h3>Liabilities</h3>
+              <h3 className="fs-app-card-title">Liabilities</h3>
               <p>Debt absence requires affirmative evidence; an empty list alone is treated as unknown.</p>
             </div>
           </div>
@@ -514,7 +514,7 @@ function PositionForm({ title, onSubmit, onCancel, saving, children }) {
   return (
     <form className={`fs-app-card ${styles.formPanel}`} onSubmit={onSubmit}>
       <div className={styles.formHeader}>
-        <h3>{title}</h3>
+        <h3 className="fs-app-card-title">{title}</h3>
         <button type="button" className="fs-app-button is-secondary" onClick={onCancel}>Cancel</button>
       </div>
       <div className={styles.formGrid}>{children}</div>

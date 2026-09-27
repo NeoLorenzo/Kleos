@@ -463,7 +463,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
           <CharacterSheet userId={user.id} kleosData={kleosData} />
           <details className="fs-app-card kleos-card wide-card">
             <summary>Shared profile context</summary>
-            <p className="kleos-subtitle">
+            <p className="fs-app-subtitle">
               Cross-dimensional context that does not belong to a single Kleos dimension.
             </p>
             <div className="kleos-grid">
@@ -651,7 +651,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
 
       case "psychological":
         return (
-          <div className="kleos-scroll">
+          <div className="kleos-content">
             <BigFiveAssessments
               userId={user.id}
               assessments={kleosData.bigFiveAssessments || []}
@@ -819,7 +819,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
         return (
           <section className="fs-app-card kleos-card wide-card">
             <SectionHeader title={`${page.label} Measurements`} />
-            <p className="kleos-subtitle">
+            <p className="fs-app-subtitle">
               No dedicated structured measurement source is currently modeled for this dimension.
               The page is now the canonical home for future {page.label.toLowerCase()} evidence and
               measurement workflows.
@@ -833,13 +833,13 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
   };
 
   return (
-    <main className="kleos-shell">
-      <section className="kleos-board">
-        <header className="kleos-header">
-          <div>
+    <main className="fs-app-workspace">
+      <section className="fs-app-page">
+        <header className="fs-app-page-header">
+          <div className="fs-app-heading">
             <p className="fs-app-kicker">{isDashboard ? "Character Dashboard" : "Kleos Dimension"}</p>
-            <h1>{isDashboard ? "Character Sheet" : page.label}</h1>
-            <p className="kleos-subtitle">
+            <h1 className="fs-app-title">{isDashboard ? "Character Sheet" : page.label}</h1>
+            <p className="fs-app-subtitle">
               {isDashboard
                 ? "Current eight-dimensional overview."
                 : "Assessment, evidence, measurements, and history for this dimension."}
@@ -853,7 +853,7 @@ export default function KleosWorkspace({ activePage = "character-sheet" }) {
           statusMessage,
           onSignIn: signInWithGoogle
         }) || (
-          <div className="kleos-scroll">
+          <div className="kleos-content">
             {renderPageContent()}
             {statusMessage ? <p className="status-line">{statusMessage}</p> : null}
           </div>

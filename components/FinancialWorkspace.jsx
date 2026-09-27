@@ -491,7 +491,7 @@ export default function FinancialWorkspace() {
                     ) : <p className="fs-app-subtitle">No booked spending in this currency for the current month.</p>}
                   </div>
                   <div>
-                    <h3 className={styles.subheading}>Monthly trend</h3>
+                    <h3 className={`fs-app-card-title ${styles.subheading}`}>Monthly trend</h3>
                     <div className="table-wrap">
                       <table>
                         <thead><tr><th>Month</th><th>Income</th><th>Spend</th><th>Net</th></tr></thead>

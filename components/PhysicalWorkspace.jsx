@@ -520,11 +520,11 @@ export default function PhysicalWorkspace() {
               <div className="stacked-form">
                 <label>
                   Latest Blood Test
-                  <textarea className="large-textarea" value={healthForm.bloodTestText} onChange={(event) => setHealthForm((current) => ({ ...current, bloodTestText: event.target.value }))} placeholder="Plain-text latest blood test results for Kleos evidence." />
+                  <textarea className="fs-app-control fs-app-textarea large-textarea" value={healthForm.bloodTestText} onChange={(event) => setHealthForm((current) => ({ ...current, bloodTestText: event.target.value }))} placeholder="Plain-text latest blood test results for Kleos evidence." />
                 </label>
                 <label>
                   Miscellaneous Health
-                  <textarea className="large-textarea" value={healthForm.miscText} onChange={(event) => setHealthForm((current) => ({ ...current, miscText: event.target.value }))} placeholder="Plain-text health details that are not represented by structured metrics." />
+                  <textarea className="fs-app-control fs-app-textarea large-textarea" value={healthForm.miscText} onChange={(event) => setHealthForm((current) => ({ ...current, miscText: event.target.value }))} placeholder="Plain-text health details that are not represented by structured metrics." />
                 </label>
               </div>
               <button className="fs-app-button is-primary" type="button" onClick={saveHealth} disabled={isSaving}>{isSaving ? "Saving…" : "Save Health Records"}</button>

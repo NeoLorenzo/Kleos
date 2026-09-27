@@ -120,7 +120,7 @@
 .assessment {
   border: 1px solid var(--fs-app-border);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--fs-color-bg) 30%, transparent);
+  background: var(--fs-app-surface-raised);
 }
 
 .assessment + .assessment {

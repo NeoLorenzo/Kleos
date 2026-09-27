@@ -479,15 +479,15 @@ export default function FinancialPosition({ userId }) {
 
       {showAssetForm ? (
         <PositionForm title={editingAssetId ? "Edit asset" : "Add asset"} onSubmit={saveAsset} onCancel={resetAssetForm} saving={savingKey === "asset"}>
-          <Field label="Name"><input value={assetForm.name} onChange={(e) => setAssetForm({ ...assetForm, name: e.target.value })} required /></Field>
+          <Field label="Name"><input className="fs-app-control" value={assetForm.name} onChange={(e) => setAssetForm({ ...assetForm, name: e.target.value })} required /></Field>
           <Field label="Category"><Select value={assetForm.category} options={ASSET_CATEGORIES} onChange={(value) => setAssetForm({ ...assetForm, category: value })} /></Field>
-          <Field label="Currency"><input value={assetForm.currency} maxLength="3" disabled={Boolean(editingAssetId)} onChange={(e) => setAssetForm({ ...assetForm, currency: e.target.value.toUpperCase() })} required /></Field>
-          <Field label="Ownership %"><input type="number" min="0.01" max="100" step="0.01" value={assetForm.ownership_pct} onChange={(e) => setAssetForm({ ...assetForm, ownership_pct: e.target.value })} required /></Field>
+          <Field label="Currency"><input className="fs-app-control" value={assetForm.currency} maxLength="3" disabled={Boolean(editingAssetId)} onChange={(e) => setAssetForm({ ...assetForm, currency: e.target.value.toUpperCase() })} required /></Field>
+          <Field label="Ownership %"><input className="fs-app-control" type="number" min="0.01" max="100" step="0.01" value={assetForm.ownership_pct} onChange={(e) => setAssetForm({ ...assetForm, ownership_pct: e.target.value })} required /></Field>
           <Field label="Control"><Select value={assetForm.control_level} options={CONTROL_LEVELS} onChange={(value) => setAssetForm({ ...assetForm, control_level: value })} /></Field>
           <Field label="Liquidity"><Select value={assetForm.liquidity_class} options={LIQUIDITY_CLASSES} onChange={(value) => setAssetForm({ ...assetForm, liquidity_class: value })} /></Field>
-          <Field label="Owned since"><input type="date" value={assetForm.started_on} onChange={(e) => setAssetForm({ ...assetForm, started_on: e.target.value })} required /></Field>
-          <Field label={editingAssetId ? "New value (optional)" : "Current value (optional)"}><input type="number" min="0" step="0.01" value={assetForm.value} onChange={(e) => setAssetForm({ ...assetForm, value: e.target.value })} /></Field>
-          <Field label="Valuation date"><input type="date" value={assetForm.valuation_date} onChange={(e) => setAssetForm({ ...assetForm, valuation_date: e.target.value })} /></Field>
+          <Field label="Owned since"><input className="fs-app-control" type="date" value={assetForm.started_on} onChange={(e) => setAssetForm({ ...assetForm, started_on: e.target.value })} required /></Field>
+          <Field label={editingAssetId ? "New value (optional)" : "Current value (optional)"}><input className="fs-app-control" type="number" min="0" step="0.01" value={assetForm.value} onChange={(e) => setAssetForm({ ...assetForm, value: e.target.value })} /></Field>
+          <Field label="Valuation date"><input className="fs-app-control" type="date" value={assetForm.valuation_date} onChange={(e) => setAssetForm({ ...assetForm, valuation_date: e.target.value })} /></Field>
           <Field label="Valuation method"><Select value={assetForm.valuation_method} options={VALUATION_METHODS} onChange={(value) => setAssetForm({ ...assetForm, valuation_method: value })} /></Field>
           <Field label="Confidence"><Select value={assetForm.confidence} options={CONFIDENCE_LEVELS} onChange={(value) => setAssetForm({ ...assetForm, confidence: value })} /></Field>
         </PositionForm>
@@ -495,12 +495,12 @@ export default function FinancialPosition({ userId }) {
 
       {showLiabilityForm ? (
         <PositionForm title={editingLiabilityId ? "Edit liability" : "Add liability"} onSubmit={saveLiability} onCancel={resetLiabilityForm} saving={savingKey === "liability"}>
-          <Field label="Name"><input value={liabilityForm.name} onChange={(e) => setLiabilityForm({ ...liabilityForm, name: e.target.value })} required /></Field>
+          <Field label="Name"><input className="fs-app-control" value={liabilityForm.name} onChange={(e) => setLiabilityForm({ ...liabilityForm, name: e.target.value })} required /></Field>
           <Field label="Category"><Select value={liabilityForm.category} options={LIABILITY_CATEGORIES} onChange={(value) => setLiabilityForm({ ...liabilityForm, category: value })} /></Field>
-          <Field label="Currency"><input value={liabilityForm.currency} maxLength="3" disabled={Boolean(editingLiabilityId)} onChange={(e) => setLiabilityForm({ ...liabilityForm, currency: e.target.value.toUpperCase() })} required /></Field>
-          <Field label="Liability since"><input type="date" value={liabilityForm.started_on} onChange={(e) => setLiabilityForm({ ...liabilityForm, started_on: e.target.value })} required /></Field>
-          <Field label={editingLiabilityId ? "New balance (optional)" : "Current balance (optional)"}><input type="number" min="0" step="0.01" value={liabilityForm.amount} onChange={(e) => setLiabilityForm({ ...liabilityForm, amount: e.target.value })} /></Field>
-          <Field label="Balance date"><input type="date" value={liabilityForm.balance_date} onChange={(e) => setLiabilityForm({ ...liabilityForm, balance_date: e.target.value })} /></Field>
+          <Field label="Currency"><input className="fs-app-control" value={liabilityForm.currency} maxLength="3" disabled={Boolean(editingLiabilityId)} onChange={(e) => setLiabilityForm({ ...liabilityForm, currency: e.target.value.toUpperCase() })} required /></Field>
+          <Field label="Liability since"><input className="fs-app-control" type="date" value={liabilityForm.started_on} onChange={(e) => setLiabilityForm({ ...liabilityForm, started_on: e.target.value })} required /></Field>
+          <Field label={editingLiabilityId ? "New balance (optional)" : "Current balance (optional)"}><input className="fs-app-control" type="number" min="0" step="0.01" value={liabilityForm.amount} onChange={(e) => setLiabilityForm({ ...liabilityForm, amount: e.target.value })} /></Field>
+          <Field label="Balance date"><input className="fs-app-control" type="date" value={liabilityForm.balance_date} onChange={(e) => setLiabilityForm({ ...liabilityForm, balance_date: e.target.value })} /></Field>
           <Field label="Confidence"><Select value={liabilityForm.confidence} options={CONFIDENCE_LEVELS} onChange={(value) => setLiabilityForm({ ...liabilityForm, confidence: value })} /></Field>
         </PositionForm>
       ) : null}
@@ -531,7 +531,7 @@ function Field({ label, children }) {
 
 function Select({ value, options, onChange }) {
   return (
-    <select value={value} onChange={(event) => onChange(event.target.value)}>
+    <select className="fs-app-control" value={value} onChange={(event) => onChange(event.target.value)}>
       {options.map((option) => <option value={option} key={option}>{humanize(option)}</option>)}
     </select>
   );

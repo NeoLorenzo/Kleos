@@ -241,7 +241,7 @@ export default function PsychologicalAssessment({ userId }) {
               <button
                 type="button"
                 key={step.id}
-                className={index === stepIndex ? styles.activeStep : styles.stepButton}
+                className={`fs-app-button is-secondary ${index === stepIndex ? styles.activeStep : styles.stepButton}`}
                 onClick={() => setStepIndex(index)}
               >
                 <span>{index + 1}</span>
@@ -486,7 +486,7 @@ function AssessmentHistoryCard({ assessment, latest, onEdit, onDelete, disabled 
           <button type="button" className="fs-app-button is-secondary" onClick={onEdit} disabled={disabled}>
             Correct responses
           </button>
-          <button type="button" className={styles.deleteButton} onClick={onDelete} disabled={disabled}>
+          <button type="button" className={`fs-app-button is-ghost ${styles.deleteButton}`} onClick={onDelete} disabled={disabled}>
             Delete
           </button>
         </div>

@@ -41,7 +41,6 @@ button {
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
 }
 
 :focus-visible {
@@ -54,45 +53,7 @@ button:disabled {
   color: var(--fs-app-text);
 }
 
-.kleos-shell {
-  min-height: calc(100dvh - var(--fs-app-utility-height));
-  padding:
-    var(--fs-app-workspace-padding-block-start)
-    var(--fs-app-workspace-padding-inline)
-    var(--fs-app-workspace-padding-block-end);
-  background: var(--fs-app-bg);
-}
-
-.kleos-board {
-  width: min(100%, var(--fs-app-content-max));
-  margin: 0 auto;
-}
-
-.kleos-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--fs-space-4);
-  padding: 0 0 var(--fs-space-5);
-  border-bottom: var(--fs-border-width) solid var(--fs-app-border);
-}
-
-.kleos-header h1 {
-  margin: 0;
-  color: var(--fs-app-text);
-  font-size: var(--fs-app-type-page-title-size);
-  font-weight: var(--fs-app-type-page-title-weight);
-  line-height: var(--fs-app-type-page-title-line-height);
-  letter-spacing: var(--fs-app-type-page-title-tracking);
-}
-
-.kleos-subtitle {
-  margin: 0.45rem 0 0;
-  max-width: 60ch;
-  color: var(--fs-app-text-muted);
-  font-size: var(--fs-app-type-supporting-size);
-  line-height: var(--fs-app-type-supporting-line-height);
-}
+/* Kleos-owned composition layered on canonical Application UI primitives. */
 
 .kleos-header-actions {
   display: flex;
@@ -101,10 +62,9 @@ button:disabled {
   gap: var(--fs-space-2);
 }
 
-.kleos-scroll {
+.kleos-content {
   display: grid;
   gap: var(--fs-space-4);
-  padding-top: var(--fs-space-5);
 }
 
 .kleos-card {
@@ -141,54 +101,6 @@ label {
   font-weight: var(--fs-app-type-metadata-weight);
 }
 
-input,
-select,
-textarea {
-  width: 100%;
-  min-height: var(--fs-app-field-min-height);
-  border: var(--fs-border-width) solid var(--fs-app-border-raised);
-  border-radius: var(--fs-radius-control);
-  outline: none;
-  background: var(--fs-app-surface-raised);
-  color: var(--fs-app-text);
-  font-size: var(--fs-app-type-body-size);
-  line-height: var(--fs-app-type-body-line-height);
-  color-scheme: dark;
-  transition:
-    border-color var(--fs-motion-fast) var(--fs-motion-ease),
-    box-shadow var(--fs-motion-fast) var(--fs-motion-ease),
-    background var(--fs-motion-fast) var(--fs-motion-ease);
-}
-
-input,
-select {
-  padding: 0.5rem 0.62rem;
-}
-
-textarea {
-  min-height: 6rem;
-  padding: 0.65rem;
-  resize: vertical;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--fs-app-text-quiet);
-}
-
-input:hover:not(:disabled),
-select:hover:not(:disabled),
-textarea:hover:not(:disabled) {
-  border-color: var(--fs-app-border-strong);
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--fs-app-accent-line);
-  box-shadow: 0 0 0 3px var(--fs-app-accent-soft);
-}
-
 .large-textarea {
   min-height: 9rem;
   margin-bottom: var(--fs-space-3);
@@ -204,24 +116,12 @@ textarea:focus {
   grid-column: 1 / -1;
 }
 
-.section-header {
+.kleos-section-heading {
   margin-bottom: var(--fs-space-3);
 }
 
-.section-header h2 {
-  margin: 0;
-  color: var(--fs-app-text);
-  font-size: var(--fs-app-type-section-title-size);
-  font-weight: var(--fs-app-type-section-title-weight);
-  line-height: var(--fs-app-type-section-title-line-height);
-  letter-spacing: var(--fs-app-type-section-title-tracking);
-}
-
-.section-header p:not(.fs-app-kicker) {
-  margin: 0.35rem 0 0;
-  color: var(--fs-app-text-muted);
-  font-size: 0.76rem;
-  line-height: 1.45;
+.kleos-section-heading > .fs-app-subtitle {
+  margin-top: 0.35rem;
 }
 
 .table-wrap {
@@ -236,7 +136,7 @@ table {
   width: 100%;
   min-width: 560px;
   border-collapse: collapse;
-  font-size: 0.75rem;
+  font-size: var(--fs-app-type-body-size);
 }
 
 th,
@@ -291,17 +191,9 @@ tbody tr:last-child td {
   height: 100%;
 }
 
-.access-panel h2 {
-  margin: 0;
-  color: var(--fs-app-text);
-  font-size: 1.35rem;
-}
-
-.access-panel p {
+.access-panel .fs-app-subtitle {
   max-width: 28rem;
-  margin: 0;
-  color: var(--fs-app-text-muted);
-  line-height: 1.55;
+  text-align: center;
 }
 
 .status-line {
@@ -316,16 +208,12 @@ tbody tr:last-child td {
   border-radius: 999px;
   background: var(--fs-app-surface-strong);
   color: var(--fs-app-text-secondary);
-  font-size: 0.75rem;
-  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.25);
+  font-size: var(--fs-app-type-body-size);
+  box-shadow: var(--fs-app-overlay-shadow);
 }
 
 @media (max-width: 900px) {
-  .kleos-shell {
-    min-height: calc(100dvh - var(--fs-app-utility-height));
-  }
-
-  .kleos-header {
+  .fs-app-page-header {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -345,7 +233,8 @@ tbody tr:last-child td {
 
 @media (max-width: 560px) {
   .kleos-header-actions,
-  .kleos-header-actions button {
+  .kleos-header-actions button,
+  .kleos-header-actions a {
     width: 100%;
   }
 }

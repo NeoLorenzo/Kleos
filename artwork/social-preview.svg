@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+<defs>
+  <radialGradient id="bg" cx="79%" cy="50%" r="67%">
+    <stop offset="0%" stop-color="#1B071F"/>
+    <stop offset="55%" stop-color="#08020A"/>
+    <stop offset="100%" stop-color="#000000"/>
+  </radialGradient>
+  <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+    <feGaussianBlur stdDeviation="8" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+<rect width="1280" height="640" fill="url(#bg)"/>
+<rect x="0" y="0" width="1280" height="640" fill="none" stroke="#151518" stroke-width="2"/>
+<text x="84" y="108" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="650" letter-spacing="10" fill="#F4F4F5">KLEOS</text>
+<circle cx="58" cy="96" r="18" fill="none" stroke="#CB30E0" stroke-width="3"/>
+<g stroke="#CB30E0" stroke-width="3" stroke-linecap="round">
+  <line x1="58" y1="66" x2="58" y2="56"/><line x1="58" y1="126" x2="58" y2="136"/>
+  <line x1="28" y1="96" x2="18" y2="96"/><line x1="88" y1="96" x2="98" y2="96"/>
+  <line x1="37" y1="75" x2="30" y2="68"/><line x1="79" y1="117" x2="86" y2="124"/>
+  <line x1="79" y1="75" x2="86" y2="68"/><line x1="37" y1="117" x2="30" y2="124"/>
+</g>
+<text x="84" y="258" font-family="Inter, Arial, sans-serif" font-size="67" font-weight="850" letter-spacing="2" fill="#F4F4F5">EVIDENCE</text>
+<text x="84" y="336" font-family="Inter, Arial, sans-serif" font-size="67" font-weight="850" letter-spacing="2" fill="#F4F4F5">TO STATE.</text>
+<rect x="84" y="367" width="72" height="5" rx="2.5" fill="#CB30E0"/>
+<text x="84" y="414" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="420" fill="#A0A0A0">Longitudinal personal intelligence</text>
+<text x="84" y="532" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="650" letter-spacing="3.1" fill="#696970">FABBRO SYSTEMS</text>
+<g transform="translate(1000 320)">
+  <circle r="220" fill="none" stroke="#2A202C" stroke-width="1.5"/>
+  <circle r="170" fill="none" stroke="#352438" stroke-width="1.5"/>
+  <circle r="120" fill="none" stroke="#442A48" stroke-width="1.5"/>
+  <circle r="70" fill="none" stroke="#5B2D62" stroke-width="1.5"/>
+  <g stroke="#CB30E0" stroke-width="3" stroke-linecap="round" opacity=".9">
+    <line x1="0" y1="-222" x2="0" y2="-70"/><line x1="157" y1="-157" x2="50" y2="-50"/>
+    <line x1="222" y1="0" x2="70" y2="0"/><line x1="157" y1="157" x2="50" y2="50"/>
+    <line x1="0" y1="222" x2="0" y2="70"/><line x1="-157" y1="157" x2="-50" y2="50"/>
+    <line x1="-222" y1="0" x2="-70" y2="0"/><line x1="-157" y1="-157" x2="-50" y2="-50"/>
+  </g>
+  <g fill="#F4F4F5">
+    <circle cx="0" cy="-222" r="5"/><circle cx="157" cy="-157" r="5"/>
+    <circle cx="222" cy="0" r="5"/><circle cx="157" cy="157" r="5"/>
+    <circle cx="0" cy="222" r="5"/><circle cx="-157" cy="157" r="5"/>
+    <circle cx="-222" cy="0" r="5"/><circle cx="-157" cy="-157" r="5"/>
+  </g>
+  <circle r="22" fill="#CB30E0" opacity=".22" filter="url(#glow)"/>
+  <circle r="8" fill="#F9E9FC"/>
+</g>
+<path d="M 84 584 H 440" stroke="#1C1C1F"/><circle cx="452" cy="584" r="2.5" fill="#CB30E0"/>
+</svg>

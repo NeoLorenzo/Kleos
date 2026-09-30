@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SectionHeading from "@/components/SectionHeading";
 import { loadLatestVectorSnapshot } from "@/lib/kleos/vectorSnapshotRepository";
 import { VECTOR_DEFINITIONS } from "@/lib/kleos/vectorSnapshots";
 
@@ -65,18 +66,14 @@ export default function CurrentVectorState({ userId }) {
 
   return (
     <section className="fs-app-card kleos-card wide-card" aria-labelledby="current-vector-state-title">
-      <div className="section-header">
-        <h2 id="current-vector-state-title">Current Vector State</h2>
-        <p>
-          Assessed {formatDateTime(snapshot.evaluatedAt)} by {snapshot.evaluator} · methodology {snapshot.methodologyVersion}
-          {snapshot.overallScore === null ? "" : ` · overall ${formatNumber(snapshot.overallScore)} / 100`}
-        </p>
-        <p>
-          {deterministic
-            ? "Methodology 2.x: final vector scores are calculated deterministically from fixed weighted subdomains and coverage rules."
-            : "Legacy 1.x methodology: this snapshot used holistic model scoring and is not directly comparable with Methodology 2.x snapshots."}
-        </p>
-      </div>
+      <SectionHeading
+        title="Current Vector State"
+        id="current-vector-state-title"
+        sub={`Assessed ${formatDateTime(snapshot.evaluatedAt)} by ${snapshot.evaluator} · methodology ${snapshot.methodologyVersion}${snapshot.overallScore === null ? "" : ` · overall ${formatNumber(snapshot.overallScore)} / 100`}`}
+        hint={deterministic
+          ? "Methodology 2.x: final vector scores are calculated deterministically from fixed weighted subdomains and coverage rules."
+          : "Legacy 1.x methodology: this snapshot used holistic model scoring and is not directly comparable with Methodology 2.x snapshots."}
+      />
 
       <div className="kleos-grid">
         {VECTOR_DEFINITIONS.map((vector) => {
@@ -98,13 +95,13 @@ export default function CurrentVectorState({ userId }) {
                 </em>
               </div>
               {result?.commentary ? (
-                <details>
+                <details className="kleos-disclosure">
                   <summary>Assessment context</summary>
                   <p className="kleos-subtitle">{result.commentary}</p>
                 </details>
               ) : null}
               {result?.subdomains?.length ? (
-                <details>
+                <details className="kleos-disclosure">
                   <summary>Methodology subdomains</summary>
                   <div className="table-wrap">
                     <table>

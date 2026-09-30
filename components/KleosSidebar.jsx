@@ -53,6 +53,18 @@ export default function KleosSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const relativePath = normalizeRelativePath(pathname);
   const compact = state === "collapsed" && !isMobile;
+  const items = KLEOS_PAGES.map((page) => ({
+    ...page,
+    icon: PAGE_ICONS[page.id] || Compass,
+    active:
+      page.path === "/"
+        ? relativePath === "/"
+        : relativePath === page.path || relativePath.startsWith(page.path)
+  }));
+  const groups = [
+    { label: "Overview", items: items.filter((item) => item.id === "character-sheet") },
+    { label: "Dimensions", items: items.filter((item) => item.id !== "character-sheet") }
+  ];
 
   return (
     <Sidebar collapsible="icon" aria-label="Kleos primary navigation">
@@ -71,23 +83,17 @@ export default function KleosSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Current state</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {KLEOS_PAGES.map((page) => {
-                const Icon = PAGE_ICONS[page.id] || Compass;
-                const active =
-                  page.path === "/"
-                    ? relativePath === "/"
-                    : relativePath === page.path || relativePath.startsWith(page.path);
-
-                return (
+        {groups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((page) => (
                   <SidebarMenuItem key={page.id}>
                     <SidebarMenuButton
                       href={page.path}
-                      icon={Icon}
-                      isActive={active}
+                      icon={page.icon}
+                      isActive={page.active}
                       tooltip={page.label}
                       onClick={() => {
                         if (isMobile) setOpenMobile(false);
@@ -96,11 +102,11 @@ export default function KleosSidebar() {
                       {page.label}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarRail />

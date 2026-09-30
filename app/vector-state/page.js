@@ -66,7 +66,7 @@ export default function VectorStatePage() {
         <header className="kleos-header">
           <div>
             <p className="fs-app-kicker">Shared 8D Character State</p>
-            <h1>Kleos</h1>
+            <h1>Vector State</h1>
             <p className="kleos-subtitle">Dated current-state assessments across the eight canonical vectors.</p>
           </div>
           {accessState === "authorized" ? (

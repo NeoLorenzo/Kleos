@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { RefreshCw } from "lucide-react";
 import DimensionState from "@/components/DimensionState";
+import SectionHeading from "@/components/SectionHeading";
+import StatusToast from "@/components/StatusToast";
 import { supabase } from "@/lib/supabase/client";
 import { AUTHORIZED_KLEOS_EMAIL } from "@/lib/kleos/data";
 import styles from "./FinancialWorkspace.module.css";
@@ -30,6 +33,7 @@ export default function FinancialWorkspace() {
   const [user, setUser] = useState(null);
   const [finance, setFinance] = useState(EMPTY_DATA);
   const [selectedCurrency, setSelectedCurrency] = useState("EUR");
+  const [merchantView, setMerchantView] = useState("recurring");
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -335,296 +339,356 @@ export default function FinancialWorkspace() {
   const rolling365 = rollingWindow(finance.analytics.rolling, selectedCurrency, 365);
   const categoryTotal = categoryRows.reduce((sum, row) => sum + Number(row.spending_amount || 0), 0);
 
+  const accessGate = renderAccessGate({ accessState, user, statusMessage, onSignIn: signIn });
+  const connectionState = currentConnection ? connectionLabel(currentConnection) : "Not connected";
+  const connectionTone =
+    connectionState === "Connected"
+      ? "is-success"
+      : connectionState === "Reauthorization required"
+        ? "is-warning"
+        : "is-quiet";
+  const maxCategory = categoryRows.reduce((max, row) => Math.max(max, Number(row.spending_amount || 0)), 0);
+  const maxTrend = trendRows.reduce(
+    (max, row) => Math.max(max, Number(row.income_amount || 0), Number(row.spending_amount || 0)),
+    0
+  );
+  const lowCoverage = coverage && Number(coverage.spending_category_coverage_pct || 0) < 85;
+  const merchantRows = merchantView === "recurring" ? recurringRows : topMerchantRows;
+
   return (
     <main className="kleos-shell">
       <section className="kleos-board">
-        <header className="kleos-header">
-          <div>
-            <p className="fs-app-kicker">Kleos Dimension</p>
-            <h1>Financial</h1>
-            <p className="kleos-subtitle">Current financial state, cash-flow intelligence, Open Banking evidence, and assessment history.</p>
-          </div>
-        </header>
-
-        {renderAccessGate({ accessState, user, statusMessage, onSignIn: signIn }) || (
+        {accessGate || (
           <div className="kleos-scroll">
-            <DimensionState userId={user.id} vectorId="financial" />
+            <DimensionState userId={user.id} vectorId="financial">
+              {currentAccounts.length ? (
+                <section className="fs-app-card kleos-card">
+                  <SectionHeading
+                    title="Cash Flow"
+                    sub={`${formatMonthLabel(currentMonth)} to date`}
+                    hint={
+                      <>
+                        Economic cash flow excludes transfers, internal FX conversions, ATM cash movements, and
+                        zero-value authorization records.
+                        {currentMonthSummary && (Number(currentMonthSummary.transfer_in) || Number(currentMonthSummary.transfer_out)) ? (
+                          <> Transfers excluded from cash-flow KPIs this month: {formatMoney(currentMonthSummary.transfer_in || 0, selectedCurrency)} in · {formatMoney(currentMonthSummary.transfer_out || 0, selectedCurrency)} out.</>
+                        ) : null}
+                        {coverage ? (
+                          <> Flow classification {formatPercent(coverage.flow_coverage_pct)} · specific spending categories {formatPercent(coverage.spending_category_coverage_pct)} · {Number(coverage.fx_transactions || 0)} FX records excluded.</>
+                        ) : null}
+                      </>
+                    }
+                  >
+                    {currencies.length > 1 ? (
+                      <div className="kleos-segmented" role="group" aria-label="Cash-flow currency">
+                        {currencies.map((currency) => (
+                          <button
+                            type="button"
+                            key={currency}
+                            aria-pressed={currency === selectedCurrency}
+                            onClick={() => setSelectedCurrency(currency)}
+                          >
+                            {currency}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </SectionHeading>
 
-            <section className="fs-app-card kleos-card wide-card">
-              <div className={styles.sectionHeaderRow}>
-                <div className="section-header">
-                  <p className="fs-app-kicker">Bank Connectivity</p>
-                  <h2>Revolut via Enable Banking</h2>
-                  <p>Read-only Open Banking synchronization. Kleos never stores your Revolut password or a full account identifier.</p>
+                  <div className="kleos-stats">
+                    <Metric label="Income · month" value={formatMoney(currentMonthSummary?.income_amount || 0, selectedCurrency)} />
+                    <Metric label="Spending · month" value={formatMoney(currentMonthSummary?.spending_amount || 0, selectedCurrency)} />
+                    <Metric
+                      label="Net cash flow · month"
+                      value={formatSignedMoney(currentMonthSummary?.net_cash_flow || 0, selectedCurrency)}
+                      tone={Number(currentMonthSummary?.net_cash_flow || 0) > 0 ? "positive" : ""}
+                    />
+                    <Metric label="Refunds · month" value={formatMoney(currentMonthSummary?.refund_amount || 0, selectedCurrency)} />
+                  </div>
+                  <dl className={styles.rollingRow}>
+                    <div><dt>30-day spend</dt><dd>{formatMoney(rolling30?.spending_amount || 0, selectedCurrency)}</dd></div>
+                    <div><dt>90-day spend</dt><dd>{formatMoney(rolling90?.spending_amount || 0, selectedCurrency)}</dd></div>
+                    <div><dt>365-day spend</dt><dd>{formatMoney(rolling365?.spending_amount || 0, selectedCurrency)}</dd></div>
+                  </dl>
+                  {lowCoverage ? (
+                    <p className="kleos-note is-warning">
+                      Only {formatPercent(coverage.spending_category_coverage_pct)} of spending has a specific category this month, so category totals are incomplete.
+                    </p>
+                  ) : null}
+                </section>
+              ) : null}
+
+              {currentAccounts.length ? (
+                <section className="fs-app-card kleos-card">
+                  <SectionHeading
+                    title="Spending"
+                    sub={`${formatMonthLabel(currentMonth)} · ${selectedCurrency}`}
+                    hint="Gross booked spending by deterministic transaction category. Refunds are tracked separately rather than counted as income."
+                  />
+                  <div className={styles.analyticsColumns}>
+                    <div>
+                      <h3 className="kleos-subheading">By category</h3>
+                      {categoryRows.length ? (
+                        <div className={styles.categoryList}>
+                          {categoryRows.slice(0, 8).map((row) => {
+                            const amount = Number(row.spending_amount || 0);
+                            const share = categoryTotal > 0 ? (amount / categoryTotal) * 100 : 0;
+                            const width = maxCategory > 0 ? (amount / maxCategory) * 100 : 0;
+                            return (
+                              <div
+                                className={styles.categoryRow}
+                                key={`${row.month}-${row.currency}-${row.category}`}
+                                title={`${Number(row.transaction_count || 0)} transaction(s) · ${share.toFixed(1)}% of spending`}
+                              >
+                                <span className={styles.categoryName}>{humanize(row.category)}</span>
+                                <div className={styles.categoryTrack} aria-hidden="true">
+                                  <span className={styles.categoryFill} style={{ width: `${Math.max(2, Math.min(100, width))}%` }} />
+                                </div>
+                                <strong>{formatMoney(amount, selectedCurrency)}</strong>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : <p className="kleos-subtitle">No booked spending in this currency for the current month.</p>}
+                    </div>
+                    <div>
+                      <div className={styles.trendHead}>
+                        <h3 className="kleos-subheading">Last {trendRows.length} months</h3>
+                        {trendRows.length ? (
+                          <div className={styles.trendLegend} aria-hidden="true">
+                            <span><i className={styles.trendIncome} />Income</span>
+                            <span><i className={styles.trendSpend} />Spend</span>
+                          </div>
+                        ) : null}
+                      </div>
+                      {trendRows.length ? (
+                        <div className={styles.trendChart}>
+                          {[...trendRows].reverse().map((row) => (
+                            <div
+                              className={styles.trendMonth}
+                              key={`bar-${row.month}`}
+                              title={`${formatMonthLabel(row.month)}: income ${formatMoney(row.income_amount, selectedCurrency)}, spend ${formatMoney(row.spending_amount, selectedCurrency)}, net ${formatSignedMoney(row.net_cash_flow, selectedCurrency)}`}
+                            >
+                              <div className={styles.trendBars} aria-hidden="true">
+                                <span className={styles.trendIncome} style={{ height: `${maxTrend ? (Number(row.income_amount || 0) / maxTrend) * 100 : 0}%` }} />
+                                <span className={styles.trendSpend} style={{ height: `${maxTrend ? (Number(row.spending_amount || 0) / maxTrend) * 100 : 0}%` }} />
+                              </div>
+                              <small>{formatShortMonth(row.month)}</small>
+                            </div>
+                          ))}
+                        </div>
+                      ) : <p className="kleos-subtitle">No monthly cash-flow history yet.</p>}
+                      {trendRows.length ? (
+                        <details className="kleos-disclosure">
+                          <summary>Monthly values</summary>
+                          <div className="table-wrap">
+                            <table className={styles.compactTable}>
+                              <thead><tr><th>Month</th><th className="num">Income</th><th className="num">Spend</th><th className="num">Net</th></tr></thead>
+                              <tbody>
+                                {trendRows.map((row) => (
+                                  <tr key={`${row.month}-${row.currency}`}>
+                                    <td>{formatMonthLabel(row.month)}</td>
+                                    <td className="num">{formatMoney(row.income_amount, selectedCurrency)}</td>
+                                    <td className="num">{formatMoney(row.spending_amount, selectedCurrency)}</td>
+                                    <td className={`num${Number(row.net_cash_flow) > 0 ? " kleos-positive" : ""}`}>{formatSignedMoney(row.net_cash_flow, selectedCurrency)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
+                      ) : null}
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
+              {currentAccounts.length ? (
+                <section className="fs-app-card kleos-card">
+                  <SectionHeading
+                    title="Merchants"
+                    hint={
+                      merchantView === "recurring"
+                        ? "Likely recurring commitments, detected from repeated merchant, amount, and cadence evidence. This is derived classification, not a bank-provided fact."
+                        : "Largest classified merchant spending over the last 365 days in the selected currency."
+                    }
+                  >
+                    <div className="kleos-segmented" role="group" aria-label="Merchant view">
+                      <button type="button" aria-pressed={merchantView === "recurring"} onClick={() => setMerchantView("recurring")}>
+                        Recurring
+                      </button>
+                      <button type="button" aria-pressed={merchantView === "top"} onClick={() => setMerchantView("top")}>
+                        Top · 365 days
+                      </button>
+                    </div>
+                  </SectionHeading>
+                  {merchantRows.length ? (
+                    <ul className={styles.merchantList}>
+                      {merchantRows.map((row) => (
+                        <li key={`${merchantView}-${row.currency}-${row.normalized_label}-${row.category}`}>
+                          <span className={styles.merchantName}>
+                            <strong>{row.display_label || humanize(row.normalized_label)}</strong>
+                            <small>
+                              {merchantView === "recurring" ? formatCadence(row.recurrence_interval_days) : humanize(row.category)}
+                            </small>
+                          </span>
+                          <span className={styles.merchantAmount}>
+                            {formatMoney(merchantView === "recurring" ? row.typical_amount : row.spending_amount, selectedCurrency)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="kleos-subtitle">
+                      {merchantView === "recurring"
+                        ? `No active recurring charges detected in ${selectedCurrency}.`
+                        : "No merchant spending available."}
+                    </p>
+                  )}
+                </section>
+              ) : null}
+
+              <section className="fs-app-card kleos-card">
+                <SectionHeading
+                  title="Recent Transactions"
+                  hint="Raw bank rows remain canonical evidence; flow/category are derived, while remittance notes and transaction codes remain bank-provided context."
+                />
+                <div className={`table-wrap ${styles.transactionsWrap}`}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th className="num">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {finance.transactions.length ? finance.transactions.map((transaction) => {
+                        const classification = finance.analytics.classificationsByTransaction[transaction.id];
+                        const primaryLabel = classification?.display_label || transactionDescription(transaction);
+                        const contextNote = transactionContextNote(transaction, primaryLabel);
+                        const amount = Number(transaction.amount);
+                        const pending = String(transaction.status || "").toLowerCase() !== "booked";
+                        return (
+                          <tr key={transaction.id}>
+                            <td className={styles.dateCell}>{formatCalendarDate(transaction.booking_date || transaction.value_date)}</td>
+                            <td>
+                              <div className={styles.transactionDescription}>
+                                <strong>
+                                  {primaryLabel}
+                                  {pending ? <span className="kleos-pill is-quiet">{humanize(transaction.status)}</span> : null}
+                                </strong>
+                                {contextNote ? <span>{contextNote}</span> : null}
+                                {transaction.bank_transaction_code ? <small>{humanize(transaction.bank_transaction_code)}</small> : null}
+                              </div>
+                            </td>
+                            <td>
+                              <div className={styles.categoryCell}>
+                                <span>
+                                  {classification ? humanize(classification.category) : "—"}
+                                  {classification?.subcategory ? ` · ${humanize(classification.subcategory)}` : ""}
+                                </span>
+                                {classification ? (
+                                  <small>
+                                    {humanize(classification.flow_type)}
+                                    {classification.is_recurring ? " · Recurring" : ""}
+                                  </small>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td className={`num ${amount > 0 ? "kleos-positive" : ""} ${styles.amountCell}`}>
+                              {amount > 0 ? "+" : ""}{formatMoney(transaction.amount, transaction.currency)}
+                            </td>
+                          </tr>
+                        );
+                      }) : <tr><td colSpan="4">No synchronized transactions yet.</td></tr>}
+                    </tbody>
+                  </table>
                 </div>
-                <div className={styles.actions}>
-                  <button type="button" className="fs-app-button is-primary" onClick={connectRevolut} disabled={isConnecting || isSyncing}>
-                    {isConnecting ? "Opening…" : currentConnection ? "Reconnect Revolut" : "Connect Revolut"}
-                  </button>
+              </section>
+
+              <section className="fs-app-card kleos-card">
+                <SectionHeading
+                  title={
+                    <span className={styles.titleWithStatus}>
+                      Bank connection
+                      <span className={`kleos-pill ${connectionTone}`}>
+                        <span className={styles.statusDot} aria-hidden="true" />
+                        {connectionState}
+                      </span>
+                    </span>
+                  }
+                  sub={
+                    currentConnection
+                      ? `${currentConnection.institution_name || "Revolut"} via Enable Banking · synced ${formatDateTime(currentConnection.last_synced_at)}`
+                      : "Revolut via Enable Banking"
+                  }
+                  hint={
+                    <>
+                      Read-only Open Banking synchronization. Kleos never stores your Revolut password or a full account identifier.
+                      {currentConnection?.consent_valid_until ? ` Consent valid until ${formatDateTime(currentConnection.consent_valid_until)}.` : ""}
+                      {" "}Balances remain separated by currency; Kleos does not perform implicit FX conversion.
+                    </>
+                  }
+                >
                   {currentConnection?.provider_session_id ? (
                     <button type="button" className="fs-app-button is-secondary" onClick={() => void syncConnection(currentConnection.id)} disabled={isSyncing}>
+                      <RefreshCw aria-hidden="true" className={isSyncing ? styles.spinning : undefined} />
                       {isSyncing ? "Syncing…" : "Sync Revolut"}
                     </button>
                   ) : null}
-                </div>
-              </div>
+                  <button
+                    type="button"
+                    className={`fs-app-button ${currentConnection ? "is-ghost" : "is-primary"}`}
+                    onClick={connectRevolut}
+                    disabled={isConnecting || isSyncing}
+                  >
+                    {isConnecting ? "Opening…" : currentConnection ? "Reconnect" : "Connect Revolut"}
+                  </button>
+                </SectionHeading>
 
-              <div className={styles.connectionGrid}>
-                <Metric label="Connection" value={currentConnection ? connectionLabel(currentConnection) : "Not connected"} />
-                <Metric label="Institution" value={currentConnection?.institution_name || "—"} />
-                <Metric label="Last sync" value={formatDateTime(currentConnection?.last_synced_at)} />
-                <Metric label="Accounts" value={currentAccounts.length ? String(currentAccounts.length) : "—"} />
-              </div>
-              {currentConnection?.consent_valid_until ? (
-                <p className={styles.errorNote}>Consent valid until {formatDateTime(currentConnection.consent_valid_until)}.</p>
-              ) : null}
-              {currentConnection?.last_error_code ? (
-                <p className={styles.errorNote}>Last provider error: {currentConnection.last_error_code} · {formatDateTime(currentConnection.last_error_at)}</p>
-              ) : null}
-            </section>
-
-            <section className="fs-app-card kleos-card wide-card">
-              <div className="section-header">
-                <p className="fs-app-kicker">Current Evidence</p>
-                <h2>Accounts & Balances</h2>
-                <p>Balances remain separated by currency; Kleos does not perform implicit FX conversion.</p>
-              </div>
-              {currentAccounts.length ? (
-                <div className={styles.accountGrid}>
-                  {currentAccounts.map((account) => {
-                    const balance = pickDisplayBalance(finance.balancesByAccount[account.id] || []);
-                    return (
-                      <article className={styles.accountCard} key={account.id}>
-                        <div>
-                          <strong>{account.account_name || "Revolut account"}</strong>
-                          <span>{account.masked_identifier || account.cash_account_type || "Open Banking account"}</span>
-                        </div>
-                        <div className={styles.accountBalance}>
-                          <strong>{balance ? formatMoney(balance.amount, balance.currency) : "Balance unavailable"}</strong>
-                          <span>{account.currency || balance?.currency || ""}{balance?.balance_type ? ` · ${humanize(balance.balance_type)}` : ""}</span>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="kleos-subtitle">{isLoading ? "Loading accounts…" : "No synchronized Revolut accounts yet."}</p>
-              )}
-            </section>
-
-            {currentAccounts.length ? (
-              <section className="fs-app-card kleos-card wide-card">
-                <div className={styles.sectionHeaderRow}>
-                  <div className="section-header">
-                    <p className="fs-app-kicker">Transaction Intelligence</p>
-                    <h2>Cash Flow</h2>
-                    <p>Economic cash flow excludes transfers, internal FX conversions, ATM cash movements, and zero-value authorization records.</p>
-                  </div>
-                  <div className={styles.currencyTabs} aria-label="Cash-flow currency">
-                    {currencies.map((currency) => (
-                      <button
-                        type="button"
-                        key={currency}
-                        className={`${styles.currencyButton} ${currency === selectedCurrency ? styles.activeCurrency : ""}`}
-                        onClick={() => setSelectedCurrency(currency)}
-                      >
-                        {currency}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className={styles.analyticsGrid}>
-                  <Metric label="Income · month" value={formatMoney(currentMonthSummary?.income_amount || 0, selectedCurrency)} />
-                  <Metric label="Spending · month" value={formatMoney(currentMonthSummary?.spending_amount || 0, selectedCurrency)} />
-                  <Metric label="Net cash flow · month" value={formatSignedMoney(currentMonthSummary?.net_cash_flow || 0, selectedCurrency)} />
-                  <Metric label="Refunds · month" value={formatMoney(currentMonthSummary?.refund_amount || 0, selectedCurrency)} />
-                </div>
-                <div className={styles.rollingGrid}>
-                  <Metric label="30d spending" value={formatMoney(rolling30?.spending_amount || 0, selectedCurrency)} />
-                  <Metric label="90d spending" value={formatMoney(rolling90?.spending_amount || 0, selectedCurrency)} />
-                  <Metric label="365d spending" value={formatMoney(rolling365?.spending_amount || 0, selectedCurrency)} />
-                </div>
-
-                {currentMonthSummary && (Number(currentMonthSummary.transfer_in) || Number(currentMonthSummary.transfer_out)) ? (
-                  <p className={styles.analyticsNote}>
-                    Transfers excluded from cash-flow KPIs this month: {formatMoney(currentMonthSummary.transfer_in || 0, selectedCurrency)} in · {formatMoney(currentMonthSummary.transfer_out || 0, selectedCurrency)} out.
-                  </p>
-                ) : null}
-                {coverage ? (
-                  <p className={Number(coverage.spending_category_coverage_pct || 0) < 85 ? styles.warningNote : styles.analyticsNote}>
-                    Flow classification {formatPercent(coverage.flow_coverage_pct)} · specific spending categories {formatPercent(coverage.spending_category_coverage_pct)} · {Number(coverage.fx_transactions || 0)} FX records excluded.
-                  </p>
-                ) : null}
-              </section>
-            ) : null}
-
-            {currentAccounts.length ? (
-              <section className="fs-app-card kleos-card wide-card">
-                <div className="section-header">
-                  <p className="fs-app-kicker">Spending Intelligence</p>
-                  <h2>{formatMonthLabel(currentMonth)} · {selectedCurrency}</h2>
-                  <p>Gross booked spending by deterministic transaction category. Refunds are tracked separately rather than counted as income.</p>
-                </div>
-                <div className={styles.analyticsColumns}>
-                  <div>
-                    <h3 className={styles.subheading}>Categories</h3>
-                    {categoryRows.length ? (
-                      <div className={styles.categoryList}>
-                        {categoryRows.slice(0, 10).map((row) => {
-                          const amount = Number(row.spending_amount || 0);
-                          const share = categoryTotal > 0 ? (amount / categoryTotal) * 100 : 0;
-                          return (
-                            <div className={styles.categoryRow} key={`${row.month}-${row.currency}-${row.category}`}>
-                              <div className={styles.categoryMeta}>
-                                <span>{humanize(row.category)}</span>
-                                <strong>{formatMoney(amount, selectedCurrency)}</strong>
-                              </div>
-                              <div className={styles.categoryTrack} aria-hidden="true">
-                                <span className={styles.categoryFill} style={{ width: `${Math.max(2, Math.min(100, share))}%` }} />
-                              </div>
-                              <small>{Number(row.transaction_count || 0)} transaction(s) · {share.toFixed(1)}%</small>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : <p className="kleos-subtitle">No booked spending in this currency for the current month.</p>}
-                  </div>
-                  <div>
-                    <h3 className={styles.subheading}>Monthly trend</h3>
-                    <div className="table-wrap">
-                      <table>
-                        <thead><tr><th>Month</th><th>Income</th><th>Spend</th><th>Net</th></tr></thead>
-                        <tbody>
-                          {trendRows.length ? trendRows.map((row) => (
-                            <tr key={`${row.month}-${row.currency}`}>
-                              <td>{formatMonthLabel(row.month)}</td>
-                              <td>{formatMoney(row.income_amount, selectedCurrency)}</td>
-                              <td>{formatMoney(row.spending_amount, selectedCurrency)}</td>
-                              <td>{formatSignedMoney(row.net_cash_flow, selectedCurrency)}</td>
-                            </tr>
-                          )) : <tr><td colSpan="4">No monthly cash-flow history yet.</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            ) : null}
-
-            {currentAccounts.length ? (
-              <section className="fs-app-card kleos-card wide-card">
-                <div className={styles.analyticsColumns}>
-                  <div>
-                    <div className="section-header">
-                      <p className="fs-app-kicker">Recurring Commitments</p>
-                      <h2>Likely Recurring</h2>
-                      <p>Detected from repeated merchant, amount, and cadence evidence. This is derived classification, not a bank-provided fact.</p>
-                    </div>
-                    <div className="table-wrap">
-                      <table>
-                        <thead><tr><th>Merchant</th><th>Typical</th><th>Cadence</th></tr></thead>
-                        <tbody>
-                          {recurringRows.length ? recurringRows.map((row) => (
-                            <tr key={`${row.currency}-${row.normalized_label}`}>
-                              <td>{row.display_label || humanize(row.normalized_label)}</td>
-                              <td>{formatMoney(row.typical_amount, selectedCurrency)}</td>
-                              <td>{formatCadence(row.recurrence_interval_days)}</td>
-                            </tr>
-                          )) : <tr><td colSpan="3">No active recurring charges detected in {selectedCurrency}.</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="section-header">
-                      <p className="fs-app-kicker">365-Day Spend</p>
-                      <h2>Top Merchants</h2>
-                      <p>Largest classified merchant spending over the last 365 days in the selected currency.</p>
-                    </div>
-                    <div className="table-wrap">
-                      <table>
-                        <thead><tr><th>Merchant</th><th>Category</th><th>Spend</th></tr></thead>
-                        <tbody>
-                          {topMerchantRows.length ? topMerchantRows.map((row) => (
-                            <tr key={`${row.currency}-${row.normalized_label}-${row.category}`}>
-                              <td>{row.display_label || humanize(row.normalized_label)}</td>
-                              <td>{humanize(row.category)}</td>
-                              <td>{formatMoney(row.spending_amount, selectedCurrency)}</td>
-                            </tr>
-                          )) : <tr><td colSpan="3">No merchant spending available.</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            ) : null}
-
-            <section className="fs-app-card kleos-card wide-card">
-              <div className="section-header">
-                <p className="fs-app-kicker">Cash Flow Evidence</p>
-                <h2>Recent Transactions</h2>
-                <p>Raw bank rows remain canonical evidence; flow/category are derived, while remittance notes and transaction codes remain bank-provided context.</p>
-              </div>
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Description</th>
-                      <th>Flow</th>
-                      <th>Category</th>
-                      <th>Status</th>
-                      <th>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {finance.transactions.length ? finance.transactions.map((transaction) => {
-                      const classification = finance.analytics.classificationsByTransaction[transaction.id];
-                      const primaryLabel = classification?.display_label || transactionDescription(transaction);
-                      const contextNote = transactionContextNote(transaction, primaryLabel);
+                {currentAccounts.length ? (
+                  <div className={styles.accountGrid}>
+                    {currentAccounts.map((account) => {
+                      const balance = pickDisplayBalance(finance.balancesByAccount[account.id] || []);
                       return (
-                        <tr key={transaction.id}>
-                          <td>{formatCalendarDate(transaction.booking_date || transaction.value_date)}</td>
-                          <td>
-                            <div className={styles.transactionDescription}>
-                              <strong>{primaryLabel}</strong>
-                              {contextNote ? <span>{contextNote}</span> : null}
-                              {transaction.bank_transaction_code ? <small>{humanize(transaction.bank_transaction_code)}</small> : null}
+                        <article className={styles.accountCard} key={account.id}>
+                          <div className={styles.accountIdentity}>
+                            <span className={styles.currencyBadge}>{account.currency || balance?.currency || "—"}</span>
+                            <div>
+                              <strong>{account.account_name || "Revolut account"}</strong>
+                              <span>{account.masked_identifier || account.cash_account_type || "Open Banking account"}</span>
                             </div>
-                          </td>
-                          <td><span className={styles.statusBadge}>{classification ? humanize(classification.flow_type) : "—"}</span></td>
-                          <td>
-                            {classification ? humanize(classification.category) : "—"}
-                            {classification?.subcategory ? ` · ${humanize(classification.subcategory)}` : ""}
-                            {classification?.is_recurring ? " · Recurring" : ""}
-                          </td>
-                          <td><span className={styles.statusBadge}>{humanize(transaction.status)}</span></td>
-                          <td className={Number(transaction.amount) < 0 ? styles.negativeAmount : ""}>
-                            {formatMoney(transaction.amount, transaction.currency)}
-                          </td>
-                        </tr>
+                          </div>
+                          <div className={styles.accountBalance} title={balance?.balance_type ? humanize(balance.balance_type) : undefined}>
+                            <strong>{balance ? formatMoney(balance.amount, balance.currency) : "Balance unavailable"}</strong>
+                          </div>
+                        </article>
                       );
-                    }) : <tr><td colSpan="6">No synchronized transactions yet.</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {statusMessage ? <p className="status-line">{statusMessage}</p> : null}
+                    })}
+                  </div>
+                ) : (
+                  <p className="kleos-subtitle">{isLoading ? "Loading accounts…" : "No synchronized Revolut accounts yet."}</p>
+                )}
+                {currentConnection?.last_error_code ? (
+                  <p className="kleos-note is-warning">Last provider error: {currentConnection.last_error_code} · {formatDateTime(currentConnection.last_error_at)}</p>
+                ) : null}
+              </section>
+            </DimensionState>
           </div>
         )}
+        {accessGate ? null : <StatusToast message={statusMessage} />}
       </section>
     </main>
   );
 }
 
-function Metric({ label, value }) {
+function Metric({ label, value, tone = "" }) {
   return (
-    <div className={styles.metric}>
+    <div className="kleos-stat">
       <span>{label}</span>
-      <strong>{value}</strong>
+      <strong className={tone === "positive" ? "kleos-positive" : undefined}>{value}</strong>
     </div>
   );
 }
@@ -644,7 +708,10 @@ function renderAccessGate({ accessState, user, statusMessage, onSignIn }) {
     unauthorized: `${user?.email || "This account"} is not authorized for Kleos.`
   }[accessState];
   return (
-    <section className="fs-app-card access-panel">
+    <section
+      className={`fs-app-card access-panel${accessState === "loading" ? " is-loading" : ""}`}
+      aria-busy={accessState === "loading" ? "true" : undefined}
+    >
       <div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div>
       <h2>{title}</h2>
       <p>{statusMessage || body}</p>
@@ -818,6 +885,13 @@ function formatMonthLabel(value) {
   return date.toLocaleDateString(undefined, { month: "short", year: "numeric" });
 }
 
+function formatShortMonth(value) {
+  if (!value) return "—";
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString(undefined, { month: "short" });
+}
+
 function formatDateTime(value) {
   if (!value) return "—";
   const date = new Date(value);
@@ -827,7 +901,11 @@ function formatDateTime(value) {
 function formatCalendarDate(value) {
   if (!value) return "—";
   const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
-  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
+  if (Number.isNaN(date.getTime())) return "—";
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString(undefined, sameYear
+    ? { day: "numeric", month: "short" }
+    : { day: "numeric", month: "short", year: "numeric" });
 }
 
 function humanize(value) {

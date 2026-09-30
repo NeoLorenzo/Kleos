@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import styles from "./CharacterSheet.module.css";
+import InfoHint from "@/components/InfoHint";
+import { ScoreDelta, ScoreMeter, Sparkline, VectorRadar } from "@/components/KleosCharts";
 import { supabase } from "@/lib/supabase/client";
 import { loadVectorSnapshotHistory } from "@/lib/kleos/vectorSnapshotRepository";
 import { VECTOR_DEFINITIONS } from "@/lib/kleos/vectorSnapshots";
-import { formatBigFiveTestDate } from "@/lib/kleos/bigFive";
 import {
   buildVectorTrajectory,
   formatTrajectorySummary
 } from "@/lib/kleos/characterSheet";
 
-export default function CharacterSheet({ userId, kleosData }) {
+const TRAJECTORY_LENGTH = 8;
+
+export default function CharacterSheet({ userId }) {
   const [historyState, setHistoryState] = useState({
     status: "loading",
     snapshots: [],
@@ -66,215 +70,153 @@ export default function CharacterSheet({ userId, kleosData }) {
 
   const snapshots = historyState.snapshots;
   const latest = snapshots[0] || null;
+  const previous =
+    snapshots[1] && snapshots[1].methodologyVersion === latest?.methodologyVersion ? snapshots[1] : null;
   const assessedCount =
     latest?.results?.filter((result) => result.status === "assessed").length || 0;
-  const unknownCount = VECTOR_DEFINITIONS.length - assessedCount;
+  const isLoading = historyState.status === "loading";
+  const overall = numeric(latest?.overallScore);
+  const previousOverall = numeric(previous?.overallScore);
 
-  const latestStage =
-    [...(kleosData?.academicStages || [])]
-      .filter((stage) => Number.isFinite(Number(stage.stage_mean)))
-      .sort((a, b) => Number(b.stage || 0) - Number(a.stage || 0))[0] || null;
-  const latestCognitive = kleosData?.cognitiveTests?.[0] || null;
-  const latestBigFive = kleosData?.bigFiveAssessments?.[0] || null;
+  const radarAxes = VECTOR_DEFINITIONS.map((vector) => {
+    const result = latest?.results?.find((item) => item.vectorId === vector.id);
+    return {
+      id: vector.id,
+      label: vector.label,
+      href: `/${vector.id}/`,
+      score: result?.status === "assessed" ? Number(result.score) : null
+    };
+  });
+  const previousScores = previous
+    ? Object.fromEntries(
+        previous.results
+          .filter((result) => result.status === "assessed")
+          .map((result) => [result.vectorId, Number(result.score)])
+      )
+    : null;
 
   return (
-    <section className={styles.sheet} aria-labelledby="character-sheet-title">
-      <header className={styles.identity}>
-        <div className={styles.identityPrimary}>
-          <p className={styles.eyebrow}>Character Sheet</p>
-          <h2 id="character-sheet-title">{subjectName}</h2>
-          <p className={styles.identitySubtitle}>
-            Evidence-backed current profile across eight canonical dimensions.
-          </p>
+    <div className={styles.sheet}>
+      <header className={styles.header}>
+        <div className={styles.identity}>
+          <p className="fs-app-kicker">Character Sheet</p>
+          <h1 id="character-sheet-title">{subjectName}</h1>
+          <section aria-labelledby="character-summary-title">
+            <h2 id="character-summary-title" className="sr-only">Character summary</h2>
+            {isLoading ? (
+              <span className={`kleos-skeleton ${styles.summarySkeleton}`} aria-hidden="true" />
+            ) : (
+              <p className={styles.summary}>{buildCharacterSummary(latest)}</p>
+            )}
+          </section>
+          {latest ? (
+            <p className={styles.meta}>
+              Assessed {formatDate(latest.evaluatedAt)}
+              <span aria-hidden="true">·</span>
+              {assessedCount} of {VECTOR_DEFINITIONS.length} dimensions
+              <span aria-hidden="true">·</span>
+              Methodology {latest.methodologyVersion}
+              <InfoHint label="About this assessment">
+                Evaluated by {latest.evaluator}. {snapshots.length} snapshot
+                {snapshots.length === 1 ? "" : "s"} in history. Scores from different methodology
+                versions are historical records, not like-for-like measurements.
+              </InfoHint>
+            </p>
+          ) : null}
         </div>
 
-        <dl className={styles.metadata} aria-label="Assessment metadata">
-          <Meta label="Last assessment" value={latest ? formatDate(latest.evaluatedAt) : "Unavailable"} />
-          <Meta label="Evaluator" value={latest?.evaluator || "Unavailable"} />
-          <Meta label="Methodology" value={latest?.methodologyVersion || "Unavailable"} />
-          <Meta label="Coverage" value={`${assessedCount} assessed · ${unknownCount} unknown`} />
-          <Meta
-            label="History"
-            value={`${snapshots.length} snapshot${snapshots.length === 1 ? "" : "s"}`}
-          />
-        </dl>
+        {overall !== null ? (
+          <div className={styles.overall}>
+            <span>Overall</span>
+            <div>
+              <strong>{formatNumber(overall)}</strong>
+              <small>/ 100</small>
+            </div>
+            {previousOverall !== null ? <ScoreDelta value={overall - previousOverall} /> : null}
+          </div>
+        ) : null}
       </header>
 
       {historyState.status === "error" ? (
-        <p className={styles.alert}>
+        <p className="kleos-note is-warning">
           Vector history is temporarily unavailable. Canonical measurements remain intact.
         </p>
       ) : null}
 
-      <section className={styles.summarySection} aria-labelledby="character-summary-title">
-        <SectionHeading eyebrow="Current State" title="Character summary" id="character-summary-title" />
-        <p className={styles.characterSummary}>{buildCharacterSummary(latest)}</p>
-      </section>
-
-      <section className={styles.dimensionsSection} aria-labelledby="dimension-state-title">
-        <SectionHeading
-          eyebrow="Eight Dimensions"
-          title="Current dimensional state"
-          id="dimension-state-title"
-          note="Recent trajectory runs oldest → newest. Select a row for the full dimension."
-        />
-
-        <div className={styles.dimensionTable}>
-          <div className={styles.dimensionHeader} aria-hidden="true">
-            <span>Dimension</span>
-            <span>State</span>
-            <span>Confidence</span>
-            <span>Trajectory</span>
-            <span>Assessment</span>
-            <span />
+      <section className={`fs-app-card ${styles.stateCard}`} aria-labelledby="dimension-state-title">
+        <div className={styles.stateHead}>
+          <div className="kleos-title-row">
+            <h2 id="dimension-state-title">Current dimensional state</h2>
+            <InfoHint label="How to read this">
+              Scores are out of 100. The change is measured against the previous snapshot under the same
+              methodology, and the trend line shows up to the last {TRAJECTORY_LENGTH} snapshots, oldest to
+              newest. Select a dimension for its full assessment and evidence.
+            </InfoHint>
           </div>
+          {previousScores ? (
+            <div className={styles.legend} aria-hidden="true">
+              <span><i className={styles.legendCurrent} />Latest</span>
+              <span><i className={styles.legendPrevious} />Previous</span>
+            </div>
+          ) : null}
+        </div>
 
-          <div className={styles.dimensionRows}>
+        <div className={styles.stateGrid}>
+          <figure className={styles.radarFigure}>
+            <VectorRadar axes={radarAxes} previous={previousScores} showValues={false} />
+          </figure>
+
+          <ol className={styles.dimensionRows}>
             {VECTOR_DEFINITIONS.map((vector) => {
               const result = latest?.results?.find((item) => item.vectorId === vector.id) || null;
-              const trajectory = buildVectorTrajectory(snapshots, vector.id, { limit: 6 });
+              const trajectory = buildVectorTrajectory(snapshots, vector.id, { limit: TRAJECTORY_LENGTH });
+              const assessed = result?.status === "assessed";
+              const priorResult = previous?.results?.find((item) => item.vectorId === vector.id);
+              const delta =
+                assessed && priorResult?.status === "assessed"
+                  ? Number(result.score) - Number(priorResult.score)
+                  : null;
               return (
-                <a
-                  className={styles.dimensionRow}
-                  href={`/${vector.id}/`}
-                  key={vector.id}
-                  aria-label={`Open ${vector.label} dimension`}
-                >
-                  <span className={styles.dimensionIdentity}>
-                    <strong>{vector.label}</strong>
-                    <small>{vector.description}</small>
-                  </span>
-                  <span className={styles.dimensionScore}>
-                    {result?.status === "assessed" ? formatNumber(result.score) : "—"}
-                    <small>{result?.status === "assessed" ? "/ 100" : "Unknown"}</small>
-                  </span>
-                  <span className={styles.dimensionConfidence}>{confidenceLabel(result)}</span>
-                  <span className={styles.dimensionTrajectory}>
-                    {trajectory.length ? formatTrajectorySummary(trajectory) : "No history"}
-                  </span>
-                  <span className={styles.dimensionAssessment}>{assessmentSummary(result)}</span>
-                  <span className={styles.dimensionArrow} aria-hidden="true">→</span>
-                </a>
+                <li key={vector.id}>
+                  <a
+                    className={styles.dimensionRow}
+                    href={`/${vector.id}/`}
+                    aria-label={`Open ${vector.label} dimension`}
+                    title={result?.commentary || undefined}
+                  >
+                    <span className={styles.dimensionIdentity}>
+                      <strong>{vector.label}</strong>
+                      <small>{isLoading ? " " : confidenceLabel(result)}</small>
+                    </span>
+                    <ScoreMeter value={assessed ? Number(result.score) : NaN} size="md" />
+                    <span className={assessed ? styles.score : styles.scoreUnknown}>
+                      {isLoading ? "…" : assessed ? formatNumber(result.score) : "—"}
+                    </span>
+                    <span className={styles.delta}>
+                      {delta !== null ? <ScoreDelta value={delta} /> : null}
+                    </span>
+                    <span
+                      className={styles.dimensionTrajectory}
+                      title={trajectory.length ? formatTrajectorySummary(trajectory) : "No history"}
+                    >
+                      <Sparkline
+                        values={trajectory
+                          .slice()
+                          .reverse()
+                          .map((point) => (point.status === "assessed" ? point.score : null))}
+                        width={72}
+                        height={22}
+                        label={`${vector.label} trajectory: ${formatTrajectorySummary(trajectory)}`}
+                      />
+                    </span>
+                    <ChevronRight className={styles.dimensionArrow} aria-hidden="true" />
+                  </a>
+                </li>
               );
             })}
-          </div>
+          </ol>
         </div>
       </section>
-
-      <section className={styles.factsSection} aria-labelledby="key-facts-title">
-        <SectionHeading
-          eyebrow="Selected Records"
-          title="Key facts"
-          id="key-facts-title"
-          note="Summary only. Detailed measurements and editing live inside each dimension."
-        />
-
-        <div className={styles.factColumns}>
-          <FactGroup title="Physical">
-            <Fact label="Body metrics" value={bodyMetricSummary(kleosData?.strengthProfile)} />
-            <Fact label="Heracles strength" value={strengthMetricSummary(kleosData?.strengthMetrics)} />
-            <Fact label="Strength sync" value={strengthSyncSummary(kleosData?.strengthMetrics)} />
-            <Fact
-              label="Health profile"
-              value={
-                hasText(kleosData?.healthProfile?.bloodTestText) ||
-                hasText(kleosData?.healthProfile?.miscText)
-                  ? "Recorded"
-                  : "Not recorded"
-              }
-            />
-          </FactGroup>
-
-          <FactGroup title="Intellectual & psychological">
-            <Fact
-              label="Latest academic stage"
-              value={
-                latestStage
-                  ? `${latestStage.academic_year} · ${formatNumber(latestStage.stage_mean)}% mean`
-                  : "No completed stage mean"
-              }
-            />
-            <Fact
-              label="Latest cognitive test"
-              value={
-                latestCognitive
-                  ? `${latestCognitive.test_name} · ${latestCognitive.score_text}`
-                  : "No cognitive test recorded"
-              }
-            />
-            <Fact
-              label="Big Five"
-              value={
-                latestBigFive
-                  ? `${kleosData.bigFiveAssessments.length} recorded · latest ${formatBigFiveTestDate(latestBigFive.test_date)}`
-                  : "No assessment recorded"
-              }
-            />
-            <Fact
-              label="Academic modules"
-              value={`${kleosData?.academicModules?.length || 0} recorded`}
-            />
-          </FactGroup>
-
-          <FactGroup title="Professional & record status">
-            <Fact
-              label="Professional profile"
-              value={hasText(kleosData?.cvText) ? "CV recorded" : "No CV recorded"}
-            />
-            <Fact
-              label="Assessed dimensions"
-              value={`${assessedCount} of ${VECTOR_DEFINITIONS.length}`}
-            />
-            <Fact
-              label="Unknown dimensions"
-              value={`${unknownCount} of ${VECTOR_DEFINITIONS.length}`}
-            />
-            <Fact
-              label="Assessment snapshots"
-              value={`${snapshots.length} recorded`}
-            />
-          </FactGroup>
-        </div>
-      </section>
-    </section>
-  );
-}
-
-function Meta({ label, value }) {
-  return (
-    <div className={styles.metaRow}>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  );
-}
-
-function SectionHeading({ eyebrow, title, id, note = "" }) {
-  return (
-    <header className={styles.sectionHeading}>
-      <div>
-        <p className={styles.eyebrow}>{eyebrow}</p>
-        <h3 id={id}>{title}</h3>
-      </div>
-      {note ? <p className={styles.sectionNote}>{note}</p> : null}
-    </header>
-  );
-}
-
-function FactGroup({ title, children }) {
-  return (
-    <section className={styles.factGroup}>
-      <h4>{title}</h4>
-      <dl>{children}</dl>
-    </section>
-  );
-}
-
-function Fact({ label, value }) {
-  return (
-    <div className={styles.factRow}>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
     </div>
   );
 }
@@ -291,93 +233,42 @@ function buildCharacterSummary(latest) {
   const ranked = assessed.slice().sort((a, b) => Number(b.score) - Number(a.score));
   const highest = ranked.slice(0, Math.min(2, ranked.length));
   const lowest = ranked.length > 2 ? ranked.slice(-2).reverse() : [];
-  const parts = [`${assessed.length} of ${VECTOR_DEFINITIONS.length} dimensions are currently assessed.`];
+  const unknown = (latest?.results || []).filter((result) => result.status !== "assessed");
 
-  if (highest.length) {
-    parts.push(`Highest current scores: ${formatRankedDimensions(highest)}.`);
+  const parts = [`Strongest in ${formatRankedDimensions(highest)}`];
+  if (lowest.length) parts.push(`weakest in ${formatRankedDimensions(lowest)}`);
+  let sentence = `${parts.join("; ")}.`;
+  if (unknown.length) {
+    sentence += ` ${formatNames(unknown.map((result) => vectorLabel(result.vectorId)))} ${
+      unknown.length === 1 ? "is" : "are"
+    } not yet assessable.`;
   }
-  if (lowest.length) {
-    parts.push(`Lowest current scores: ${formatRankedDimensions(lowest)}.`);
-  }
-
-  const commentary = assessed
-    .map((result) => firstSentence(result.commentary))
-    .filter(Boolean)
-    .slice(0, 2);
-  if (commentary.length) {
-    parts.push(`Current assessment notes: ${commentary.join(" ")}`);
-  }
-
-  return parts.join(" ");
+  return sentence;
 }
 
 function formatRankedDimensions(results) {
-  return results
-    .map((result) => `${vectorLabel(result.vectorId)} ${formatNumber(result.score)}`)
-    .join(" · ");
+  return formatNames(results.map((result) => vectorLabel(result.vectorId)));
+}
+
+function formatNames(names) {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
 function vectorLabel(vectorId) {
   return VECTOR_DEFINITIONS.find((vector) => vector.id === vectorId)?.label || vectorId;
 }
 
-function firstSentence(value) {
-  const text = String(value || "").trim();
-  if (!text) return "";
-  const match = text.match(/^.*?[.!?](?:\s|$)/);
-  return (match?.[0] || text).trim();
-}
-
-function assessmentSummary(result) {
-  if (!result) return "No current assessment.";
-  if (result.status !== "assessed") {
-    return result.commentary || "Insufficient evidence for a current assessment.";
-  }
-  return firstSentence(result.commentary) || "Assessment available on the dimension page.";
-}
-
 function confidenceLabel(result) {
   if (!result) return "No data";
-  if (result.status === "unknown") return "Unknown";
-  return result.confidence ? capitalize(result.confidence) : "Unspecified";
-}
-
-function bodyMetricSummary(profile) {
-  const height = numeric(profile?.heightCm);
-  const weight = numeric(profile?.bodyWeightKg);
-  if (height === null && weight === null) return "Not recorded";
-  return [
-    height === null ? null : `${formatNumber(height)} cm`,
-    weight === null ? null : `${formatNumber(weight)} kg`
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
-
-function strengthMetricSummary(metrics = []) {
-  const current = metrics.filter((metric) => metric.is_current).length;
-  const stale = metrics.length - current;
-  if (!metrics.length) return "No Heracles strength snapshot yet";
-  return `${current} current · ${stale} stale`;
-}
-
-function strengthSyncSummary(metrics = []) {
-  const checkedTimes = metrics
-    .map((metric) => new Date(metric.last_checked_at || 0).getTime())
-    .filter(Number.isFinite)
-    .filter((time) => time > 0);
-  if (!checkedTimes.length) return "Never synced";
-  return `Checked ${formatDate(new Date(Math.max(...checkedTimes)).toISOString())}`;
+  if (result.status === "unknown") return "Not assessable";
+  return result.confidence ? `${capitalize(result.confidence)} confidence` : "Unspecified confidence";
 }
 
 function numeric(value) {
   if (value === "" || value === null || value === undefined) return null;
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
-}
-
-function hasText(value) {
-  return Boolean(String(value || "").trim());
 }
 
 function formatDate(value) {

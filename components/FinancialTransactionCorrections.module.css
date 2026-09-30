@@ -1,26 +1,30 @@
-.headerRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+.summaryTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.intro {
+  max-width: 64ch;
+  margin: 16px 0 0;
+  color: var(--fs-app-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .filter {
-  min-width: 10rem;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  padding: 0.55rem 0.7rem;
-  font: inherit;
+  align-self: flex-end;
+  width: auto;
+  min-width: 11rem;
+  min-height: 32px;
+  font-size: 12.5px;
 }
 
 .list {
-  display: grid;
-  gap: 0.55rem;
-  margin-top: 1rem;
-  max-height: 34rem;
+  max-height: 32rem;
   overflow: auto;
+  border: var(--fs-border-width) solid var(--fs-app-border);
+  border-radius: 10px;
 }
 
 .row {
@@ -28,9 +32,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 9px;
+  padding: 10px 8px 10px 14px;
+  transition: background var(--fs-motion-fast) var(--fs-motion-ease);
+}
+
+.row + .row {
+  border-top: var(--fs-border-width) solid var(--fs-app-border);
+}
+
+.row:hover {
   background: var(--fs-app-hover);
 }
 
@@ -38,135 +48,157 @@
 .amountBlock {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 3px;
 }
 
 .identity {
   min-width: 0;
 }
 
+.identity strong {
+  color: var(--fs-app-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .identity > span,
-.identity small,
-.editorHeader span,
-.field small,
-.ruleNote,
-.status {
+.identity small {
   color: var(--fs-app-text-muted);
+  font-size: 12px;
+}
+
+.identity small {
+  color: var(--fs-app-text-quiet);
 }
 
 .titleLine {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .sourceBadge {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--fs-app-border);
+  height: 18px;
+  padding: 0 6px;
+  border: var(--fs-border-width) solid var(--fs-app-border-raised);
   border-radius: 999px;
-  padding: 0.1rem 0.45rem;
   color: var(--fs-app-text-muted);
-  font-size: 0.68rem;
+  font-size: 10.5px;
   font-weight: 500;
 }
 
 .confirmedBadge {
-  color: inherit;
-  background: var(--fs-app-surface-strong);
+  border-color: var(--fs-app-accent-line);
+  background: var(--fs-app-accent-soft);
+  color: var(--fs-app-accent-text);
 }
 
 .amountBlock {
-  align-items: flex-end;
   flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.amountBlock strong {
+  color: var(--fs-app-text);
+  font-size: 13px;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Editor dialog */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(3px);
 }
 
 .editor {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 10px;
-  background: var(--fs-app-surface-raised);
+  width: min(600px, calc(100vw - 32px));
 }
 
 .editorHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
 }
 
-.editorHeader h3 {
-  margin: 0.15rem 0;
+.editorHeader :global(.fs-app-kicker) {
+  margin: 0 0 2px;
+}
+
+.editorHeader span {
+  color: var(--fs-app-text-muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.editorBody {
+  display: grid;
+  gap: 16px;
 }
 
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 12px;
 }
 
 .field {
   display: grid;
-  gap: 0.35rem;
+  align-content: start;
+  gap: 6px;
 }
 
 .field > span {
-  color: var(--fs-app-text-muted);
-  font-size: 0.78rem;
+  color: var(--fs-app-text-secondary);
+  font-size: 12px;
 }
 
-.field input,
-.field select {
-  width: 100%;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  padding: 0.58rem 0.65rem;
-  font: inherit;
+.field small {
+  color: var(--fs-app-text-quiet);
+  font-size: 11.5px;
+  line-height: 1.4;
 }
 
 .ruleToggle {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  font-size: 0.86rem;
+  gap: 10px;
+  color: var(--fs-app-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.ruleToggle input {
-  width: auto;
-}
-
-.ruleNote,
-.status {
+.ruleNote {
   margin: 0;
-  font-size: 0.78rem;
-}
-
-.editorActions {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: var(--fs-radius-control);
+  background: var(--fs-app-surface-raised);
+  color: var(--fs-app-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 @media (max-width: 760px) {
-  .headerRow,
-  .row,
-  .editorHeader {
+  .row {
     align-items: flex-start;
     flex-direction: column;
+    padding-right: 14px;
   }
 
   .filter {
     width: 100%;
-  }
-
-  .amountBlock {
-    align-items: flex-start;
   }
 
   .formGrid {

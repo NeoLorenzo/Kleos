@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { AUTHORIZED_KLEOS_EMAIL, createEmptyKleosData, loadKleosData } from "@/lib/kleos/data";
+import { RefreshCw } from "lucide-react";
 import DimensionState from "@/components/DimensionState";
+import SectionHeading from "@/components/SectionHeading";
+import StatusToast from "@/components/StatusToast";
 import styles from "./PhysicalWorkspace.module.css";
 
 const STATIC_HEIGHT_CM = 190;
@@ -108,7 +111,7 @@ function changeOverWindow(metrics, name, days = 30) {
 
 function StatCard({ label, value, note }) {
   return (
-    <div className={styles.statCard}>
+    <div className="kleos-stat">
       <span>{label}</span>
       <strong>{value}</strong>
       {note ? <small>{note}</small> : null}
@@ -116,11 +119,11 @@ function StatCard({ label, value, note }) {
   );
 }
 
-function SectionHeader({ title, note }) {
+function Metric({ label, value }) {
   return (
-    <div className="section-header">
-      <h2>{title}</h2>
-      {note ? <p>{note}</p> : null}
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
     </div>
   );
 }
@@ -129,40 +132,63 @@ function EmptyChart({ text = "Not enough data yet." }) {
   return <div className={styles.emptyChart}>{text}</div>;
 }
 
-function LineChart({ rows, valueField = "qty", label, unit = "" }) {
+function LineChart({ rows, valueField = "qty", label, unit = "", flush = false }) {
   const points = rows
     .map((row) => ({ date: row.metric_date, value: Number(row[valueField]) }))
     .filter((point) => Number.isFinite(point.value));
 
-  if (points.length < 2) return <EmptyChart />;
+  if (points.length < 2) {
+    return (
+      <div className={flush ? `${styles.chartBlock} ${styles.flush}` : styles.chartBlock}>
+        <div className={styles.chartHeader}><span>{label}</span></div>
+        <EmptyChart />
+      </div>
+    );
+  }
 
   const width = 640;
-  const height = 180;
-  const padding = 22;
+  const height = 168;
+  const padX = 4;
+  const padY = 14;
   const values = points.map((point) => point.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
   const coordinates = points.map((point, index) => {
-    const x = padding + (index / Math.max(points.length - 1, 1)) * (width - padding * 2);
-    const y = height - padding - ((point.value - min) / range) * (height - padding * 2);
+    const x = padX + (index / Math.max(points.length - 1, 1)) * (width - padX * 2);
+    const y = height - padY - ((point.value - min) / range) * (height - padY * 2);
     return { ...point, x, y };
   });
-  const path = coordinates.map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`).join(" ");
+  const path = coordinates.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  const area = `${path} L${coordinates[coordinates.length - 1].x.toFixed(1)},${height} L${coordinates[0].x.toFixed(1)},${height} Z`;
+  const last = coordinates[coordinates.length - 1];
+  const gradientId = `grad-${label.replace(/[^a-z0-9]/gi, "")}`;
 
   return (
-    <div className={styles.chartBlock}>
+    <div className={flush ? `${styles.chartBlock} ${styles.flush}` : styles.chartBlock}>
       <div className={styles.chartHeader}>
         <span>{label}</span>
-        <small>{formatNumber(points[points.length - 1].value)} {unit}</small>
+        <strong>
+          {formatNumber(last.value)}
+          {unit ? <small> {unit}</small> : null}
+        </strong>
       </div>
-      <svg className={styles.chart} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${label} trend`}>
-        <path className={styles.gridLine} d={`M${padding},${height / 2} L${width - padding},${height / 2}`} />
-        <path className={styles.linePath} d={path} />
-        {coordinates.map((point) => (
-          <circle key={`${point.date}-${point.x}`} className={styles.lineDot} cx={point.x} cy={point.y} r="3" />
-        ))}
-      </svg>
+      <div className={styles.chartFrame}>
+        <svg className={styles.chart} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`${label} trend, latest ${formatNumber(last.value)} ${unit}`}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" className={styles.areaStart} />
+              <stop offset="100%" className={styles.areaEnd} />
+            </linearGradient>
+          </defs>
+          <path className={styles.gridLine} d={`M0,${padY} L${width},${padY}`} vectorEffect="non-scaling-stroke" />
+          <path className={styles.gridLine} d={`M0,${height - padY} L${width},${height - padY}`} vectorEffect="non-scaling-stroke" />
+          <path d={area} fill={`url(#${gradientId})`} />
+          <path className={styles.linePath} d={path} vectorEffect="non-scaling-stroke" />
+        </svg>
+        <span className={styles.axisMax}>{formatNumber(max)}</span>
+        <span className={styles.axisMin}>{formatNumber(min)}</span>
+      </div>
       <div className={styles.chartAxis}>
         <span>{formatDate(points[0].date)}</span>
         <span>{formatDate(points[points.length - 1].date)}</span>
@@ -171,24 +197,39 @@ function LineChart({ rows, valueField = "qty", label, unit = "" }) {
   );
 }
 
-function BarChart({ rows, label, unit = "" }) {
+function BarChart({ rows, label, unit = "", flush = false }) {
   const points = rows
     .slice(-30)
     .map((row) => ({ date: row.metric_date, value: Number(row.qty) }))
     .filter((point) => Number.isFinite(point.value));
-  if (!points.length) return <EmptyChart />;
+  if (!points.length) {
+    return (
+      <div className={flush ? `${styles.chartBlock} ${styles.flush}` : styles.chartBlock}>
+        <div className={styles.chartHeader}><span>{label}</span></div>
+        <EmptyChart />
+      </div>
+    );
+  }
   const max = Math.max(...points.map((point) => point.value), 1);
+  const average = points.reduce((sum, point) => sum + point.value, 0) / points.length;
 
   return (
-    <div className={styles.chartBlock}>
+    <div className={flush ? `${styles.chartBlock} ${styles.flush}` : styles.chartBlock}>
       <div className={styles.chartHeader}>
         <span>{label}</span>
-        <small>{formatNumber(points[points.length - 1].value, 0)} {unit}</small>
+        <strong>
+          {formatNumber(average, 0)}
+          <small> avg {unit}</small>
+        </strong>
       </div>
       <div className={styles.bars} aria-label={`${label} recent daily values`}>
-        {points.map((point) => (
+        <span className={styles.barAverage} style={{ bottom: `${(average / max) * 100}%` }} aria-hidden="true" />
+        {points.map((point, index) => (
           <div key={point.date} className={styles.barSlot} title={`${formatDate(point.date)}: ${formatNumber(point.value, 0)} ${unit}`}>
-            <span className={styles.bar} style={{ height: `${Math.max(4, (point.value / max) * 100)}%` }} />
+            <span
+              className={index === points.length - 1 ? styles.barLatest : styles.bar}
+              style={{ height: `${Math.max(3, (point.value / max) * 100)}%` }}
+            />
           </div>
         ))}
       </div>
@@ -203,9 +244,9 @@ function BarChart({ rows, label, unit = "" }) {
 function SleepStages({ sleep }) {
   const details = sleep?.details || {};
   const stages = [
+    ["Deep", Number(details.deep)],
     ["Core", Number(details.core)],
     ["REM", Number(details.rem)],
-    ["Deep", Number(details.deep)],
     ["Awake", Number(details.awake)]
   ].filter(([, value]) => Number.isFinite(value) && value >= 0);
   const total = stages.reduce((sum, [, value]) => sum + value, 0);
@@ -220,7 +261,12 @@ function SleepStages({ sleep }) {
       </div>
       <div className={styles.stageLegend}>
         {stages.map(([name, value]) => (
-          <span key={name}><i className={styles[`legend${name}`]} />{name} {formatHours(value)}</span>
+          <span key={name}>
+            <i className={styles[`stage${name}`]} />
+            <b>{name}</b>
+            {formatHours(value)}
+            <em>{Math.round((value / total) * 100)}%</em>
+          </span>
         ))}
       </div>
     </div>
@@ -228,25 +274,32 @@ function SleepStages({ sleep }) {
 }
 
 function StrengthTable({ metrics }) {
-  if (!metrics.length) return <p className={styles.muted}>No Heracles strength snapshot has been synced yet.</p>;
+  if (!metrics.length) {
+    return (
+      <div className="kleos-empty">
+        <strong>No strength snapshot yet</strong>
+        <p>No Heracles strength snapshot has been synced yet.</p>
+      </div>
+    );
+  }
   return (
     <div className="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Exercise</th><th>Equipment</th><th>Estimated 1RM</th><th>Relative to BW</th><th>Sessions</th><th>State</th><th>Achieved</th>
+            <th>Exercise</th><th>Equipment</th><th className="num">Estimated 1RM</th><th className="num">Relative to BW</th><th className="num">Sessions</th><th>State</th><th className="num">Achieved</th>
           </tr>
         </thead>
         <tbody>
           {metrics.map((metric) => (
-            <tr key={`${metric.source_exercise_id}-${metric.exercise_name}`}>
+            <tr key={`${metric.source_exercise_id}-${metric.exercise_name}`} className={metric.is_current ? undefined : styles.staleRow}>
               <td>{metric.exercise_name}</td>
               <td>{metric.equipment_name || "Not recorded"}</td>
-              <td>{formatNumber(metric.best_1rm)} kg</td>
-              <td>{metric.best_1rm_relative_bw == null ? "Unavailable" : `${formatNumber(metric.best_1rm_relative_bw, 2)}× BW`}</td>
-              <td>{metric.qualifying_sessions}</td>
-              <td>{metric.is_current ? "Current" : "Stale"}</td>
-              <td>{formatDate(metric.achieved_on)}</td>
+              <td className="num">{formatNumber(metric.best_1rm)} kg</td>
+              <td className="num">{metric.best_1rm_relative_bw == null ? "Unavailable" : `${formatNumber(metric.best_1rm_relative_bw, 2)}× BW`}</td>
+              <td className="num">{metric.qualifying_sessions}</td>
+              <td>{metric.is_current ? "Current" : <span className="kleos-pill is-quiet">Stale</span>}</td>
+              <td className="num">{formatDate(metric.achieved_on)}</td>
             </tr>
           ))}
         </tbody>
@@ -327,25 +380,12 @@ export default function PhysicalWorkspace() {
   }, []);
 
   const latestSleep = latest(healthMetrics, "sleep_analysis");
-  const latestWeight = latest(healthMetrics, "weight_body_mass");
-  const latestRhr = latest(healthMetrics, "resting_heart_rate");
-  const latestHrv = latest(healthMetrics, "heart_rate_variability");
   const latestSpO2 = latest(healthMetrics, "blood_oxygen_saturation");
-  const latestSteps = latest(healthMetrics, "step_count");
   const latestRespiratory = latest(healthMetrics, "respiratory_rate");
   const latestTemperature = latest(healthMetrics, "apple_sleeping_wrist_temperature");
   const sleepHours = Number(latestSleep?.details?.totalSleep);
   const weightChange30 = changeOverWindow(healthMetrics, "weight_body_mass", 30);
 
-  const summaryStats = useMemo(() => [
-    { label: "Height", value: `${STATIC_HEIGHT_CM} cm`, note: "Static physical characteristic" },
-    { label: "Weight", value: latestWeight ? `${formatNumber(latestWeight.qty)} kg` : "—", note: latestWeight ? `${formatDate(latestWeight.metric_date)} · ${latestWeight.source || "Apple Health"}` : "No recent body mass" },
-    { label: "Sleep", value: Number.isFinite(sleepHours) ? formatHours(sleepHours) : "—", note: latestSleep ? formatDate(latestSleep.metric_date) : "No Watch sleep yet" },
-    { label: "Resting HR", value: latestRhr ? `${formatNumber(latestRhr.qty, 0)} bpm` : "—", note: latestRhr ? formatDate(latestRhr.metric_date) : "No recent value" },
-    { label: "HRV", value: latestHrv ? `${formatNumber(latestHrv.qty, 0)} ms` : "—", note: latestHrv ? formatDate(latestHrv.metric_date) : "No recent value" },
-    { label: "Blood oxygen", value: latestSpO2 ? `${formatNumber(latestSpO2.qty)}%` : "—", note: latestSpO2 ? formatDate(latestSpO2.metric_date) : "No recent value" },
-    { label: "Steps", value: latestSteps ? formatNumber(latestSteps.qty, 0) : "—", note: latestSteps ? formatDate(latestSteps.metric_date) : "No recent value" }
-  ], [latestWeight, latestSleep, latestRhr, latestHrv, latestSpO2, latestSteps, sleepHours]);
 
   const signIn = async () => {
     if (!supabase) return;
@@ -379,20 +419,33 @@ export default function PhysicalWorkspace() {
       .from("goat_health_characteristics")
       .upsert({ user_id: user.id, blood_test_content: healthForm.bloodTestText, misc_content: healthForm.miscText, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     setIsSaving(false);
+    if (!error) {
+      setKleosData((current) => ({ ...current, healthProfile: { ...healthForm } }));
+    }
     setStatusMessage(error ? `Health save failed: ${error.message}` : "Clinical/manual health records saved.");
   };
 
   if (accessState === "loading") {
-    return <div className="fs-app-card access-panel"><div className="access-mark">K</div><h2>Loading Kleos</h2><p>Checking private access.</p></div>;
+    return (
+      <div className="kleos-shell">
+        <div className="fs-app-card access-panel is-loading" aria-busy="true">
+          <div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div>
+          <h2>Loading Kleos</h2>
+          <p>Checking private access.</p>
+        </div>
+      </div>
+    );
   }
 
   if (accessState !== "authorized") {
     return (
-      <div className="fs-app-card access-panel">
-        <div className="access-mark">K</div>
-        <h2>{accessState === "unconfigured" ? "Kleos is not configured" : accessState === "unauthorized" ? "Access restricted" : "Sign in to Kleos"}</h2>
-        <p>{accessState === "unauthorized" ? "This private workspace is locked to the authorized account." : "Use the authorized Google account to open the private Physical workspace."}</p>
-        {accessState === "signed-out" ? <button className="fs-app-button is-primary" type="button" onClick={signIn}>Continue with Google</button> : null}
+      <div className="kleos-shell">
+        <div className="fs-app-card access-panel">
+          <div className="access-mark"><img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" /></div>
+          <h2>{accessState === "unconfigured" ? "Kleos is not configured" : accessState === "unauthorized" ? "Access restricted" : "Sign in to Kleos"}</h2>
+          <p>{accessState === "unauthorized" ? "This private workspace is locked to the authorized account." : "Use the authorized Google account to open the private Physical workspace."}</p>
+          {accessState === "signed-out" ? <button className="fs-app-button is-primary" type="button" onClick={signIn}>Continue with Google</button> : null}
+        </div>
       </div>
     );
   }
@@ -419,38 +472,33 @@ export default function PhysicalWorkspace() {
     ["Stair ascent", "stair_speed_up", "m/s"],
     ["Stair descent", "stair_speed_down", "m/s"]
   ];
+  const heartRate = latest(healthMetrics, "heart_rate");
+  const healthDirty =
+    healthForm.bloodTestText !== (kleosData.healthProfile?.bloodTestText || "") ||
+    healthForm.miscText !== (kleosData.healthProfile?.miscText || "");
 
   return (
     <div className="kleos-shell">
       <div className="kleos-board">
-        <header className="kleos-header">
-          <div>
-            <p className="fs-app-kicker">Kleos · Physical</p>
-            <h1>Physical</h1>
-            <p className="kleos-subtitle">Live physiology, body, activity, nutrition and strength evidence.</p>
-          </div>
-          <div className="kleos-header-actions">
-            <button className="fs-app-button is-secondary" type="button" onClick={() => void loadPhysicalData(user.id)}>Refresh</button>
-          </div>
-        </header>
         <main className="kleos-scroll">
-          <DimensionState userId={user.id} vectorId="physical" kleosData={kleosData} />
-
-          <section className="fs-app-card kleos-card wide-card">
-            <SectionHeader title="Current State" note="Headline physical measurements. Height is deterministic; live measurements come from Apple Health and connected sources." />
-            <div className={styles.statGrid}>{summaryStats.map((stat) => <StatCard key={stat.label} {...stat} />)}</div>
-          </section>
-
-          <div className="kleos-grid">
-            <section className="fs-app-card kleos-card wide-card">
-              <SectionHeader title="Sleep & Recovery" note="Raw measurements and personal trends only; Kleos does not manufacture a generic recovery score." />
-              <div className={styles.statGrid}>
-                <StatCard label="Respiratory rate" value={latestRespiratory ? `${formatNumber(latestRespiratory.qty)} /min` : "—"} note={latestRespiratory ? formatDate(latestRespiratory.metric_date) : "No recent value"} />
-                <StatCard label="Wrist temperature" value={latestTemperature ? `${formatNumber(latestTemperature.qty, 2)} °C` : "—"} note={latestTemperature ? formatDate(latestTemperature.metric_date) : "No recent value"} />
-                <StatCard label="Heart rate range" value={latest(healthMetrics, "heart_rate") ? `${formatNumber(latest(healthMetrics, "heart_rate").min_value, 0)}–${formatNumber(latest(healthMetrics, "heart_rate").max_value, 0)} bpm` : "—"} note="Daily observed range" />
-              </div>
+          <DimensionState
+            userId={user.id}
+            vectorId="physical"
+            kleosData={kleosData}
+            actions={
+              <button className="fs-app-button is-secondary" type="button" onClick={() => void loadPhysicalData(user.id)}>
+                <RefreshCw aria-hidden="true" />
+                Refresh
+              </button>
+            }
+          >
+            <section className="fs-app-card kleos-card">
+              <SectionHeading
+                title="Sleep & Recovery"
+                hint="Raw measurements and personal trends from Apple Watch. Kleos does not manufacture a generic recovery score."
+              />
               <div className={styles.sleepBlock}>
-                <div>
+                <div className={styles.sleepSummary}>
                   <h3>Latest sleep</h3>
                   <strong className={styles.bigValue}>{Number.isFinite(sleepHours) ? formatHours(sleepHours) : "—"}</strong>
                   <small>{latestSleep ? formatDate(latestSleep.metric_date) : "No staged Watch sleep record"}</small>
@@ -461,62 +509,84 @@ export default function PhysicalWorkspace() {
                 <LineChart rows={rowsFor(healthMetrics, "resting_heart_rate")} label="Resting heart rate" unit="bpm" />
                 <LineChart rows={rowsFor(healthMetrics, "heart_rate_variability")} label="HRV" unit="ms" />
               </div>
+              <dl className={styles.metricList}>
+                <Metric label="Blood oxygen" value={latestSpO2 ? `${formatNumber(latestSpO2.qty)}%` : "—"} />
+                <Metric label="Respiratory rate" value={latestRespiratory ? `${formatNumber(latestRespiratory.qty)} /min` : "—"} />
+                <Metric label="Wrist temperature" value={latestTemperature ? `${formatNumber(latestTemperature.qty, 2)} °C` : "—"} />
+                <Metric label="Heart rate range" value={heartRate ? `${formatNumber(heartRate.min_value, 0)}–${formatNumber(heartRate.max_value, 0)} bpm` : "—"} />
+              </dl>
             </section>
+
+            <div className="kleos-grid">
+              <section className="fs-app-card kleos-card">
+                <SectionHeading
+                  title="Body"
+                  hint="Body weight is a general Physical metric, independent of the Heracles strength UI. Height is a static characteristic."
+                />
+                <LineChart rows={rowsFor(healthMetrics, "weight_body_mass")} label="Weight · 90 days" unit="kg" flush />
+                <dl className={styles.metricList}>
+                  <Metric label="Height" value={`${STATIC_HEIGHT_CM} cm`} />
+                  <Metric
+                    label="30-day change"
+                    value={weightChange30 == null ? "—" : `${weightChange30 >= 0 ? "+" : ""}${formatNumber(weightChange30)} kg`}
+                  />
+                </dl>
+              </section>
+
+              <section className="fs-app-card kleos-card">
+                <SectionHeading title="Activity" hint="Daily movement and general activity from Apple Health." />
+                <BarChart rows={rowsFor(healthMetrics, "step_count")} label="Steps · last 30 days" unit="steps" flush />
+                <dl className={styles.metricList}>
+                  {activity.map(([label, name, unit]) => {
+                    const row = latest(healthMetrics, name);
+                    return <Metric key={name} label={label} value={row ? formatMetricValue(row, unit) : "—"} />;
+                  })}
+                </dl>
+              </section>
+            </div>
 
             <section className="fs-app-card kleos-card">
-              <SectionHeader title="Body" note="Body weight is a general Physical metric, independent of the Heracles strength UI." />
-              <div className={styles.statGridSingle}>
-                <StatCard label="Height" value={`${STATIC_HEIGHT_CM} cm`} note="Static" />
-                <StatCard label="Weight" value={latestWeight ? `${formatNumber(latestWeight.qty)} kg` : "—"} note={weightChange30 == null ? "30-day change unavailable" : `${weightChange30 >= 0 ? "+" : ""}${formatNumber(weightChange30)} kg over 30 days`} />
-              </div>
-              <LineChart rows={rowsFor(healthMetrics, "weight_body_mass")} label="Weight · 90 days" unit="kg" />
-            </section>
-
-            <section className="fs-app-card kleos-card">
-              <SectionHeader title="Activity" note="Daily movement and general activity from Apple Health." />
-              <div className={styles.statGridSingle}>
-                <StatCard label="Steps" value={latestSteps ? formatNumber(latestSteps.qty, 0) : "—"} note={`7-day avg ${formatNumber(averageRecent(healthMetrics, "step_count", 7), 0)}`} />
-                {activity.map(([label, name, unit]) => {
-                  const row = latest(healthMetrics, name);
-                  return <StatCard key={name} label={label} value={row ? formatMetricValue(row, unit) : "—"} note={row ? formatDate(row.metric_date) : "No recent value"} />;
-                })}
-              </div>
-              <BarChart rows={rowsFor(healthMetrics, "step_count")} label="Steps · recent days" unit="steps" />
-            </section>
-
-            <section className="fs-app-card kleos-card wide-card">
-              <SectionHeader title="Nutrition" note="High-value MacroFactor/Apple Health nutrition signals. Micronutrients stay out of the main dashboard." />
-              <div className={styles.statGrid}>
+              <SectionHeading
+                title="Nutrition"
+                sub="Latest day, with the 7-day average beneath."
+                hint="High-value MacroFactor / Apple Health nutrition signals. Micronutrients stay out of the main dashboard."
+              />
+              <div className="kleos-stats">
                 {nutrition.map(([label, name, unit]) => {
                   const row = latest(healthMetrics, name);
                   const avg = averageRecent(healthMetrics, name, 7);
-                  return <StatCard key={name} label={label} value={row ? `${formatNumber(row.qty)} ${unit}` : "—"} note={avg == null ? "7-day average unavailable" : `7-day avg ${formatNumber(avg)} ${unit}`} />;
+                  return <StatCard key={name} label={label} value={row ? `${formatNumber(row.qty)} ${unit}` : "—"} note={avg == null ? "No 7-day average" : `${formatNumber(avg)} ${unit} avg`} />;
                 })}
               </div>
             </section>
 
-            <section className="fs-app-card kleos-card wide-card">
-              <div className={styles.sectionActions}>
-                <SectionHeader title="Strength Performance" note="Heracles remains the authority for resistance-training performance. Body weight is no longer presented as Heracles-owned." />
-                <button className="fs-app-button is-secondary" type="button" onClick={syncStrength} disabled={isSyncingStrength}>{isSyncingStrength ? "Syncing…" : "Sync Heracles"}</button>
-              </div>
+            <section className="fs-app-card kleos-card">
+              <SectionHeading
+                title="Strength Performance"
+                hint="Heracles remains the authority for resistance-training performance. An exercise is current when trained in at least 3 sessions in the last 30 days. Body weight is no longer presented as Heracles-owned."
+              >
+                <button className="fs-app-button is-secondary" type="button" onClick={syncStrength} disabled={isSyncingStrength}>
+                  <RefreshCw aria-hidden="true" className={isSyncingStrength ? styles.spinning : undefined} />
+                  {isSyncingStrength ? "Syncing…" : "Sync Heracles"}
+                </button>
+              </SectionHeading>
               <StrengthTable metrics={kleosData.strengthMetrics || []} />
             </section>
 
-            <details className="fs-app-card kleos-card wide-card">
-              <summary>Mobility details</summary>
-              <p className="kleos-subtitle">Secondary gait and stair metrics kept available without occupying headline dashboard space.</p>
-              <div className={styles.statGrid}>
+            <details className="fs-app-card kleos-card">
+              <summary>Mobility</summary>
+              <p className="kleos-subtitle">Secondary gait and stair metrics.</p>
+              <dl className={`${styles.metricList} ${styles.metricListWide}`}>
                 {mobility.map(([label, name, unit]) => {
                   const row = latest(healthMetrics, name);
-                  return <StatCard key={name} label={label} value={row ? formatMetricValue(row, unit) : "—"} note={row ? formatDate(row.metric_date) : "No recent value"} />;
+                  return <Metric key={name} label={label} value={row ? formatMetricValue(row, unit) : "—"} />;
                 })}
-              </div>
+              </dl>
             </details>
 
-            <details className="fs-app-card kleos-card wide-card">
-              <summary>Clinical & Manual Records</summary>
-              <p className="kleos-subtitle">Manual context remains available as evidence but is secondary to structured live measurements.</p>
+            <details className="fs-app-card kleos-card">
+              <summary>Clinical & manual records</summary>
+              <p className="kleos-subtitle">Plain-text context supplied to the evaluator alongside structured measurements.</p>
               <div className="stacked-form">
                 <label>
                   Latest Blood Test
@@ -527,11 +597,14 @@ export default function PhysicalWorkspace() {
                   <textarea className="large-textarea" value={healthForm.miscText} onChange={(event) => setHealthForm((current) => ({ ...current, miscText: event.target.value }))} placeholder="Plain-text health details that are not represented by structured metrics." />
                 </label>
               </div>
-              <button className="fs-app-button is-primary" type="button" onClick={saveHealth} disabled={isSaving}>{isSaving ? "Saving…" : "Save Health Records"}</button>
+              <div className="kleos-form-footer">
+                {healthDirty ? <p className="kleos-note">Unsaved changes</p> : null}
+                <button className={`fs-app-button ${healthDirty ? "is-primary" : "is-secondary"}`} type="button" onClick={saveHealth} disabled={isSaving || !healthDirty}>{isSaving ? "Saving…" : "Save Health Records"}</button>
+              </div>
             </details>
-          </div>
+          </DimensionState>
         </main>
-        {statusMessage ? <div className="status-line">{statusMessage}</div> : null}
+        <StatusToast message={statusMessage} />
       </div>
     </div>
   );

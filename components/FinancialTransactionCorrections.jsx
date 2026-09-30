@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import styles from "./FinancialTransactionCorrections.module.css";
 
@@ -159,16 +161,36 @@ export default function FinancialTransactionCorrections({ userId }) {
     window.location.reload();
   };
 
+  const confirmedCount = rows.filter((row) => row.interpretation_source && row.interpretation_source !== "deterministic").length;
+
+  const closeEditor = () => {
+    setEditing(null);
+    setForm(null);
+  };
+
+  useEffect(() => {
+    if (!editing) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") closeEditor();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [editing]);
+
   const exactAmountLabel = editing ? formatMoney(Math.abs(Number(editing.amount)), editing.currency) : "";
 
   return (
-    <section className="kleos-card wide-card">
-      <div className={styles.headerRow}>
-        <div className="section-header">
-          <p className="fs-app-kicker">User-confirmed interpretation</p>
-          <h2>Review Transactions</h2>
-          <p>Correct derived meaning without changing the canonical Revolut transaction. Reusable rules can match the same label, currency and direction, with an optional exact-amount constraint.</p>
-        </div>
+    <details className="fs-app-card kleos-card">
+      <summary>
+        <span className={styles.summaryTitle}>
+          Review transactions
+          {confirmedCount ? <span className="kleos-pill is-accent">{confirmedCount} confirmed</span> : null}
+        </span>
+      </summary>
+      <div className="kleos-section-head">
+        <p className={styles.intro}>
+          Correct derived meaning without changing the canonical Revolut transaction. Reusable rules can match the same label, currency and direction, with an optional exact-amount constraint.
+        </p>
         <select className={styles.filter} value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Transaction review filter">
           <option value="all">Recent</option>
           <option value="credits">Credits / inflows</option>
@@ -194,23 +216,39 @@ export default function FinancialTransactionCorrections({ userId }) {
               </div>
               <div className={styles.amountBlock}>
                 <strong>{formatMoney(row.amount, row.currency)}</strong>
-                <button type="button" className="fs-app-button is-secondary" onClick={() => openEditor(row)}>Correct</button>
+                <button type="button" className="fs-app-button is-ghost" onClick={() => openEditor(row)}>Correct</button>
               </div>
             </article>
           ))}
         </div>
       ) : null}
 
-      {editing && form ? (
-        <form className={styles.editor} onSubmit={saveCorrection}>
-          <div className={styles.editorHeader}>
-            <div>
+      {editing && form ? createPortal(
+        <div
+          className={styles.backdrop}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeEditor();
+          }}
+        >
+        <form
+          className={`fs-app-modal ${styles.editor}`}
+          onSubmit={saveCorrection}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="transaction-correction-title"
+        >
+          <div className="fs-app-modal-header">
+            <div className={styles.editorHeader}>
               <p className="fs-app-kicker">Correction</p>
-              <h3>{editing.display_label || editing.counterparty_name || editing.description || "Transaction"}</h3>
+              <h3 id="transaction-correction-title">{editing.display_label || editing.counterparty_name || editing.description || "Transaction"}</h3>
               <span>{formatMoney(editing.amount, editing.currency)} · {formatDate(editing.transaction_date)}</span>
             </div>
-            <button type="button" className="fs-app-button is-secondary" onClick={() => { setEditing(null); setForm(null); }}>Cancel</button>
+            <button type="button" className="fs-app-button is-icon" aria-label="Cancel correction" onClick={closeEditor}>
+              <X aria-hidden="true" />
+            </button>
           </div>
+          <div className={`fs-app-modal-body ${styles.editorBody}`}>
 
           {Number(editing.amount) > 0 ? (
             <label className={styles.field}>
@@ -276,24 +314,27 @@ export default function FinancialTransactionCorrections({ userId }) {
             {form.apply_matching && form.match_exact_amount ? ` · exactly ${exactAmountLabel}` : ""}. No fuzzy matching is used.
           </p>
 
-          <div className={styles.editorActions}>
-            <button type="submit" className="fs-app-button is-primary" disabled={isSaving}>{isSaving ? "Saving…" : "Save correction"}</button>
+          </div>
+          <div className="fs-app-modal-footer">
             {editing.interpretation_override_id ? (
-              <button type="button" className="fs-app-button is-secondary" disabled={isSaving} onClick={() => void resetCorrection(false)}>
+              <button type="button" className="fs-app-button is-ghost" disabled={isSaving} onClick={() => void resetCorrection(false)}>
                 Reset transaction override
               </button>
             ) : null}
             {editing.interpretation_rule_id ? (
-              <button type="button" className="fs-app-button is-secondary" disabled={isSaving} onClick={() => void resetCorrection(true)}>
+              <button type="button" className="fs-app-button is-ghost" disabled={isSaving} onClick={() => void resetCorrection(true)}>
                 {editing.interpretation_override_id ? "Remove override + matching rule" : "Remove matching rule"}
               </button>
             ) : null}
+            <button type="submit" className="fs-app-button is-primary" disabled={isSaving}>{isSaving ? "Saving…" : "Save correction"}</button>
           </div>
         </form>
+        </div>,
+        document.getElementById("kleos-app-root") || document.body
       ) : null}
 
-      {message ? <p className={styles.status}>{message}</p> : null}
-    </section>
+      {message ? <p className="kleos-note">{message}</p> : null}
+    </details>
   );
 }
 

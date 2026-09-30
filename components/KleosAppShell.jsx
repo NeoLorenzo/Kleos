@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { ChevronRight, LogOut } from "lucide-react";
+import { inter } from "@/app/fonts";
 import KleosPublicSite from "@/components/KleosPublicSite";
 import KleosSidebar from "@/components/KleosSidebar";
 import MeasurementCorrections from "@/components/MeasurementCorrections";
@@ -35,6 +37,9 @@ export default function KleosAppShell({ children }) {
   const hasSession = authState === "authenticated";
 
   const currentPage = useMemo(() => {
+    if (relativePath === "/vector-state/") {
+      return { id: "vector-state", label: "Vector State", path: "/vector-state/" };
+    }
     return (
       KLEOS_PAGES.find((page) =>
         page.path === "/"
@@ -152,37 +157,46 @@ export default function KleosAppShell({ children }) {
   }
 
   return (
-    <SidebarProvider defaultOpen>
-      <KleosSidebar />
+    <div id="kleos-app-root" className={`${inter.variable} ${styles.appRoot}`}>
+      <SidebarProvider defaultOpen>
+        <KleosSidebar />
 
-      <SidebarInset className={styles.inset}>
-        <header className={styles.utilityBar}>
-          <div className={styles.context}>
-            <SidebarTrigger />
-            <span className={styles.pageLabel}>{currentPage.label}</span>
-          </div>
+        <SidebarInset className={styles.inset}>
+          <header className={styles.utilityBar}>
+            <div className={styles.context}>
+              <SidebarTrigger className={styles.trigger} />
+              <span className={styles.separator} aria-hidden="true" />
+              <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+                <span className={styles.crumbRoot}>
+                  {KLEOS_PAGES.some((page) => page.id === currentPage.id && page.id !== "character-sheet") ? "Dimensions" : "Kleos"}
+                </span>
+                <ChevronRight className={styles.crumbIcon} aria-hidden="true" />
+                <span className={styles.pageLabel} aria-current="page">{currentPage.label}</span>
+              </nav>
+            </div>
 
-          <div className={styles.utilities}>
-            <img
-              className={styles.familyMark}
-              src="/brand/fabbro-mark.svg"
-              alt="Fabbro Systems"
-            />
-            <button
-              className={`fs-app-button is-secondary ${styles.signOut}`}
-              type="button"
-              onClick={signOut}
-              disabled={isSigningOut}
-            >
-              {isSigningOut ? "Signing Out…" : "Sign Out"}
-            </button>
-          </div>
-        </header>
+            <div className={styles.utilities}>
+              <MeasurementCorrections />
+              <img
+                className={styles.familyMark}
+                src="/brand/fabbro-mark.svg"
+                alt="Fabbro Systems"
+              />
+              <button
+                className={`fs-app-button is-ghost ${styles.signOut}`}
+                type="button"
+                onClick={signOut}
+                disabled={isSigningOut}
+              >
+                <LogOut aria-hidden="true" />
+                <span>{isSigningOut ? "Signing Out…" : "Sign Out"}</span>
+              </button>
+            </div>
+          </header>
 
-        <div className={styles.workspace}>{children}</div>
-      </SidebarInset>
-
-      <MeasurementCorrections />
-    </SidebarProvider>
+          <div className={styles.workspace}>{children}</div>
+        </SidebarInset>
+      </SidebarProvider>
+    </div>
   );
 }

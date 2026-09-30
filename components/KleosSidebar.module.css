@@ -1,20 +1,22 @@
 .header {
-  min-height: 4.4rem;
+  min-height: var(--fs-app-utility-height);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-block: 0;
 }
 
 .brandLink {
   display: flex;
   width: 100%;
-  min-height: 2.7rem;
+  min-height: 2.5rem;
   align-items: center;
   justify-content: flex-start;
-  padding: 0.25rem 0.35rem;
+  padding: 0.25rem 0.45rem;
   overflow: hidden;
   border-radius: var(--fs-radius-control);
   text-decoration: none;
+  transition: background var(--fs-motion-fast) var(--fs-motion-ease);
 }
 
 .brandLink:hover,
@@ -25,15 +27,15 @@
 
 .brandLockup {
   display: block;
-  width: 126px;
+  width: 118px;
   max-width: 100%;
   height: auto;
 }
 
 .brandMark {
   display: block;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   margin-inline: auto;
   object-fit: contain;
 }
@@ -45,6 +47,6 @@
   }
 
   .brandLockup {
-    width: 132px;
+    width: 126px;
   }
 }

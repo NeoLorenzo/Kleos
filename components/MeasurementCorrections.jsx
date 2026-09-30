@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import { AUTHORIZED_KLEOS_EMAIL } from "@/lib/kleos/data";
 import {
   cognitiveRowToDraft,
@@ -154,123 +156,186 @@ export default function MeasurementCorrections() {
     setStatus(`${COGNITIVE_TABLE.label} deleted.`);
   };
 
+  useEffect(() => {
+    const openCorrections = () => setOpen(true);
+    window.addEventListener("kleos:open-measurement-corrections", openCorrections);
+    return () => window.removeEventListener("kleos:open-measurement-corrections", openCorrections);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
   if (!authorized) return null;
+
+  const dialog = open ? (
+    <div
+      className="correction-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) setOpen(false);
+      }}
+    >
+      <section
+        className="fs-app-modal correction-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="correction-title"
+      >
+        <header className="fs-app-modal-header">
+          <div>
+            <h2 id="correction-title">{editingId ? "Edit cognitive test" : "Cognitive test history"}</h2>
+            <p className="correction-subtitle">
+              Edit or delete canonical cognitive history. Strength evidence is read-only from Heracles.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="fs-app-button is-icon"
+            onClick={() => setOpen(false)}
+            aria-label="Close"
+          >
+            <X aria-hidden="true" />
+          </button>
+        </header>
+
+        <div className="fs-app-modal-body">
+          {status ? <p className="correction-status">{status}</p> : null}
+          {loading && !editingId && !records.length ? <p className="correction-status">Loading…</p> : null}
+
+          {editingId && draft ? (
+            <EditForm
+              draft={draft}
+              setDraft={setDraft}
+              onSubmit={saveEdit}
+              onCancel={cancelEdit}
+              disabled={loading}
+            />
+          ) : (
+            <RecordGroup
+              rows={sortedRecords}
+              onEdit={beginEdit}
+              onDelete={deleteRecord}
+              disabled={loading}
+            />
+          )}
+        </div>
+      </section>
+    </div>
+  ) : null;
 
   return (
     <>
-      <button className="correction-launcher" type="button" onClick={() => setOpen(true)}>
-        Correct measurements
-      </button>
-
-      {open ? (
-        <div
-          className="correction-backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setOpen(false);
-          }}
-        >
-          <section
-            className="correction-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Correct recorded measurements"
-          >
-            <header className="correction-header">
-              <div>
-                <h2>Correct recorded measurements</h2>
-                <p>Edit or delete canonical cognitive history. Strength evidence is read-only from Heracles.</p>
-              </div>
-              <button
-                type="button"
-                className="correction-close"
-                onClick={() => setOpen(false)}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </header>
-
-            {status ? <p className="correction-status">{status}</p> : null}
-            {loading && !editingId ? <p className="correction-status">Loading…</p> : null}
-
-            {editingId && draft ? (
-              <EditForm
-                draft={draft}
-                setDraft={setDraft}
-                onSubmit={saveEdit}
-                onCancel={cancelEdit}
-                disabled={loading}
-              />
-            ) : (
-              <div className="correction-groups">
-                <RecordGroup
-                  rows={sortedRecords}
-                  onEdit={beginEdit}
-                  onDelete={deleteRecord}
-                  disabled={loading}
-                />
-              </div>
-            )}
-          </section>
-        </div>
-      ) : null}
+      {dialog ? createPortal(dialog, document.getElementById("kleos-app-root") || document.body) : null}
 
       <style jsx global>{`
-        .correction-launcher {
-          position: fixed;
-          right: 18px;
-          bottom: 18px;
-          z-index: 30;
-          border: 1px solid rgba(255,255,255,.2);
-          border-radius: 999px;
-          padding: 10px 15px;
-          background: #111820;
-          color: #f7f7f5;
-          font: inherit;
-          cursor: pointer;
-          box-shadow: 0 10px 30px rgba(0,0,0,.28);
-        }
         .correction-backdrop {
           position: fixed;
           inset: 0;
-          z-index: 40;
+          z-index: 100;
+          display: grid;
+          place-items: center;
+          padding: 16px;
+          background: rgba(0, 0, 0, 0.66);
+          backdrop-filter: blur(3px);
+          font-family: var(--fs-font-primary);
+        }
+        .correction-panel .fs-app-modal-header {
+          align-items: flex-start;
+        }
+        .correction-subtitle {
+          margin: 4px 0 0;
+          color: var(--fs-app-text-muted);
+          font-size: 13px;
+          line-height: 1.45;
+        }
+        .correction-status {
+          margin: 0 0 12px;
+          padding: 8px 12px;
+          border: 1px solid var(--fs-app-border-raised);
+          border-radius: var(--fs-radius-control);
+          background: var(--fs-app-surface-raised);
+          color: var(--fs-app-text-secondary);
+          font-size: 13px;
+        }
+        .correction-group h3 {
+          margin: 0 0 10px;
+          color: var(--fs-app-text-muted);
+          font-size: 12px;
+          font-weight: 500;
+        }
+        .correction-list {
+          overflow: hidden;
+          border: 1px solid var(--fs-app-border);
+          border-radius: 10px;
+        }
+        .correction-row {
+          display: flex;
+          gap: 12px;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 12px;
+        }
+        .correction-row + .correction-row {
+          border-top: 1px solid var(--fs-app-border);
+        }
+        .correction-row:hover {
+          background: var(--fs-app-hover);
+        }
+        .correction-row-text {
+          display: grid;
+          gap: 2px;
+          min-width: 0;
+        }
+        .correction-row-text strong {
+          color: var(--fs-app-text);
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .correction-row-text span {
+          color: var(--fs-app-text-muted);
+          font-size: 12px;
+          font-variant-numeric: tabular-nums;
+        }
+        .correction-actions {
+          display: flex;
+          gap: 4px;
+          flex: 0 0 auto;
+        }
+        .correction-empty {
+          padding: 20px;
+          color: var(--fs-app-text-muted);
+          font-size: 13px;
+          text-align: center;
+        }
+        .correction-form {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+        .correction-form .is-wide {
+          grid-column: 1 / -1;
+        }
+        .correction-form-actions {
+          grid-column: 1 / -1;
           display: flex;
           justify-content: flex-end;
-          background: rgba(0,0,0,.55);
+          gap: 8px;
+          padding-top: 4px;
         }
-        .correction-panel {
-          width: min(620px, 100%);
-          height: 100%;
-          overflow-y: auto;
-          background: #10161d;
-          color: #f4f4f0;
-          padding: 24px;
-          box-shadow: -12px 0 40px rgba(0,0,0,.35);
-        }
-        .correction-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
-        .correction-header h2 { margin: 0 0 6px; font-size: 22px; }
-        .correction-header p, .correction-status { color: #aeb7c1; margin: 0; }
-        .correction-close { border: 0; background: transparent; color: inherit; font-size: 30px; cursor: pointer; }
-        .correction-status { margin-top: 14px; }
-        .correction-groups { display: grid; gap: 24px; margin-top: 24px; }
-        .correction-group h3 { margin: 0 0 10px; font-size: 16px; }
-        .correction-list { display: grid; gap: 8px; }
-        .correction-row { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 11px 12px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; }
-        .correction-row-text { min-width: 0; font-size: 13px; color: #d9dee3; overflow-wrap: anywhere; }
-        .correction-actions { display: flex; gap: 7px; flex: 0 0 auto; }
-        .correction-actions button, .correction-form button { border: 1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 7px 10px; background: #19222c; color: inherit; cursor: pointer; }
-        .correction-actions button:last-child { color: #ffb3b3; }
-        .correction-actions button:disabled, .correction-form button:disabled { opacity: .5; cursor: default; }
-        .correction-empty { color: #87929d; font-size: 13px; }
-        .correction-form { display: grid; gap: 13px; margin-top: 24px; }
-        .correction-form label { display: grid; gap: 6px; color: #c7ced5; font-size: 13px; }
-        .correction-form input, .correction-form select, .correction-form textarea { width: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 9px 10px; background: #0b1016; color: #f4f4f0; font: inherit; }
-        .correction-form-actions { display: flex; gap: 9px; }
         @media (max-width: 640px) {
-          .correction-panel { padding: 18px; }
-          .correction-launcher { right: 12px; bottom: 12px; }
-          .correction-row { align-items: flex-start; flex-direction: column; }
+          .correction-row {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+          .correction-form {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
     </>
@@ -285,12 +350,17 @@ function RecordGroup({ rows, onEdit, onDelete, disabled }) {
         {rows.length ? (
           rows.map((row) => (
             <div className="correction-row" key={row.id}>
-              <div className="correction-row-text">{describeRecord(row)}</div>
+              <div className="correction-row-text">
+                <strong>{row.test_name} · {row.score_text}</strong>
+                <span>
+                  {formatDateTime(row.taken_at)} · H {row.hunger}/10 · D {row.distractions}/10 · W {row.wakefulness}/10 · M {row.mood}/10
+                </span>
+              </div>
               <div className="correction-actions">
-                <button type="button" onClick={() => onEdit(row)} disabled={disabled}>
+                <button type="button" className="fs-app-button is-ghost" onClick={() => onEdit(row)} disabled={disabled}>
                   Edit
                 </button>
-                <button type="button" onClick={() => onDelete(row)} disabled={disabled}>
+                <button type="button" className="fs-app-button is-ghost is-danger" onClick={() => onDelete(row)} disabled={disabled}>
                   Delete
                 </button>
               </div>
@@ -309,8 +379,7 @@ function EditForm({ draft, setDraft, onSubmit, onCancel, disabled }) {
 
   return (
     <form className="correction-form" onSubmit={onSubmit}>
-      <h3>Edit cognitive test</h3>
-      <Field label="Test">
+      <Field label="Test" wide>
         <input value={draft.testName} onChange={(event) => setField("testName", event.target.value)} />
       </Field>
       <Field label="Score">
@@ -332,15 +401,15 @@ function EditForm({ draft, setDraft, onSubmit, onCancel, disabled }) {
         </Field>
       ))}
       <div className="correction-form-actions">
-        <button type="submit" disabled={disabled}>Save correction</button>
-        <button type="button" onClick={onCancel} disabled={disabled}>Cancel</button>
+        <button type="button" className="fs-app-button is-secondary" onClick={onCancel} disabled={disabled}>Cancel</button>
+        <button type="submit" className="fs-app-button is-primary" disabled={disabled}>Save correction</button>
       </div>
     </form>
   );
 }
 
-function Field({ label, children }) {
-  return <label>{label}{children}</label>;
+function Field({ label, wide = false, children }) {
+  return <label className={wide ? "is-wide" : undefined}>{label}{children}</label>;
 }
 
 function describeRecord(row) {

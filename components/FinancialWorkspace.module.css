@@ -1,75 +1,31 @@
-.sectionHeaderRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-
-.actions {
+.titleWithStatus {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.65rem;
+  align-items: center;
+  gap: 10px;
 }
 
-.connectionGrid,
-.analyticsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.8rem;
-  margin-top: 1rem;
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
-.rollingGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
-  margin-top: 0.8rem;
+.spinning {
+  animation: financial-spin 0.9s linear infinite;
 }
 
-.metric {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 10px;
-  background: var(--fs-app-surface-raised);
+@keyframes financial-spin {
+  to { transform: rotate(360deg); }
 }
 
-.metric span,
-.accountCard span,
-.accountBalance span {
-  color: var(--fs-app-text-muted);
-  font-size: 0.78rem;
-}
-
-.metric strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.errorNote,
-.analyticsNote,
-.warningNote {
-  margin: 0.85rem 0 0;
-  color: var(--fs-app-text-muted);
-  font-size: 0.82rem;
-}
-
-.warningNote {
-  padding: 0.7rem 0.8rem;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 8px;
-}
+/* Accounts */
 
 .accountGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
-  margin-top: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
 }
 
 .accountCard {
@@ -77,85 +33,165 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--fs-app-border);
+  padding: 14px 16px;
+  border: var(--fs-border-width) solid var(--fs-app-border);
   border-radius: 10px;
   background: var(--fs-app-surface-raised);
 }
 
-.accountCard > div,
-.accountBalance {
+.accountIdentity {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.accountIdentity > div,
+.accountBalance {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.accountIdentity strong {
+  color: var(--fs-app-text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.accountIdentity span:not(.currencyBadge),
+.accountBalance span {
+  color: var(--fs-app-text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.currencyBadge {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: var(--fs-border-width) solid var(--fs-app-border-raised);
+  border-radius: 9px;
+  background: var(--fs-app-surface-strong);
+  color: var(--fs-app-text-secondary);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
 }
 
 .accountBalance {
-  align-items: flex-end;
+  justify-items: end;
   text-align: right;
 }
 
-.currencyTabs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.4rem;
+.accountBalance strong {
+  color: var(--fs-app-text);
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
-.currencyButton {
-  border: 1px solid var(--fs-app-border);
-  border-radius: 999px;
-  background: transparent;
+.connectionMeta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: var(--fs-border-width) solid var(--fs-app-border);
+}
+
+.connectionMeta div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.connectionMeta dt,
+.rollingRow dt {
   color: var(--fs-app-text-muted);
-  padding: 0.4rem 0.7rem;
-  font: inherit;
-  font-size: 0.78rem;
-  cursor: pointer;
+  font-size: 12px;
 }
 
-.currencyButton:hover,
-.activeCurrency {
-  color: inherit;
-  background: var(--fs-app-surface-strong);
+.connectionMeta dd,
+.rollingRow dd {
+  margin: 0;
+  overflow: hidden;
+  color: var(--fs-app-text-secondary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+/* Cash flow */
+
+.rollingRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 10px 0 0;
+  border: var(--fs-border-width) solid var(--fs-app-border);
+  border-radius: 10px;
+}
+
+.rollingRow div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.rollingRow div + div {
+  border-left: var(--fs-border-width) solid var(--fs-app-border);
+}
+
+.rollingRow dd {
+  color: var(--fs-app-text);
+  font-weight: 550;
+}
+
+/* Spending */
 
 .analyticsColumns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.2rem;
-  margin-top: 0.8rem;
-}
-
-.subheading {
-  margin: 0 0 0.7rem;
-  font-size: 0.9rem;
+  gap: var(--fs-space-6);
 }
 
 .categoryList {
   display: grid;
-  gap: 0.85rem;
+  gap: 12px;
 }
 
 .categoryRow {
   display: grid;
-  gap: 0.32rem;
+  grid-template-columns: minmax(96px, 0.8fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
 }
 
-.categoryMeta {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.84rem;
+.categoryName {
+  overflow: hidden;
+  color: var(--fs-app-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.categoryRow small {
-  color: var(--fs-app-text-muted);
-  font-size: 0.72rem;
+.categoryRow strong {
+  min-width: 72px;
+  color: var(--fs-app-text);
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .categoryTrack {
   width: 100%;
-  height: 5px;
+  height: 6px;
   overflow: hidden;
   border-radius: 999px;
   background: var(--fs-app-surface-strong);
@@ -165,76 +201,215 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: currentColor;
-  opacity: 0.58;
+  background: var(--fs-app-accent);
 }
 
-.statusBadge {
+.trendChart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 10px;
+  height: 140px;
+  margin-bottom: 8px;
+}
+
+.trendMonth {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 6px;
+  min-width: 0;
+}
+
+.trendMonth small {
+  color: var(--fs-app-text-quiet);
+  font-size: 11px;
+  text-align: center;
+}
+
+.trendBars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  min-height: 0;
+}
+
+.trendBars span {
+  width: min(14px, 40%);
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+
+.trendIncome {
+  background: color-mix(in srgb, var(--fs-app-success) 70%, var(--fs-app-surface-strong));
+}
+
+.trendSpend {
+  background: var(--fs-app-accent);
+}
+
+.trendHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trendLegend {
+  display: flex;
+  gap: 16px;
+  color: var(--fs-app-text-muted);
+  font-size: 11.5px;
+}
+
+.trendLegend span {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--fs-app-border);
-  border-radius: 999px;
-  padding: 0.12rem 0.5rem;
-  font-size: 0.75rem;
-  color: var(--fs-app-text-muted);
+  gap: 6px;
+}
+
+.trendLegend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.compactTable {
+  min-width: 320px;
+}
+
+/* Merchants */
+
+.merchantList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.merchantList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: var(--fs-border-width) solid var(--fs-app-border);
+}
+
+.merchantName {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.merchantName strong {
+  overflow: hidden;
+  color: var(--fs-app-text);
+  font-size: 13px;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.merchantName small {
+  color: var(--fs-app-text-quiet);
+  font-size: 12px;
+}
+
+.merchantAmount {
+  color: var(--fs-app-text);
+  font-size: 13px;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Transactions */
+
+.categoryCell {
+  display: grid;
+  gap: 2px;
+}
+
+.categoryCell small {
+  color: var(--fs-app-text-quiet);
+  font-size: 11.5px;
+}
+
+.transactionsWrap {
+  max-height: 36rem;
+  overflow: auto;
+}
+
+.transactionsWrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.dateCell {
+  white-space: nowrap;
+}
+
+.amountCell {
+  color: var(--fs-app-text);
+  font-weight: 550;
+  white-space: nowrap;
 }
 
 .transactionDescription {
   display: grid;
-  gap: 0.16rem;
+  gap: 2px;
   min-width: 12rem;
   max-width: 28rem;
 }
 
 .transactionDescription strong {
-  font-weight: 600;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--fs-app-text);
+  font-weight: 550;
 }
 
 .transactionDescription span {
   color: var(--fs-app-text-muted);
-  font-size: 0.78rem;
-  line-height: 1.3;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .transactionDescription small {
-  color: var(--fs-app-text-muted);
-  font-size: 0.68rem;
-  letter-spacing: 0.02em;
-  opacity: 0.82;
+  color: var(--fs-app-text-quiet);
+  font-size: 11px;
 }
 
-.negativeAmount {
-  font-variant-numeric: tabular-nums;
+@media (prefers-reduced-motion: reduce) {
+  .spinning {
+    animation: none;
+  }
 }
 
 @media (max-width: 900px) {
-  .sectionHeaderRow {
-    flex-direction: column;
-  }
-
-  .actions,
-  .currencyTabs {
-    justify-content: flex-start;
-  }
-
-  .connectionGrid,
-  .analyticsGrid,
-  .accountGrid,
-  .analyticsColumns {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .rollingGrid {
+  .analyticsColumns,
+  .merchantList {
     grid-template-columns: 1fr;
+  }
+
+  .connectionMeta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 600px) {
-  .connectionGrid,
-  .analyticsGrid,
-  .accountGrid,
-  .analyticsColumns {
+  .rollingRow {
     grid-template-columns: 1fr;
+  }
+
+  .rollingRow div + div {
+    border-top: var(--fs-border-width) solid var(--fs-app-border);
+    border-left: 0;
   }
 
   .accountCard {
@@ -243,7 +418,7 @@
   }
 
   .accountBalance {
-    align-items: flex-start;
+    justify-items: start;
     text-align: left;
   }
 

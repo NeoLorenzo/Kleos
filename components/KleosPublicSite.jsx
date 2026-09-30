@@ -1,72 +1,93 @@
 "use client";
 
+import CharacterSheetPreview from "./public/CharacterSheetPreview";
+import EvidencePipeline from "./public/EvidencePipeline";
+import ModelSimulator from "./public/ModelSimulator";
+import RadianceField from "./public/RadianceField";
+import UseCases from "./public/UseCases";
+import VectorExplorer from "./public/VectorExplorer";
+import { useInView } from "./public/useInView";
 import styles from "./KleosPublicSite.module.css";
 
-const VECTORS = [
+const SOURCE_ROWS = [
+  [
+    "Apple Health",
+    "Heart-rate variability",
+    "Heracles strength",
+    "Sleep stages",
+    "Open banking",
+    "Big Five inventory",
+    "Academic transcripts",
+    "Blood panels",
+    "Asset register",
+    "WHO-5"
+  ],
+  [
+    "CV & role history",
+    "Cognitive tests",
+    "Nutrition logs",
+    "Resting heart rate",
+    "PHQ-9",
+    "Creative portfolio",
+    "Relationship notes",
+    "Experience log",
+    "GAD-7",
+    "SWLS"
+  ]
+];
+
+const PRINCIPLES = [
   {
-    id: "physical",
-    label: "Physical",
-    description: "Health, physiology, body state, activity, nutrition, and physical capability."
+    title: "Evidence stays traceable",
+    body: "Source material remains distinguishable from the conclusions drawn from it."
   },
   {
-    id: "psychological",
-    label: "Psychological",
-    description: "Psychological characteristics, assessments, affective state, and mental functioning."
+    title: "Interpretation stays explicit",
+    body: "Subdomain judgments map to fixed anchors, with no hidden holistic scoring."
   },
   {
-    id: "intellectual",
-    label: "Intellectual",
-    description: "Cognitive performance, academic evidence, learning, and intellectual development."
+    title: "Confidence stays visible",
+    body: "Coverage and confidence are part of the state, not decorative metadata."
   },
   {
-    id: "professional",
-    label: "Professional",
-    description: "Career evidence, capabilities, trajectory, achievements, and professional position."
-  },
-  {
-    id: "financial",
-    label: "Financial",
-    description: "Assets, liabilities, cash flow, financial resilience, and current financial position."
-  },
-  {
-    id: "relational",
-    label: "Relational",
-    description: "Relationships, social connection, support, and the quality of interpersonal life."
-  },
-  {
-    id: "experiential",
-    label: "Experiential",
-    description: "Breadth, novelty, meaningful experiences, and engagement with the world."
-  },
-  {
-    id: "creative",
-    label: "Creative",
-    description: "Creative practice, output, expression, and the development of original work."
+    title: "Unknown stays unknown",
+    body: "Insufficient evidence reduces coverage. It never produces a made-up middling score."
   }
 ];
 
-const MODEL_STAGES = [
-  {
-    number: "01",
-    title: "Evidence",
-    body: "Kleos starts with source material: structured records, measurements, assessments, documents, and bounded outputs from specialist systems."
-  },
-  {
-    number: "02",
-    title: "Assessment",
-    body: "Evidence is interpreted against an explicit methodology. Missing evidence can remain unknown rather than becoming an invented score."
-  },
-  {
-    number: "03",
-    title: "State",
-    body: "Subdomain judgments are combined deterministically into an eight-vector model with visible coverage and confidence."
-  },
-  {
-    number: "04",
-    title: "History",
-    body: "Immutable snapshots preserve how the model looked at a point in time so changes remain inspectable."
-  }
+const CONTRASTS = [
+  ["One opaque score for your whole life", "Eight vectors, forty subdomains, no cross-vector total"],
+  ["Missing data quietly counts as zero", "Unassessable subdomains stay explicitly unknown"],
+  ["A model invents the number", "Fixed anchors, fixed weights, deterministic arithmetic"],
+  ["Yesterday's dashboard is overwritten", "Every evaluation is an immutable, versioned snapshot"],
+  ["Confidence is implied", "Coverage and confidence are shown next to every result"]
 ];
+
+const STATS = [
+  { value: "8", label: "life vectors" },
+  { value: "40", label: "weighted subdomains" },
+  { value: "7", label: "fixed anchors" },
+  { value: "0", label: "invented scores" }
+];
+
+function Reveal({ as: Tag = "div", className = "", children, ...rest }) {
+  const [ref, inView] = useInView({ threshold: 0.15 });
+  return (
+    <Tag ref={ref} className={`${styles.reveal} ${inView ? styles.revealed : ""} ${className}`} {...rest}>
+      {children}
+    </Tag>
+  );
+}
+
+function SectionHeading({ kicker, title, children, id, align = "start" }) {
+  return (
+    <Reveal className={`${styles.sectionHeading} ${align === "center" ? styles.centered : ""}`}>
+      <p className={styles.sectionKicker}>{kicker}</p>
+      <h2 id={id}>{title}</h2>
+      {children ? <p className={styles.sectionLede}>{children}</p> : null}
+    </Reveal>
+  );
+}
 
 export default function KleosPublicSite({
   onSignIn,
@@ -79,6 +100,8 @@ export default function KleosPublicSite({
     : signInAvailable
       ? "Sign In"
       : "Sign In Unavailable";
+  const startLabel = isSigningIn ? "Opening sign in…" : "Start with Google";
+  const signInDisabled = isSigningIn || !signInAvailable;
 
   return (
     <div className={styles.site} id="top">
@@ -91,13 +114,14 @@ export default function KleosPublicSite({
           <a href="#how-it-works">How It Works</a>
           <a href="#vectors">Vectors</a>
           <a href="#methodology">Methodology</a>
+          <a href="#use-cases">Use Cases</a>
         </nav>
 
         <button
           className={styles.signIn}
           type="button"
           onClick={onSignIn}
-          disabled={isSigningIn || !signInAvailable}
+          disabled={signInDisabled}
         >
           {signInLabel}
         </button>
@@ -109,242 +133,200 @@ export default function KleosPublicSite({
             <p className={styles.eyebrow}>Kleos · Current-state modelling</p>
             <h1 id="kleos-public-title">See your current state clearly.</h1>
             <p className={styles.heroLede}>
-              Kleos organizes evidence across the major dimensions of your life into an
-              interpretable model of where you are now—while keeping sources, interpretation,
-              confidence, and uncertainty distinct.
+              Kleos turns the evidence your life already produces into one honest model of where
+              you are now, across eight dimensions.
             </p>
             <div className={styles.heroActions}>
-              <a className={styles.primaryButton} href="#how-it-works">
-                Explore Kleos
-              </a>
-              <a className={styles.secondaryButton} href="#methodology">
-                See the methodology
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={onSignIn}
+                disabled={signInDisabled}
+              >
+                {startLabel}
+              </button>
+              <a className={styles.secondaryButton} href="#how-it-works">
+                See how it works
               </a>
             </div>
             {authMessage ? <p className={styles.authMessage}>{authMessage}</p> : null}
-          </div>
 
-          <StateModel />
-        </section>
-
-        <section className={styles.problemSection}>
-          <div className={styles.sectionHeading}>
-            <p className={styles.sectionKicker}>The problem</p>
-            <h2>Your life produces evidence everywhere. Almost none of it becomes a coherent model.</h2>
-            <p>
-              Health data, training, assessments, academic results, finances, career history,
-              relationships, and personal records answer different questions. Kleos keeps those
-              differences intact while making the overall state legible.
-            </p>
-          </div>
-        </section>
-
-        <section className={styles.section} id="how-it-works">
-          <div className={styles.sectionHeading}>
-            <p className={styles.sectionKicker}>How it works</p>
-            <h2>Evidence → assessment → state → history.</h2>
-            <p>
-              Kleos separates what was observed from what was inferred. The result is a model
-              that can be inspected, challenged, and compared over time.
-            </p>
-          </div>
-
-          <div className={styles.stageGrid}>
-            {MODEL_STAGES.map((stage) => (
-              <article className={styles.stageCard} key={stage.number}>
-                <span>{stage.number}</span>
-                <h3>{stage.title}</h3>
-                <p>{stage.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.section} id="vectors">
-          <div className={styles.sectionHeading}>
-            <p className={styles.sectionKicker}>Eight-vector model</p>
-            <h2>One person. Eight distinct dimensions.</h2>
-            <p>
-              The vectors are stable parts of the model, not a single gamified score. Each vector
-              is assessed through defined subdomains with its own evidence, coverage, and confidence.
-            </p>
-          </div>
-
-          <div className={styles.vectorGrid}>
-            {VECTORS.map((vector, index) => (
-              <article className={styles.vectorCard} key={vector.id}>
-                <div className={styles.vectorCardTop}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <span className={styles.vectorSignal} aria-hidden="true" />
-                </div>
-                <h3>{vector.label}</h3>
-                <p>{vector.description}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.section} id="methodology">
-          <div className={styles.methodologyGrid}>
-            <div>
-              <p className={styles.sectionKicker}>Methodology</p>
-              <h2>Interpretation should remain inspectable.</h2>
-              <p className={styles.sectionBody}>
-                Kleos does not ask a model for eight unexplained numbers. It evaluates fixed
-                subdomains against fixed anchors, records the judgments, and lets the persistence
-                layer calculate vector state deterministically.
-              </p>
-
-              <div className={styles.principleList}>
-                <article>
-                  <span>01</span>
-                  <div>
-                    <h3>Evidence stays traceable</h3>
-                    <p>Source material remains distinguishable from the conclusions drawn from it.</p>
-                  </div>
-                </article>
-                <article>
-                  <span>02</span>
-                  <div>
-                    <h3>Interpretation stays explicit</h3>
-                    <p>Subdomain judgments map to defined anchors rather than hidden holistic scoring.</p>
-                  </div>
-                </article>
-                <article>
-                  <span>03</span>
-                  <div>
-                    <h3>Confidence stays visible</h3>
-                    <p>Coverage and confidence are part of the state rather than decorative metadata.</p>
-                  </div>
-                </article>
-                <article>
-                  <span>04</span>
-                  <div>
-                    <h3>Unknown stays unknown</h3>
-                    <p>Insufficient evidence reduces coverage instead of manufacturing mediocrity.</p>
-                  </div>
-                </article>
-              </div>
-            </div>
-
-            <aside className={styles.methodPreview} aria-label="Illustrative Kleos assessment flow">
-              <div className={styles.previewHeader}>
-                <span>Illustrative example</span>
-                <strong>Inspectable state</strong>
-              </div>
-
-              <div className={styles.previewLayer}>
-                <span>Evidence</span>
-                <div>
-                  <strong>Structured source records</strong>
-                  <p>Repeated observations, assessments, and source documents.</p>
-                </div>
-              </div>
-
-              <div className={styles.previewConnector} aria-hidden="true" />
-
-              <div className={styles.previewLayer}>
-                <span>Assessment</span>
-                <div>
-                  <strong>Fixed subdomain anchor</strong>
-                  <p>Evidence is sufficient to characterize this subdomain; confidence is recorded.</p>
-                </div>
-              </div>
-
-              <div className={styles.previewConnector} aria-hidden="true" />
-
-              <div className={styles.previewLayer}>
-                <span>Vector state</span>
-                <div>
-                  <strong>Calculated from assessed subdomains</strong>
-                  <p>Coverage and confidence remain visible beside the derived vector result.</p>
-                </div>
-              </div>
-
-              <p className={styles.previewNote}>
-                Synthetic example only. The public surface never renders private Kleos evidence.
-              </p>
-            </aside>
-          </div>
-        </section>
-
-        <section className={styles.section}>
-          <div className={styles.longitudinalGrid}>
-            <div>
-              <p className={styles.sectionKicker}>Longitudinal state</p>
-              <h2>Current state matters more when its history is preserved.</h2>
-              <p className={styles.sectionBody}>
-                Each evaluation becomes an immutable snapshot. That makes it possible to ask not
-                only “where am I now?” but also “what changed, and what evidence supported the
-                earlier interpretation?”
-              </p>
-            </div>
-
-            <div className={styles.timeline} aria-label="Illustrative immutable Kleos snapshots">
-              <div className={styles.timelineLine} aria-hidden="true" />
-              {["Earlier state", "Intermediate state", "Current state"].map((label, index) => (
-                <div className={styles.timelineItem} key={label}>
-                  <span className={styles.timelineDot} aria-hidden="true" />
-                  <div>
-                    <small>Snapshot {String(index + 1).padStart(2, "0")}</small>
-                    <strong>{label}</strong>
-                    <p>Evidence · assessments · coverage · confidence</p>
-                  </div>
+            <dl className={styles.stats}>
+              {STATS.map((stat) => (
+                <div key={stat.label}>
+                  <dt>{stat.label}</dt>
+                  <dd>{stat.value}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
+          </div>
+
+          <div className={styles.heroVisual}>
+            <RadianceField />
           </div>
         </section>
 
-        <section className={styles.section} id="fabbro-context">
-          <div className={styles.sectionHeading}>
-            <p className={styles.sectionKicker}>Fabbro Systems</p>
-            <h2>Evidence → state → action.</h2>
-            <p>
-              Kleos occupies the current-state layer of the Fabbro Systems family. Specialist
-              systems can produce richer evidence; Kleos makes that evidence legible; Ariadne
-              organizes desired movement.
-            </p>
+        <section className={styles.showcase} aria-labelledby="showcase-title">
+          <SectionHeading
+            id="showcase-title"
+            kicker="The character sheet"
+            title="Your whole life on one honest page."
+            align="center"
+          >
+            Every dimension, its confidence, its trajectory, and what can't be assessed yet. Click
+            into any vector to see the evidence and reasoning behind it.
+          </SectionHeading>
+          <div className={styles.showcaseWindow}>
+            <CharacterSheetPreview />
           </div>
+          <p className={styles.syntheticNote}>
+            Synthetic example only. The public surface never renders private Kleos evidence.
+          </p>
+        </section>
 
-          <div className={styles.familyFlow} aria-label="Fabbro Systems product relationship">
+        <section className={styles.problemSection} aria-labelledby="problem-title">
+          <SectionHeading
+            id="problem-title"
+            kicker="The problem"
+            title="Your life produces evidence everywhere. Almost none of it becomes a coherent model."
+            align="center"
+          >
+            Health data, training, assessments, transcripts, finances, and career history each answer
+            different questions. Kleos keeps those differences intact while making the overall
+            state legible.
+          </SectionHeading>
+
+          <div className={styles.marquee} aria-label="Examples of evidence Kleos can model">
+            {SOURCE_ROWS.map((row, rowIndex) => (
+              <div className={styles.marqueeRow} key={rowIndex} data-direction={rowIndex % 2 ? "reverse" : "forward"}>
+                <div className={styles.marqueeTrack}>
+                  {[...row, ...row].map((source, index) => (
+                    <span key={`${source}-${index}`} aria-hidden={index >= row.length ? "true" : undefined}>
+                      <i aria-hidden="true" />
+                      {source}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.section} id="how-it-works" aria-labelledby="how-title">
+          <SectionHeading id="how-title" kicker="How it works" title="Evidence → assessment → state → history.">
+            Kleos separates what was observed from what was inferred. Follow one vector from raw
+            records to a frozen snapshot.
+          </SectionHeading>
+          <EvidencePipeline />
+        </section>
+
+        <section className={styles.section} id="vectors" aria-labelledby="vectors-title">
+          <SectionHeading id="vectors-title" kicker="Eight-vector model" title="One person. Eight distinct dimensions.">
+            Eight rays, like the Radiance mark. Each vector has five weighted subdomains with its own
+            evidence, coverage, and confidence. There is no single gamified total.
+          </SectionHeading>
+          <VectorExplorer />
+        </section>
+
+        <section className={styles.section} id="methodology" aria-labelledby="methodology-title">
+          <SectionHeading
+            id="methodology-title"
+            kicker="Methodology · try it yourself"
+            title="Interpretation should remain inspectable."
+          >
+            Kleos doesn't ask a model for eight unexplained numbers. It judges fixed subdomains
+            against fixed anchors, then calculates the vector deterministically. Change the judgments
+            below and watch the rules respond.
+          </SectionHeading>
+
+          <Reveal className={styles.simulatorWrap}>
+            <ModelSimulator />
+          </Reveal>
+
+          <div className={styles.principles}>
+            {PRINCIPLES.map((principle, index) => (
+              <Reveal as="article" key={principle.title} style={{ "--delay": `${index * 90}ms` }}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <h3>{principle.title}</h3>
+                <p>{principle.body}</p>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.section} id="use-cases" aria-labelledby="use-cases-title">
+          <SectionHeading id="use-cases-title" kicker="Use cases" title="Built for the questions you actually ask.">
+            Kleos is useful the moment you want a straight answer about yourself, and more useful
+            every month you keep it.
+          </SectionHeading>
+          <UseCases />
+        </section>
+
+        <section className={styles.section} aria-labelledby="contrast-title">
+          <SectionHeading id="contrast-title" kicker="Why Kleos" title="Self-knowledge without the flattery.">
+            Most self-tracking tools optimise for a satisfying number. Kleos is built to be trusted.
+          </SectionHeading>
+
+          <Reveal className={styles.contrast}>
+            <div className={styles.contrastHead}>
+              <span>Typical self-tracking</span>
+              <span>Kleos</span>
+            </div>
+            {CONTRASTS.map(([before, after], index) => (
+              <div className={styles.contrastRow} key={after} style={{ "--i": index }}>
+                <span className={styles.contrastBefore}>{before}</span>
+                <span className={styles.contrastAfter}>{after}</span>
+              </div>
+            ))}
+          </Reveal>
+        </section>
+
+        <section className={styles.section} id="fabbro-context" aria-labelledby="family-title">
+          <SectionHeading id="family-title" kicker="Fabbro Systems" title="Evidence → state → action.">
+            Kleos is the current-state layer of the Fabbro Systems family. Specialist systems produce
+            richer evidence, Kleos makes it legible, and Ariadne turns it into direction.
+          </SectionHeading>
+
+          <Reveal className={styles.familyFlow} aria-label="Fabbro Systems product relationship">
             <a href="https://heracles.fabbrosystems.com/">
               <span>01 · Evidence</span>
               <strong>Heracles</strong>
               <p>Domain evidence and interpretation for resistance training.</p>
             </a>
-            <span className={styles.familyArrow} aria-hidden="true">→</span>
+            <span className={styles.familyBeam} aria-hidden="true" />
             <a className={styles.currentFamilyStage} href="#top">
               <span>02 · State</span>
               <strong>Kleos</strong>
-              <p>Evidence-based modelling of the person's current state.</p>
+              <p>Evidence-based modelling of the person&apos;s current state.</p>
             </a>
-            <span className={styles.familyArrow} aria-hidden="true">→</span>
+            <span className={styles.familyBeam} aria-hidden="true" />
             <a href="https://ariadne.fabbrosystems.com/">
               <span>03 · Action</span>
               <strong>Ariadne</strong>
               <p>Strategy, priorities, opportunities, projects, tasks, and execution.</p>
             </a>
-          </div>
+          </Reveal>
         </section>
 
-        <section className={styles.closingSection}>
-          <div>
-            <p className={styles.sectionKicker}>Kleos</p>
-            <h2>Make your current state legible.</h2>
+        <section className={styles.closingSection} aria-labelledby="closing-title">
+          <div className={styles.closingMark} aria-hidden="true">
+            <img src="/brand/kleos-mark.svg" alt="" />
           </div>
-          <p>
-            The current deployment is an owner-focused private workspace. The public layer explains
-            the model; authentication opens the existing private application.
+          <p className={styles.sectionKicker}>Recognition begins with evidence</p>
+          <h2 id="closing-title">Make your current state legible.</h2>
+          <p className={styles.closingLede}>
+            Sign in with Google to open your private workspace. Your evidence stays yours, protected
+            by row-level security and never shown on a public page.
           </p>
           <button
             className={styles.primaryButton}
             type="button"
             onClick={onSignIn}
-            disabled={isSigningIn || !signInAvailable}
+            disabled={signInDisabled}
           >
-            {signInLabel}
+            {startLabel}
           </button>
+          {authMessage ? <p className={styles.authMessage}>{authMessage}</p> : null}
         </section>
       </main>
 
@@ -369,30 +351,6 @@ export default function KleosPublicSite({
           <a href="https://fabbrosystems.com/">Fabbro Systems</a>
         </nav>
       </footer>
-    </div>
-  );
-}
-
-function StateModel() {
-  return (
-    <div className={styles.stateVisual} aria-label="Illustrative eight-vector current-state model">
-      <div className={styles.orbit} aria-hidden="true" />
-      <div className={styles.orbitInner} aria-hidden="true" />
-      <div className={styles.stateCore}>
-        <img src="/brand/kleos-mark.svg" alt="" aria-hidden="true" />
-        <span>Current state</span>
-        <strong>Legible</strong>
-      </div>
-
-      {VECTORS.map((vector, index) => (
-        <span
-          className={styles.vectorNode}
-          data-position={String(index + 1)}
-          key={vector.id}
-        >
-          {vector.label}
-        </span>
-      ))}
     </div>
   );
 }

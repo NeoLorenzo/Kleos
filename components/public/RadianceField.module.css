@@ -1,0 +1,424 @@
+.field {
+  position: relative;
+  width: min(100%, 640px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  isolation: isolate;
+}
+
+.glow {
+  position: absolute;
+  inset: 18%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--fs-accent) 34%, transparent) 0%, transparent 68%);
+  filter: blur(30px);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 1600ms ease 500ms,
+    transform 2400ms cubic-bezier(0.2, 0, 0, 1) 300ms;
+  animation: breathe 7s ease-in-out 2.5s infinite;
+}
+
+.ready .glow {
+  opacity: 0.55;
+  transform: scale(1);
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.rings polygon {
+  fill: none;
+  stroke: var(--fs-color-border);
+  stroke-width: 1;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+
+.rings polygon[data-anchor="100"] {
+  stroke: #3a3a3a;
+}
+
+.rings line {
+  stroke: var(--fs-color-border);
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
+  opacity: 0;
+  transition: opacity 900ms ease 200ms;
+}
+
+.ready .rings polygon,
+.ready .rings line {
+  opacity: 1;
+}
+
+.anchorLabels text {
+  fill: #5c5c5c;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  transition: opacity 900ms ease 1400ms;
+}
+
+.ready .anchorLabels text {
+  opacity: 1;
+}
+
+.shape {
+  fill: color-mix(in srgb, var(--fs-accent) 13%, transparent);
+  stroke: color-mix(in srgb, var(--fs-accent) 80%, transparent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: scale(0.2);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 1100ms ease 900ms,
+    transform 1400ms cubic-bezier(0.2, 0, 0, 1) 800ms;
+}
+
+.ready .shape {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ray {
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition:
+    stroke-dashoffset 1100ms cubic-bezier(0.2, 0, 0, 1) calc(var(--i) * 80ms),
+    stroke-width 400ms ease;
+}
+
+.bloom {
+  stroke: var(--fs-accent);
+  stroke-width: 10;
+  stroke-linecap: round;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+
+.ready .ray {
+  stroke-dashoffset: 0;
+}
+
+.tip {
+  fill: #000000;
+  stroke: var(--fs-accent);
+  stroke-width: 2;
+  opacity: 0;
+  transition: opacity 400ms ease calc(700ms + var(--i) * 80ms), r 300ms ease;
+}
+
+.ready .tip {
+  opacity: 1;
+}
+
+.unknownRay {
+  stroke: #6b6b72;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1 7;
+  opacity: 0;
+  transition: opacity 800ms ease 900ms;
+}
+
+.ready .unknownRay {
+  opacity: 1;
+}
+
+.activeAxis .ray {
+  stroke-width: 9;
+}
+
+.activeAxis .bloom {
+  opacity: 0.75;
+}
+
+.activeAxis .tip {
+  fill: var(--fs-accent);
+}
+
+.activeAxis .unknownRay {
+  stroke: var(--fs-color-text-secondary);
+}
+
+.particle {
+  fill: var(--fs-accent);
+  opacity: 0;
+  animation: inflow 3.6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation-delay: calc(1.6s + var(--i) * 0.45s + var(--p) * 1.8s);
+}
+
+.activeAxis .particle {
+  fill: #ffffff;
+}
+
+.core,
+.coreHalo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.core {
+  fill: #ffffff;
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    opacity 600ms ease,
+    transform 900ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coreHalo {
+  fill: none;
+  stroke: color-mix(in srgb, var(--fs-accent) 55%, transparent);
+  stroke-width: 1;
+  opacity: 0;
+  animation: pulse 2.8s ease-out 1.8s infinite;
+}
+
+.ready .core {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.labels {
+  position: absolute;
+  inset: 0;
+}
+
+.label {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--fs-radius-sm);
+  background: transparent;
+  color: var(--fs-color-text-muted);
+  font: inherit;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition:
+    opacity 700ms ease calc(900ms + var(--i) * 60ms),
+    color var(--fs-motion-normal) var(--fs-motion-ease);
+}
+
+.ready .label {
+  opacity: 1;
+}
+
+.label span {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.label strong {
+  color: var(--fs-color-text);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.activeLabel {
+  color: var(--fs-color-text);
+}
+
+.activeLabel strong {
+  color: var(--fs-app-accent-text);
+}
+
+.label:focus-visible {
+  outline: var(--fs-focus-outline-width) solid #ffffff;
+  outline-offset: 0;
+}
+
+.ticker {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 12px);
+  width: min(92%, 420px);
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--fs-app-border-raised);
+  border-radius: var(--fs-radius-lg);
+  background: color-mix(in srgb, var(--fs-app-surface) 88%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  transform: translateX(-50%);
+  animation: tickerIn 500ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.tickerRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.tickerSource,
+.tickerTarget {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--fs-color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tickerEvidence {
+  overflow: hidden;
+  color: var(--fs-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tickerArrow {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--fs-accent), transparent);
+  background-size: 200% 100%;
+  animation: sweep 1.4s ease-in-out infinite;
+}
+
+.tickerAnchor,
+.tickerUnknown {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tickerAnchor {
+  background: var(--fs-app-accent-soft);
+  color: var(--fs-app-accent-text);
+}
+
+.tickerUnknown {
+  border: 1px dashed #52525b;
+  color: var(--fs-color-text-secondary);
+}
+
+@keyframes inflow {
+  0% {
+    opacity: 0;
+    transform: translateY(-232px);
+  }
+  15% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes sweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes tickerIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 720px) {
+  .label span {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .label strong {
+    font-size: 12px;
+  }
+
+  .label {
+    padding: 4px;
+  }
+
+  .tickerSource,
+  .tickerTarget {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+
+  .tickerEvidence {
+    font-size: 12px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow,
+  .coreHalo,
+  .tickerArrow,
+  .ticker {
+    animation: none;
+  }
+
+  .ray,
+  .shape,
+  .tip,
+  .label,
+  .core {
+    transition: none;
+  }
+}

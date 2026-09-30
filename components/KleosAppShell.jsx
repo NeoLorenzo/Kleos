@@ -60,7 +60,8 @@ export default function KleosAppShell({ children }) {
 
     void supabase.auth.getUser().then(({ data, error }) => {
       if (!mounted) return;
-      if (error) {
+      // A visitor with no session is simply signed out, not an auth failure.
+      if (error && error.name !== "AuthSessionMissingError") {
         setAuthState("signed-out");
         setAuthMessage("Sign in could not be checked. You can still explore the public Kleos model.");
         return;

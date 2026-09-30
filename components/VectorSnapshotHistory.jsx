@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SectionHeading from "@/components/SectionHeading";
 import { loadVectorSnapshotHistory } from "@/lib/kleos/vectorSnapshotRepository";
 import { VECTOR_DEFINITIONS } from "@/lib/kleos/vectorSnapshots";
 
@@ -47,13 +48,11 @@ export default function VectorSnapshotHistory({ userId }) {
 
   return (
     <section className="fs-app-card kleos-card wide-card" aria-labelledby="snapshot-history-title">
-      <div className="section-header">
-        <h2 id="snapshot-history-title">Snapshot History</h2>
-        <p>
-          Methodology versions are shown explicitly. Scores produced under different methodology versions are historical records,
-          not directly comparable longitudinal measurements. Methodology 2.0.1 is the current like-for-like baseline.
-        </p>
-      </div>
+      <SectionHeading
+        title="Snapshot History"
+        id="snapshot-history-title"
+        hint="Methodology versions are shown explicitly. Scores produced under different methodology versions are historical records, not directly comparable longitudinal measurements. Methodology 2.0.1 is the current like-for-like baseline."
+      />
       <div className="table-wrap">
         <table>
           <thead>
@@ -71,7 +70,7 @@ export default function VectorSnapshotHistory({ userId }) {
               const deterministic = String(snapshot.methodologyVersion || "").startsWith("2.");
               return (
                 <tr key={snapshot.id || `${snapshot.evaluatedAt}-${index}`}>
-                  <td>{formatDate(snapshot.evaluatedAt)}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>{formatDate(snapshot.evaluatedAt)}</td>
                   <td>
                     {snapshot.methodologyVersion}
                     {deterministic ? " · deterministic" : " · legacy"}
@@ -93,7 +92,9 @@ export default function VectorSnapshotHistory({ userId }) {
 
 function formatDate(value) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
 }
 
 function formatScore(value) {

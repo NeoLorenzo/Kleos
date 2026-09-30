@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import InfoHint from "@/components/InfoHint";
+import SectionHeading from "@/components/SectionHeading";
 import styles from "./FinancialPosition.module.css";
 
 const ASSET_CATEGORIES = [
@@ -369,113 +371,14 @@ export default function FinancialPosition({ userId }) {
   const attestedToday = position.liabilityStatus?.latest_no_known_liabilities_as_of === todayKey();
 
   return (
-    <section className="kleos-card wide-card">
-      <div className={styles.headerRow}>
-        <div className="section-header">
-          <p className="fs-app-kicker">Balance Sheet</p>
-          <h2>Financial Position</h2>
-          <p>Manual assets and liabilities combine with synchronized bank cash. Every total remains currency-native; currencies are never silently converted.</p>
-        </div>
-        <div className={styles.actions}>
+    <section className="fs-app-card kleos-card">
+      <SectionHeading
+        title="Financial Position"
+        hint="Manual assets and liabilities combine with synchronized bank cash. Every total remains currency-native; currencies are never silently converted."
+      >
           <button type="button" className="fs-app-button is-secondary" onClick={() => { setShowAssetForm(true); setEditingAssetId(null); setAssetForm(newAssetForm()); }}>Add Asset</button>
           <button type="button" className="fs-app-button is-secondary" onClick={() => { setShowLiabilityForm(true); setEditingLiabilityId(null); setLiabilityForm(newLiabilityForm()); }}>Add Liability</button>
-        </div>
-      </div>
-
-      {isLoading ? <p className="kleos-subtitle">Loading financial position…</p> : null}
-
-      {position.balanceSheet.length ? (
-        <div className={styles.balanceGrid}>
-          {position.balanceSheet.map((row) => (
-            <article className={styles.currencyCard} key={row.currency}>
-              <div className={styles.currencyTitle}>
-                <strong>{row.currency}</strong>
-                <span>{Number(row.manual_asset_count || 0)} manual asset(s) · {Number(row.bank_account_count || 0)} synced account(s)</span>
-              </div>
-              <div className={styles.metricGrid}>
-                <MiniMetric label="Net worth" value={formatMoney(row.net_worth, row.currency)} />
-                <MiniMetric label="Assets" value={formatMoney(row.total_assets, row.currency)} />
-                <MiniMetric label="Liabilities" value={formatMoney(row.total_liabilities, row.currency)} />
-                <MiniMetric label="Liquid assets" value={formatMoney(row.liquid_assets, row.currency)} />
-              </div>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <p className="kleos-subtitle">No balance-sheet observations yet. Add an asset or liability; synchronized bank cash will appear automatically when available.</p>
-      )}
-
-      <div className={styles.columns}>
-        <div>
-          <div className={styles.subheader}>
-            <div>
-              <h3>Assets</h3>
-              <p>Manual assets only. Revolut balances above are bank-synced and should not be duplicated here.</p>
-            </div>
-          </div>
-          {position.assets.length ? (
-            <div className={styles.recordList}>
-              {position.assets.map((asset) => (
-                <article className={styles.recordCard} key={asset.asset_id}>
-                  <div>
-                    <strong>{asset.name}</strong>
-                    <span>{humanize(asset.category)} · {humanize(asset.control_level)} · {humanize(asset.liquidity_class)}</span>
-                    <small>{Number(asset.ownership_pct).toFixed(0)}% ownership · {asset.valuation_date ? `valued ${formatDate(asset.valuation_date)}` : "no valuation yet"}</small>
-                  </div>
-                  <div className={styles.recordValue}>
-                    <strong>{asset.ownership_adjusted_value == null ? "Unvalued" : formatMoney(asset.ownership_adjusted_value, asset.currency || asset.asset_currency)}</strong>
-                    <div className={styles.recordActions}>
-                      <button type="button" className="fs-app-button is-secondary" onClick={() => editAsset(asset)}>Edit</button>
-                      <button type="button" className="fs-app-button is-secondary" onClick={() => void archiveRecord("financial_assets", "id", asset.asset_id, "Asset")}>Archive</button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : <p className="kleos-subtitle">No manual assets recorded.</p>}
-        </div>
-
-        <div>
-          <div className={styles.subheader}>
-            <div>
-              <h3>Liabilities</h3>
-              <p>Debt absence requires affirmative evidence; an empty list alone is treated as unknown.</p>
-            </div>
-          </div>
-          {position.liabilities.length ? (
-            <div className={styles.recordList}>
-              {position.liabilities.map((liability) => (
-                <article className={styles.recordCard} key={liability.liability_id}>
-                  <div>
-                    <strong>{liability.name}</strong>
-                    <span>{humanize(liability.category)}</span>
-                    <small>{liability.balance_date ? `balance observed ${formatDate(liability.balance_date)}` : "no balance observation yet"}</small>
-                  </div>
-                  <div className={styles.recordValue}>
-                    <strong>{liability.amount == null ? "Unvalued" : formatMoney(liability.amount, liability.currency || liability.liability_currency)}</strong>
-                    <div className={styles.recordActions}>
-                      <button type="button" className="fs-app-button is-secondary" onClick={() => editLiability(liability)}>Edit</button>
-                      <button type="button" className="fs-app-button is-secondary" onClick={() => void archiveRecord("financial_liabilities", "id", liability.liability_id, "Liability")}>Archive</button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className={styles.attestationBox}>
-              <strong>{position.liabilityStatus?.affirmative_no_known_liabilities ? "No known personal liabilities" : "No liabilities recorded"}</strong>
-              <p>
-                {position.liabilityStatus?.affirmative_no_known_liabilities
-                  ? `Affirmatively confirmed as of ${formatDate(position.liabilityStatus.latest_no_known_liabilities_as_of)}.`
-                  : "This is currently missing evidence, not evidence of zero debt."}
-              </p>
-              <button type="button" className="fs-app-button is-secondary" onClick={() => void confirmNoKnownLiabilities()} disabled={savingKey === "attestation" || attestedToday}>
-                {attestedToday ? "Confirmed today" : savingKey === "attestation" ? "Recording…" : "Confirm no known liabilities today"}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      </SectionHeading>
 
       {showAssetForm ? (
         <PositionForm title={editingAssetId ? "Edit asset" : "Add asset"} onSubmit={saveAsset} onCancel={resetAssetForm} saving={savingKey === "asset"}>
@@ -505,7 +408,101 @@ export default function FinancialPosition({ userId }) {
         </PositionForm>
       ) : null}
 
-      {statusMessage ? <p className={styles.status}>{statusMessage}</p> : null}
+      {isLoading ? <p className="kleos-subtitle">Loading financial position…</p> : null}
+
+      {position.balanceSheet.length ? (
+        <div className={styles.balanceGrid}>
+          {position.balanceSheet.map((row) => (
+            <article
+              className={styles.currencyCard}
+              key={row.currency}
+              title={`${Number(row.manual_asset_count || 0)} manual asset(s) · ${Number(row.bank_account_count || 0)} synced account(s)`}
+            >
+              <div className={styles.netWorth}>
+                <span>Net worth <span className={styles.currencyCode}>{row.currency}</span></span>
+                <strong>{formatMoney(row.net_worth, row.currency)}</strong>
+              </div>
+              <div className={styles.metricGrid}>
+                <MiniMetric label="Assets" value={formatMoney(row.total_assets, row.currency)} />
+                <MiniMetric label="Liabilities" value={formatMoney(row.total_liabilities, row.currency)} />
+                <MiniMetric label="Liquid assets" value={formatMoney(row.liquid_assets, row.currency)} />
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="kleos-subtitle">No balance-sheet observations yet. Add an asset or liability; synchronized bank cash will appear automatically when available.</p>
+      )}
+
+      <div className={styles.columns}>
+        <div>
+          <div className={`kleos-title-row ${styles.subheader}`}>
+            <h3>Assets</h3>
+            <InfoHint label="About assets">Manual assets only. Revolut balances are bank-synced and should not be duplicated here.</InfoHint>
+          </div>
+          {position.assets.length ? (
+            <div className={styles.recordList}>
+              {position.assets.map((asset) => (
+                <article className={styles.recordCard} key={asset.asset_id}>
+                  <div>
+                    <strong>{asset.name}</strong>
+                    <span>{humanize(asset.category)} · {humanize(asset.control_level)} · {humanize(asset.liquidity_class)}</span>
+                    <small>{Number(asset.ownership_pct).toFixed(0)}% ownership · {asset.valuation_date ? `valued ${formatDate(asset.valuation_date)}` : "no valuation yet"}</small>
+                  </div>
+                  <div className={styles.recordValue}>
+                    <strong>{asset.ownership_adjusted_value == null ? "Unvalued" : formatMoney(asset.ownership_adjusted_value, asset.currency || asset.asset_currency)}</strong>
+                    <div className={styles.recordActions}>
+                      <button type="button" className="fs-app-button is-ghost" onClick={() => editAsset(asset)}>Edit</button>
+                      <button type="button" className="fs-app-button is-ghost" onClick={() => void archiveRecord("financial_assets", "id", asset.asset_id, "Asset")}>Archive</button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : <p className="kleos-subtitle">No manual assets recorded.</p>}
+        </div>
+
+        <div>
+          <div className={`kleos-title-row ${styles.subheader}`}>
+            <h3>Liabilities</h3>
+            <InfoHint label="About liabilities">Debt absence requires affirmative evidence; an empty list alone is treated as unknown.</InfoHint>
+          </div>
+          {position.liabilities.length ? (
+            <div className={styles.recordList}>
+              {position.liabilities.map((liability) => (
+                <article className={styles.recordCard} key={liability.liability_id}>
+                  <div>
+                    <strong>{liability.name}</strong>
+                    <span>{humanize(liability.category)}</span>
+                    <small>{liability.balance_date ? `balance observed ${formatDate(liability.balance_date)}` : "no balance observation yet"}</small>
+                  </div>
+                  <div className={styles.recordValue}>
+                    <strong>{liability.amount == null ? "Unvalued" : formatMoney(liability.amount, liability.currency || liability.liability_currency)}</strong>
+                    <div className={styles.recordActions}>
+                      <button type="button" className="fs-app-button is-ghost" onClick={() => editLiability(liability)}>Edit</button>
+                      <button type="button" className="fs-app-button is-ghost" onClick={() => void archiveRecord("financial_liabilities", "id", liability.liability_id, "Liability")}>Archive</button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.attestationBox}>
+              <strong>{position.liabilityStatus?.affirmative_no_known_liabilities ? "No known personal liabilities" : "No liabilities recorded"}</strong>
+              <p>
+                {position.liabilityStatus?.affirmative_no_known_liabilities
+                  ? `Affirmatively confirmed as of ${formatDate(position.liabilityStatus.latest_no_known_liabilities_as_of)}.`
+                  : "This is currently missing evidence, not evidence of zero debt."}
+              </p>
+              <button type="button" className="fs-app-button is-secondary" onClick={() => void confirmNoKnownLiabilities()} disabled={savingKey === "attestation" || attestedToday}>
+                {attestedToday ? "Confirmed today" : savingKey === "attestation" ? "Recording…" : "Confirm no known liabilities today"}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {statusMessage ? <p className="kleos-note">{statusMessage}</p> : null}
     </section>
   );
 }
@@ -515,10 +512,10 @@ function PositionForm({ title, onSubmit, onCancel, saving, children }) {
     <form className={styles.formPanel} onSubmit={onSubmit}>
       <div className={styles.formHeader}>
         <h3>{title}</h3>
-        <button type="button" className="fs-app-button is-secondary" onClick={onCancel}>Cancel</button>
       </div>
       <div className={styles.formGrid}>{children}</div>
       <div className={styles.formActions}>
+        <button type="button" className="fs-app-button is-ghost" onClick={onCancel}>Cancel</button>
         <button type="submit" className="fs-app-button is-primary" disabled={saving}>{saving ? "Saving…" : "Save"}</button>
       </div>
     </form>

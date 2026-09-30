@@ -97,12 +97,12 @@ test("character sheet is one profile surface with integrated dimension trajector
   assert.match(characterSheetSource, /Current dimensional state/);
   assert.match(characterSheetSource, /buildCharacterSummary/);
   assert.match(characterSheetSource, /formatTrajectorySummary\(trajectory\)/);
-  assert.match(characterSheetSource, /Key facts/);
+  assert.match(characterSheetSource, /<VectorRadar/);
+  assert.doesNotMatch(characterSheetSource, /Key facts/);
   assert.doesNotMatch(characterSheetSource, /id="vector-history-title"/);
   assert.doesNotMatch(characterSheetSource, /Evidence & assessment/);
   assert.doesNotMatch(characterSheetSource, /buildCharacterEvidence/);
   assert.match(styleSource, /\.dimensionRow/);
-  assert.match(styleSource, /\.factColumns/);
   assert.doesNotMatch(styleSource, /\.vectorCard/);
 });
 

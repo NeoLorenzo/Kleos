@@ -18,6 +18,7 @@ import {
   sortPsychologicalAssessments,
   validatePsychologicalDraft
 } from "@/lib/kleos/psychologicalBattery";
+import SectionHeading from "@/components/SectionHeading";
 import styles from "./PsychologicalAssessment.module.css";
 
 const TOTAL_QUESTIONS = getPsychologicalQuestionCount();
@@ -205,22 +206,19 @@ export default function PsychologicalAssessment({ userId }) {
   };
 
   return (
-    <section className={styles.panel} aria-labelledby="psychological-assessment-title">
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Canonical Psychological Evidence</p>
-          <h1 id="psychological-assessment-title">Psychological Battery</h1>
-          <p className={styles.intro}>
-            A repeatable set of independently scored measures plus Kleos-specific tracking facets.
-            Screening scores are evidence for Kleos Bot, not diagnoses and not a replacement for professional assessment.
-          </p>
-        </div>
+    <section className="fs-app-card kleos-card" aria-labelledby="psychological-assessment-title">
+      <SectionHeading
+        title="Psychological Battery"
+        id="psychological-assessment-title"
+        sub="WHO-5, SWLS, GAD-7 and PHQ-9, plus Kleos tracking facets."
+        hint="A repeatable set of independently scored measures plus Kleos-specific tracking facets. Screening scores are evidence for Kleos Bot, not diagnoses and not a replacement for professional assessment."
+      >
         {!isActive ? (
           <button type="button" className="fs-app-button is-primary" onClick={beginNewAssessment}>
             Take assessment
           </button>
         ) : null}
-      </header>
+      </SectionHeading>
 
       {isActive ? (
         <div className={styles.assessmentFlow}>
@@ -302,10 +300,7 @@ export default function PsychologicalAssessment({ userId }) {
 
       <section className={styles.history} aria-labelledby="psychological-history-title">
         <div className={styles.historyHeader}>
-          <div>
-            <p className={styles.eyebrow}>Longitudinal History</p>
-            <h2 id="psychological-history-title">Assessment history</h2>
-          </div>
+          <h3 id="psychological-history-title">Assessment history</h3>
           <span>{isLoading ? "Loading…" : `${history.length} recorded`}</span>
         </div>
 
@@ -444,7 +439,7 @@ function AssessmentHistoryCard({ assessment, latest, onEdit, onDelete, disabled 
   const phq9 = Number(assessment.phq9_score);
 
   return (
-    <details className={styles.historyCard} open={latest}>
+    <details className={styles.historyCard} open={latest ? true : undefined}>
       <summary>
         <div>
           <strong>{formatPsychologicalAssessmentDate(assessment.assessed_at)}</strong>
@@ -473,20 +468,23 @@ function AssessmentHistoryCard({ assessment, latest, onEdit, onDelete, disabled 
           </div>
         ) : null}
 
-        <div className={styles.facetGrid}>
-          {KLEOS_PSYCHOLOGICAL_FACETS.map((facet) => (
-            <div key={facet.id}>
-              <span>{facet.label}</span>
-              <strong>{assessment.kleos_facets?.[facet.id] ?? "-"}/4</strong>
-            </div>
-          ))}
-        </div>
+        <details className="kleos-disclosure">
+          <summary>Kleos facets</summary>
+          <div className={styles.facetGrid}>
+            {KLEOS_PSYCHOLOGICAL_FACETS.map((facet) => (
+              <div key={facet.id}>
+                <span>{facet.label}</span>
+                <strong>{assessment.kleos_facets?.[facet.id] ?? "-"}/4</strong>
+              </div>
+            ))}
+          </div>
+        </details>
 
         <div className={styles.historyActions}>
-          <button type="button" className="fs-app-button is-secondary" onClick={onEdit} disabled={disabled}>
+          <button type="button" className="fs-app-button is-ghost" onClick={onEdit} disabled={disabled}>
             Correct responses
           </button>
-          <button type="button" className={styles.deleteButton} onClick={onDelete} disabled={disabled}>
+          <button type="button" className="fs-app-button is-ghost is-danger" onClick={onDelete} disabled={disabled}>
             Delete
           </button>
         </div>

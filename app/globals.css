@@ -54,6 +54,10 @@ button:disabled {
   color: var(--fs-app-text);
 }
 
+/* ---------------------------------------------------------------------------
+ * Page frame
+ * ------------------------------------------------------------------------ */
+
 .kleos-shell {
   min-height: calc(100dvh - var(--fs-app-utility-height));
   padding:
@@ -66,6 +70,8 @@ button:disabled {
 .kleos-board {
   width: min(100%, var(--fs-app-content-max));
   margin: 0 auto;
+  display: grid;
+  gap: var(--fs-space-5);
 }
 
 .kleos-header {
@@ -73,25 +79,27 @@ button:disabled {
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--fs-space-4);
-  padding: 0 0 var(--fs-space-5);
-  border-bottom: var(--fs-border-width) solid var(--fs-app-border);
 }
 
 .kleos-header h1 {
-  margin: 0;
+  margin: 6px 0 0;
   color: var(--fs-app-text);
-  font-size: var(--fs-app-type-page-title-size);
+  font-size: 28px;
   font-weight: var(--fs-app-type-page-title-weight);
   line-height: var(--fs-app-type-page-title-line-height);
-  letter-spacing: var(--fs-app-type-page-title-tracking);
+  letter-spacing: -0.025em;
 }
 
 .kleos-subtitle {
-  margin: 0.45rem 0 0;
-  max-width: 60ch;
+  margin: 0.5rem 0 0;
+  max-width: 64ch;
   color: var(--fs-app-text-muted);
+  font-size: var(--fs-app-type-body-size);
+  line-height: 1.55;
+}
+
+.kleos-header .kleos-subtitle {
   font-size: var(--fs-app-type-supporting-size);
-  line-height: var(--fs-app-type-supporting-line-height);
 }
 
 .kleos-header-actions {
@@ -104,13 +112,519 @@ button:disabled {
 .kleos-scroll {
   display: grid;
   gap: var(--fs-space-4);
-  padding-top: var(--fs-space-5);
 }
+
+/* ---------------------------------------------------------------------------
+ * Cards and section headings
+ * ------------------------------------------------------------------------ */
 
 .kleos-card {
   min-width: 0;
-  padding: var(--fs-space-4);
+  padding: 20px;
+  scroll-margin-top: calc(var(--fs-app-utility-height) + 16px);
 }
+
+.kleos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--fs-space-4);
+}
+
+.wide-card {
+  grid-column: 1 / -1;
+}
+
+.section-header {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin-bottom: var(--fs-space-4);
+}
+
+.section-header .fs-app-kicker {
+  margin: 0 0 2px;
+}
+
+.section-header h2,
+.section-header h3 {
+  margin: 0;
+  color: var(--fs-app-text);
+  font-size: 15px;
+  font-weight: var(--fs-app-type-section-title-weight);
+  line-height: var(--fs-app-type-section-title-line-height);
+  letter-spacing: -0.01em;
+}
+
+.section-header p:not(.fs-app-kicker) {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--fs-app-text-muted);
+  font-size: var(--fs-app-type-body-size);
+  line-height: 1.5;
+}
+
+.kleos-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fs-space-4);
+  margin-bottom: var(--fs-space-4);
+}
+
+.kleos-section-head > .section-header {
+  margin-bottom: 0;
+}
+
+.kleos-section-head > .kleos-actions {
+  flex: 0 0 auto;
+}
+
+.kleos-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--fs-space-2);
+}
+
+.kleos-subheading {
+  margin: 0 0 var(--fs-space-3);
+  color: var(--fs-app-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kleos-note {
+  margin: var(--fs-space-3) 0 0;
+  color: var(--fs-app-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.kleos-note.is-warning {
+  padding: 10px 12px;
+  border: var(--fs-border-width) solid color-mix(in srgb, var(--fs-app-warning) 26%, transparent);
+  border-radius: var(--fs-radius-control);
+  background: var(--fs-app-warning-soft);
+  color: color-mix(in srgb, var(--fs-app-warning) 70%, white);
+}
+
+.kleos-divider {
+  height: 1px;
+  margin: var(--fs-space-5) 0;
+  border: 0;
+  background: var(--fs-app-border);
+}
+
+/* Collapsible cards */
+
+details.kleos-card > summary,
+details.kleos-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fs-space-3);
+  margin: -20px;
+  padding: 16px 20px;
+  border-radius: var(--fs-radius-lg);
+  color: var(--fs-app-text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background var(--fs-motion-fast) var(--fs-motion-ease);
+}
+
+details.kleos-card > summary::-webkit-details-marker,
+details.kleos-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.kleos-card > summary::after,
+details.kleos-disclosure > summary::after {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  margin-right: 4px;
+  border-right: 1.5px solid var(--fs-app-text-muted);
+  border-bottom: 1.5px solid var(--fs-app-text-muted);
+  content: "";
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--fs-motion-normal) var(--fs-app-motion-ease);
+}
+
+details.kleos-card[open] > summary::after,
+details.kleos-disclosure[open] > summary::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+details.kleos-card > summary:hover,
+details.kleos-disclosure > summary:hover {
+  background: var(--fs-app-hover);
+}
+
+details.kleos-card[open] > summary {
+  margin-bottom: 4px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+details.kleos-card > summary + .kleos-subtitle {
+  margin: 20px 0 var(--fs-space-4);
+}
+
+details.kleos-disclosure {
+  border-top: var(--fs-border-width) solid var(--fs-app-border);
+}
+
+details.kleos-disclosure > summary {
+  margin: 0;
+  padding: 12px 0;
+  border-radius: 0;
+  color: var(--fs-app-text-secondary);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+details.kleos-disclosure > summary:hover {
+  background: transparent;
+  color: var(--fs-app-text);
+}
+
+details.kleos-disclosure > :not(summary) {
+  margin-bottom: var(--fs-space-3);
+}
+
+/* ---------------------------------------------------------------------------
+ * Stat tiles
+ * ------------------------------------------------------------------------ */
+
+.kleos-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 10px;
+}
+
+.kleos-stat {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 14px 16px;
+  border: var(--fs-border-width) solid var(--fs-app-border);
+  border-radius: 10px;
+  background: var(--fs-app-surface-raised);
+}
+
+.kleos-stat > span {
+  color: var(--fs-app-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kleos-stat > strong {
+  overflow: hidden;
+  color: var(--fs-app-text);
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kleos-stat > small {
+  color: var(--fs-app-text-quiet);
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.kleos-stat.is-compact > strong {
+  font-size: 16px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Pills, badges, empty states
+ * ------------------------------------------------------------------------ */
+
+.kleos-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border: var(--fs-border-width) solid var(--fs-app-border-raised);
+  border-radius: 999px;
+  background: var(--fs-app-surface-raised);
+  color: var(--fs-app-text-secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.kleos-pill.is-accent {
+  border-color: var(--fs-app-accent-line);
+  background: var(--fs-app-accent-soft);
+  color: var(--fs-app-accent-text);
+}
+
+.kleos-pill.is-success {
+  border-color: color-mix(in srgb, var(--fs-app-success) 30%, transparent);
+  background: var(--fs-app-success-soft);
+  color: color-mix(in srgb, var(--fs-app-success) 80%, white);
+}
+
+.kleos-pill.is-warning {
+  border-color: color-mix(in srgb, var(--fs-app-warning) 30%, transparent);
+  background: var(--fs-app-warning-soft);
+  color: color-mix(in srgb, var(--fs-app-warning) 80%, white);
+}
+
+.kleos-pill.is-quiet {
+  border-color: var(--fs-app-border);
+  background: transparent;
+  color: var(--fs-app-text-muted);
+}
+
+.kleos-empty {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 20px;
+  border: var(--fs-border-width) dashed var(--fs-app-border-raised);
+  border-radius: 10px;
+  color: var(--fs-app-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.kleos-empty strong {
+  color: var(--fs-app-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kleos-empty p {
+  max-width: 62ch;
+  margin: 0;
+}
+
+.kleos-empty svg {
+  width: 18px;
+  height: 18px;
+  margin-bottom: 4px;
+  color: var(--fs-app-text-quiet);
+}
+
+.kleos-empty-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.kleos-empty-card > svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--fs-app-text-quiet);
+}
+
+.kleos-empty-card h2 {
+  margin: 0;
+  color: var(--fs-app-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.kleos-empty-card p {
+  max-width: 64ch;
+  margin: 4px 0 0;
+  color: var(--fs-app-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+details.kleos-disclosure-spaced {
+  margin-top: var(--fs-space-5);
+}
+
+.kleos-skeleton {
+  display: block;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--fs-app-surface-raised) 0%,
+    var(--fs-app-surface-strong) 50%,
+    var(--fs-app-surface-raised) 100%
+  );
+  background-size: 200% 100%;
+  animation: kleos-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes kleos-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.kleos-positive {
+  color: color-mix(in srgb, var(--fs-app-success) 85%, white);
+}
+
+a.fs-app-button {
+  text-decoration: none;
+}
+
+/* Info hint */
+
+.kleos-info {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.kleos-info-trigger {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fs-app-text-quiet);
+  transition:
+    color var(--fs-motion-fast) var(--fs-motion-ease),
+    background var(--fs-motion-fast) var(--fs-motion-ease);
+}
+
+.kleos-info-trigger svg {
+  width: 14px;
+  height: 14px;
+}
+
+.kleos-info:hover .kleos-info-trigger,
+.kleos-info-trigger:focus-visible {
+  background: var(--fs-app-hover-strong);
+  color: var(--fs-app-text);
+}
+
+.kleos-info-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -8px;
+  z-index: 70;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 48px));
+  padding: 10px 12px;
+  border: var(--fs-border-width) solid var(--fs-app-border-raised);
+  border-radius: 10px;
+  background: var(--fs-app-overlay);
+  box-shadow: var(--fs-app-overlay-shadow);
+  color: var(--fs-app-text-secondary);
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  display: none;
+  animation: kleos-info-in var(--fs-motion-fast) var(--fs-app-motion-ease);
+}
+
+.kleos-info.is-right .kleos-info-popover {
+  right: -8px;
+  left: auto;
+}
+
+.kleos-info:hover .kleos-info-popover,
+.kleos-info:focus-within .kleos-info-popover {
+  display: block;
+}
+
+@keyframes kleos-info-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
+.kleos-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Destructive ghost action */
+
+.fs-app-button.is-ghost.is-danger {
+  color: var(--fs-app-danger);
+}
+
+.fs-app-button.is-ghost.is-danger:hover:not(:disabled) {
+  background: var(--fs-app-danger-soft);
+  color: var(--fs-app-danger);
+}
+
+/* Segmented control */
+
+.kleos-segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: var(--fs-border-width) solid var(--fs-app-border-raised);
+  border-radius: 9px;
+  background: var(--fs-app-surface-raised);
+}
+
+.kleos-segmented button {
+  min-height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fs-app-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background var(--fs-motion-fast) var(--fs-motion-ease),
+    color var(--fs-motion-fast) var(--fs-motion-ease);
+}
+
+.kleos-segmented button:hover {
+  color: var(--fs-app-text);
+}
+
+.kleos-segmented button[aria-pressed="true"] {
+  background: var(--fs-app-surface-strong);
+  box-shadow: inset 0 0 0 1px var(--fs-app-border-strong);
+  color: var(--fs-app-text);
+}
+
+/* ---------------------------------------------------------------------------
+ * Forms
+ * ------------------------------------------------------------------------ */
 
 .compact-form,
 .inline-form,
@@ -120,8 +634,8 @@ button:disabled {
 }
 
 .compact-form {
-  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-  margin-bottom: var(--fs-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: end;
 }
 
 .inline-form {
@@ -130,15 +644,49 @@ button:disabled {
 }
 
 .stacked-form {
-  margin-bottom: var(--fs-space-3);
+  margin-bottom: var(--fs-space-4);
+}
+
+.kleos-form-panel {
+  margin-bottom: var(--fs-space-4);
+  padding: 16px;
+  border: var(--fs-border-width) solid var(--fs-app-border);
+  border-radius: 10px;
+  background: var(--fs-app-surface-raised);
+}
+
+.kleos-form-panel input,
+.kleos-form-panel select,
+.kleos-form-panel textarea {
+  background: var(--fs-app-surface);
+}
+
+.kleos-form-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--fs-space-2);
+  margin-top: var(--fs-space-3);
+}
+
+.kleos-form-footer > .kleos-note {
+  margin: 0 auto 0 0;
 }
 
 label {
   display: grid;
-  gap: 0.32rem;
+  align-content: start;
+  gap: 6px;
   color: var(--fs-app-text-secondary);
-  font-size: var(--fs-app-type-metadata-size);
-  font-weight: var(--fs-app-type-metadata-weight);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+label small {
+  color: var(--fs-app-text-quiet);
+  font-size: 11.5px;
+  font-weight: 400;
 }
 
 input,
@@ -162,12 +710,41 @@ textarea {
 
 input,
 select {
-  padding: 0.5rem 0.62rem;
+  padding: 0.45rem 0.7rem;
+}
+
+select {
+  appearance: none;
+  padding-right: 2rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--fs-app-text-muted) 50%),
+    linear-gradient(135deg, var(--fs-app-text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 15px) 50%,
+    calc(100% - 11px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px, 4px 4px;
+}
+
+select option {
+  background: var(--fs-app-overlay);
+  color: var(--fs-app-text);
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto;
+  min-height: 0;
+  accent-color: var(--fs-app-accent);
+}
+
+input[readonly] {
+  color: var(--fs-app-text-muted);
 }
 
 textarea {
   min-height: 6rem;
-  padding: 0.65rem;
+  padding: 0.65rem 0.75rem;
   resize: vertical;
 }
 
@@ -176,7 +753,7 @@ textarea::placeholder {
   color: var(--fs-app-text-quiet);
 }
 
-input:hover:not(:disabled),
+input:hover:not(:disabled):not([readonly]),
 select:hover:not(:disabled),
 textarea:hover:not(:disabled) {
   border-color: var(--fs-app-border-strong);
@@ -190,58 +767,76 @@ textarea:focus {
 }
 
 .large-textarea {
-  min-height: 9rem;
+  min-height: 10rem;
   margin-bottom: var(--fs-space-3);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
-.kleos-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--fs-space-4);
+label > .large-textarea {
+  margin-bottom: 0;
 }
 
-.wide-card {
-  grid-column: 1 / -1;
+.large-textarea.is-tall {
+  min-height: 22rem;
 }
 
-.section-header {
-  margin-bottom: var(--fs-space-3);
+.kleos-text-record {
+  min-width: 0;
 }
 
-.section-header h2 {
-  margin: 0;
+.kleos-text-record-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fs-space-3);
   color: var(--fs-app-text);
-  font-size: var(--fs-app-type-section-title-size);
-  font-weight: var(--fs-app-type-section-title-weight);
-  line-height: var(--fs-app-type-section-title-line-height);
-  letter-spacing: var(--fs-app-type-section-title-tracking);
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.section-header p:not(.fs-app-kicker) {
-  margin: 0.35rem 0 0;
-  color: var(--fs-app-text-muted);
-  font-size: 0.76rem;
-  line-height: 1.45;
+.kleos-condition-row {
+  margin-top: var(--fs-space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+
+.kleos-subheading-spaced {
+  margin-top: var(--fs-space-5);
+}
+
+@media (max-width: 640px) {
+  .kleos-condition-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Tables
+ * ------------------------------------------------------------------------ */
 
 .table-wrap {
   width: 100%;
-  margin-top: var(--fs-space-3);
   overflow-x: auto;
   border: var(--fs-border-width) solid var(--fs-app-border);
-  border-radius: var(--fs-radius-control);
+  border-radius: 10px;
+  background: var(--fs-app-surface);
+}
+
+.table-wrap + .table-wrap {
+  margin-top: var(--fs-space-3);
 }
 
 table {
   width: 100%;
   min-width: 560px;
   border-collapse: collapse;
-  font-size: 0.75rem;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
 th,
 td {
-  padding: 0.58rem 0.64rem;
+  padding: 10px 14px;
   border-bottom: var(--fs-border-width) solid var(--fs-app-border);
   text-align: left;
   vertical-align: top;
@@ -250,14 +845,26 @@ td {
 th {
   background: var(--fs-app-surface-raised);
   color: var(--fs-app-text-muted);
-  font-size: var(--fs-app-type-metadata-size);
-  font-weight: var(--fs-app-type-metadata-weight);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 td {
   color: var(--fs-app-text-secondary);
+}
+
+td:first-child {
+  color: var(--fs-app-text);
+}
+
+th.num,
+td.num {
+  text-align: right;
+}
+
+tbody tr {
+  transition: background var(--fs-motion-fast) var(--fs-motion-ease);
 }
 
 tbody tr:hover td {
@@ -268,8 +875,43 @@ tbody tr:last-child td {
   border-bottom: 0;
 }
 
+td.kleos-table-empty,
+tbody tr:only-child td[colspan] {
+  padding: 20px 14px;
+  color: var(--fs-app-text-muted);
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+ * Score readout (vector-state surface)
+ * ------------------------------------------------------------------------ */
+
+.score-readout {
+  display: grid;
+  gap: 4px;
+  margin-bottom: var(--fs-space-3);
+}
+
+.score-readout span,
+.score-readout em {
+  color: var(--fs-app-text-muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.score-readout strong {
+  font-size: 24px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ---------------------------------------------------------------------------
+ * Access and loading states
+ * ------------------------------------------------------------------------ */
+
 .access-panel {
-  width: min(100% - 2rem, 34rem);
+  width: min(100%, 30rem);
   margin: 4rem auto;
   padding: 2rem;
   display: grid;
@@ -278,9 +920,23 @@ tbody tr:last-child td {
   text-align: center;
 }
 
+.access-panel.is-loading {
+  border-color: transparent;
+  background: transparent;
+}
+
+.access-panel.is-loading .access-mark {
+  animation: kleos-breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes kleos-breathe {
+  0%, 100% { opacity: 0.35; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
 .access-mark {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   display: grid;
   place-items: center;
 }
@@ -294,37 +950,84 @@ tbody tr:last-child td {
 .access-panel h2 {
   margin: 0;
   color: var(--fs-app-text);
-  font-size: 1.35rem;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
 .access-panel p {
   max-width: 28rem;
   margin: 0;
   color: var(--fs-app-text-muted);
+  font-size: var(--fs-app-type-body-size);
   line-height: 1.55;
 }
 
 .status-line {
-  position: sticky;
-  bottom: 0.75rem;
-  z-index: 5;
-  width: fit-content;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0.55rem 0.8rem;
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 60;
+  max-width: min(36rem, calc(100vw - 32px));
+  margin: 0;
+  padding: 10px 16px;
   border: var(--fs-border-width) solid var(--fs-app-border-raised);
-  border-radius: 999px;
-  background: var(--fs-app-surface-strong);
+  border-radius: 10px;
+  background: var(--fs-app-overlay);
   color: var(--fs-app-text-secondary);
-  font-size: 0.75rem;
-  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: var(--fs-app-overlay-shadow);
+  transform: translateX(-50%);
+  animation: kleos-toast-in var(--fs-motion-normal) var(--fs-app-motion-ease);
+}
+
+div.status-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.status-line-close {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fs-app-text-muted);
+}
+
+.status-line-close:hover {
+  background: var(--fs-app-hover-strong);
+  color: var(--fs-app-text);
+}
+
+.status-line-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes kleos-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kleos-skeleton,
+  .access-panel.is-loading .access-mark,
+  .status-line,
+  .kleos-info-popover {
+    animation: none;
+  }
 }
 
 @media (max-width: 900px) {
-  .kleos-shell {
-    min-height: calc(100dvh - var(--fs-app-utility-height));
-  }
-
   .kleos-header {
     align-items: flex-start;
     flex-direction: column;
@@ -341,11 +1044,39 @@ tbody tr:last-child td {
   .wide-card {
     grid-column: auto;
   }
+
+  .kleos-section-head {
+    flex-direction: column;
+  }
+
+  .kleos-section-head > .kleos-actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 560px) {
-  .kleos-header-actions,
-  .kleos-header-actions button {
-    width: 100%;
+  .kleos-card {
+    padding: 16px;
+  }
+
+  details.kleos-card > summary {
+    margin: -16px;
+    padding: 14px 16px;
+  }
+
+  details.kleos-card > summary + .kleos-subtitle {
+    margin-top: 16px;
+  }
+
+  .kleos-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kleos-stat {
+    padding: 12px;
+  }
+
+  .kleos-stat > strong {
+    font-size: 17px;
   }
 }

@@ -1,25 +1,13 @@
+.appRoot {
+  --fs-font-primary: var(--kleos-font-inter), "Inter", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100dvh;
+  font-family: var(--fs-font-primary);
+  font-feature-settings: "cv11", "ss01", "ss03";
+}
+
 .inset {
   min-width: 0;
-}
-
-.loadingShell {
-  min-height: 100dvh;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: var(--fs-space-4);
-  background: var(--fs-app-bg);
-  color: var(--fs-app-text-muted);
-  font-family: var(--fs-font-primary);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.loadingShell img {
-  width: 44px;
-  height: 44px;
 }
 
 .utilityBar {
@@ -31,7 +19,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--fs-space-4);
-  padding: 0 var(--fs-space-4);
+  padding: 0 var(--fs-space-4) 0 var(--fs-space-3);
   border-bottom: var(--fs-border-width) solid var(--fs-app-border);
   background: var(--fs-app-bg);
 }
@@ -50,29 +38,61 @@
 .utilities {
   flex: 0 0 auto;
   justify-content: flex-end;
-  gap: var(--fs-space-3);
+  gap: var(--fs-space-2);
+}
+
+.trigger {
+  width: var(--fs-app-icon-button-size);
+  height: var(--fs-app-icon-button-size);
+  border-color: transparent;
+}
+
+.separator {
+  width: 1px;
+  height: 18px;
+  flex: 0 0 auto;
+  background: var(--fs-app-border-raised);
+}
+
+.breadcrumb {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.crumbRoot {
+  color: var(--fs-app-text-muted);
+  font-weight: 500;
+}
+
+.crumbIcon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: var(--fs-app-text-quiet);
 }
 
 .pageLabel {
   overflow: hidden;
-  color: var(--fs-app-text-secondary);
-  font-size: 0.76rem;
-  font-weight: 650;
+  color: var(--fs-app-text);
+  font-weight: 600;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .familyMark {
   display: block;
   width: var(--fs-family-mark-size);
   height: var(--fs-family-mark-size);
+  margin-inline: 6px;
   object-fit: contain;
 }
 
 .signOut {
-  min-height: 2rem;
-  padding-inline: 0.7rem;
-  white-space: nowrap;
+  min-height: var(--fs-app-icon-button-size);
+  padding-inline: 10px;
 }
 
 .workspace {
@@ -80,16 +100,27 @@
   min-height: calc(100dvh - var(--fs-app-utility-height));
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .utilityBar {
-    padding-inline: var(--fs-space-3);
+    padding-inline: var(--fs-space-2) var(--fs-space-3);
   }
 
-  .pageLabel {
-    max-width: 10rem;
+  .crumbRoot,
+  .crumbIcon {
+    display: none;
   }
 
   .signOut {
-    padding-inline: 0.55rem;
+    width: var(--fs-app-icon-button-size);
+    padding: 0;
+  }
+
+  .signOut span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 }

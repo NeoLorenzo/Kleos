@@ -25,10 +25,12 @@ export const metadata = {
     siteName: "Kleos",
     title: "Kleos | See your current state clearly",
     description,
-    url: "/"
+    url: "/",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Kleos: see your current state clearly. A Kleos character sheet with an eight-dimension radar and per-dimension scores." }]
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
+    images: ["/og.png"],
     title: "Kleos | See your current state clearly",
     description:
       "Evidence-based current-state modelling with explicit assessments, visible coverage and confidence, and longitudinal snapshots."
